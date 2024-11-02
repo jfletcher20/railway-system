@@ -1,0 +1,50 @@
+-- 123 --
+cd /home/UzDiz/DZ_1/podaci
+java -jar /home/NWTiS_1/UZDIZ/design-patterns/jfletcher20_zadaca_1/target/jfletcher20_zadaca_1.jar --zs DZ_1_stanice.csv --zps DZ_1_vozila.csv --zk DZ_1_kompozicije.csv
+
+-- 132 --
+cd /home/UzDiz/DZ_1/podaci
+java -jar /home/NWTiS_1/UZDIZ/design-patterns/jfletcher20_zadaca_1/target/jfletcher20_zadaca_1.jar --zs DZ_1_stanice.csv --zk DZ_1_kompozicije.csv --zps DZ_1_vozila.csv
+
+-- 213 --
+cd /home/UzDiz/DZ_1/podaci
+java -jar /home/NWTiS_1/UZDIZ/design-patterns/jfletcher20_zadaca_1/target/jfletcher20_zadaca_1.jar --zps DZ_1_vozila.csv --zs DZ_1_stanice.csv --zk DZ_1_kompozicije.csv
+
+-- 231 --
+cd /home/UzDiz/DZ_1/podaci
+java -jar /home/NWTiS_1/UZDIZ/design-patterns/jfletcher20_zadaca_1/target/jfletcher20_zadaca_1.jar --zps DZ_1_vozila.csv --zk DZ_1_kompozicije.csv --zs DZ_1_stanice.csv
+
+-- 321 --
+cd /home/UzDiz/DZ_1/podaci
+java -jar /home/NWTiS_1/UZDIZ/design-patterns/jfletcher20_zadaca_1/target/jfletcher20_zadaca_1.jar --zk DZ_1_kompozicije.csv --zps DZ_1_vozila.csv --zs DZ_1_stanice.csv
+
+-- 312 --
+cd /home/UzDiz/DZ_1/podaci
+java -jar /home/NWTiS_1/UZDIZ/design-patterns/jfletcher20_zadaca_1/target/jfletcher20_zadaca_1.jar --zk DZ_1_kompozicije.csv --zs DZ_1_stanice.csv --zps DZ_1_vozila.csv
+
+
+
+
+-- 123 --
+cd /home/UzDiz/DZ_1/podaci
+java -jar /home/UzDiz/DZ_1/jfletcher20_zadaca_1/target/jfletcher20_zadaca_1.jar --zs DZ_1_stanice.csv --zps DZ_1_vozila.csv --zk DZ_1_kompozicije.csv
+
+-- 132 --
+cd /home/UzDiz/DZ_1/podaci
+java -jar /home/UzDiz/DZ_1/jfletcher20_zadaca_1/target/jfletcher20_zadaca_1.jar --zs DZ_1_stanice.csv --zk DZ_1_kompozicije.csv --zps DZ_1_vozila.csv
+
+-- 213 --
+cd /home/UzDiz/DZ_1/podaci
+java -jar /home/UzDiz/DZ_1/jfletcher20_zadaca_1/target/jfletcher20_zadaca_1.jar --zps DZ_1_vozila.csv --zs DZ_1_stanice.csv --zk DZ_1_kompozicije.csv
+
+-- 231 --
+cd /home/UzDiz/DZ_1/podaci
+java -jar /home/UzDiz/DZ_1/jfletcher20_zadaca_1/target/jfletcher20_zadaca_1.jar --zps DZ_1_vozila.csv --zk DZ_1_kompozicije.csv --zs DZ_1_stanice.csv
+
+-- 321 --
+cd /home/UzDiz/DZ_1/podaci
+java -jar /home/UzDiz/DZ_1/jfletcher20_zadaca_1/target/jfletcher20_zadaca_1.jar --zk DZ_1_kompozicije.csv --zps DZ_1_vozila.csv --zs DZ_1_stanice.csv
+
+-- 312 --
+cd /home/UzDiz/DZ_1/podaci
+java -jar /home/UzDiz/DZ_1/jfletcher20_zadaca_1/target/jfletcher20_zadaca_1.jar --zk DZ_1_kompozicije.csv --zs DZ_1_stanice.csv --zps DZ_1_vozila.csv

@@ -4,9 +4,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>jfletcher20_zadaca_1</groupId>
 	<artifactId>jfletcher20_zadaca_1</artifactId>
-	<version>1.0.0</version>
-	<description>Joshua Lee Fletcher - projekt za kolegij "Uzorci dizajna", FOI,
-		2024.</description>
+	<version>1</version>
+	<description>Joshua Lee Fletcher - projekt za kolegij "Uzorci dizajna", FOI, 2024.</description>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,6 +22,7 @@
 		<maven.install>3.1.1</maven.install>
 	</properties>
 	<build>
+    	<finalName>${project.artifactId}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
