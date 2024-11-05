@@ -1,9 +1,13 @@
 package hr.foi.jfletcher20.utils;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
+import hr.foi.jfletcher20.RailwaySingleton;
 import hr.foi.jfletcher20.enums.FileType;
+import hr.foi.jfletcher20.tracks.TrainTrackCreator;
+import hr.foi.jfletcher20.wagons.WagonCreator;
 
 /*
  * Example run commands:
@@ -69,30 +73,28 @@ public abstract class FileLoader {
       Pattern.compile("^Oznaka;Opis;Proizvođač;Godina;Namjena;Vrsta prijevoza;"
           + "Vrsta pogona;Maks brzina;Maks snaga;Broj sjedećih mjesta;"
           + "Broj stajaćih mjesta;Broj bicikala;Broj kreveta;Broj automobila;Nosivost;Površina;Zapremina;Status$");
-  private static Pattern zkHeaderPattern = Pattern.compile("^Oznaka;Oznaka prijevoznog sredstva;Uloga$");
-  
+  private static Pattern zkHeaderPattern =
+      Pattern.compile("^Oznaka;Oznaka prijevoznog sredstva;Uloga$");
+
   public static boolean checkArgs(String[] args) {
     if (args.length != 6) {
       System.out.println("Invalidan broj argumenata. Treba biti 6, a uneseno je: " + args.length);
       return false;
     }
-    // ensure there are no duplicate args
-    for (int i = 0; i < args.length; i += 2) {
-      for (int j = i + 2; j < args.length; j += 2) {
+    for (int i = 0; i < args.length; i += 2)
+      for (int j = i + 2; j < args.length; j += 2)
         if (args[i].equals(args[j])) {
           System.out.println("Argumenti nisu ispravno postavljeni. "
               + "Argumenti ne smiju imati duplicirane tipove datoteka:  " + args[i] + " i "
               + args[j]);
           return false;
         }
-      }
-    }
     String argsString = String.join(" ", args);
     if (!pattern.matcher(argsString).matches()) {
-      System.out.println("Argumenti nisu ispravno postavljeni. "
-          + "Argumenti trebaju biti u obliku: "
-          + "--tipDat1 <nazivCsvDat1> --tipDat2 <nazivCsvDat2> --tipDat3 <nazivCsvDat3>, "
-          + "gdje su tipovi datoteke --zs, --zps ili --zk.");
+      System.out
+          .println("Argumenti nisu ispravno postavljeni. " + "Argumenti trebaju biti u obliku: "
+              + "--tipDat1 <nazivCsvDat1> --tipDat2 <nazivCsvDat2> --tipDat3 <nazivCsvDat3>, "
+              + "gdje su tipovi datoteke --zs, --zps ili --zk.");
       return false;
     }
     return true;
@@ -114,28 +116,83 @@ public abstract class FileLoader {
         System.out.println("Datoteka " + fileName + " ne odgovara uzorku za tip " + args[i]);
         continue;
       }
-      if (fileType == FileType.ZS) {
-        loadZsFile(path);
-      } else if (fileType == FileType.ZPS) {
-        loadZpsFile(path);
-      } else if (fileType == FileType.ZK) {
-        loadZkFile(path);
-      }
+      loadFile(path, fileType);
     }
   }
 
-  private static void loadZsFile(Path file) {
-    System.out.println("Učitavanje željezničkih stanica...");
+  private static void logLineError(String line, int lineNum) {
+    String output = ("\t" + lineNum + ": " + "Greska: '" + line.replaceAll(";", " ") + "'");
+    System.out.println(output.substring(0, output.length() > 40 ? 40 : output.length()));
   }
 
-  private static void loadZpsFile(Path file) {
-    System.out.println("Učitavanje željezničkih postrojenja...");
+  private static void logLineComment(String line, int lineNum) {
+    String output = ("\t" + lineNum + ": " + "Komentar: '" + line + "'");
+    System.out.println(output.substring(0, output.length() > 40 ? 40 : output.length()));
   }
 
-  private static void loadZkFile(Path file) {
-    System.out.println("Učitavanje željezničkih kompozicija...");
+  private static void logLineBlank(int lineNum) {
+    String output = ("\t" + lineNum + ": " + "Prazan redak.");
+    System.out.println(output.substring(0, output.length() > 40 ? 40 : output.length()));
   }
-  
+
+  public static void loadFile(Path path, FileType fileType) {
+    try {
+      var lines = Files.readAllLines(path);
+      // skip the first line
+      lines = lines.subList(1, lines.size());
+      for (var line : lines) {
+        if (line.trim().startsWith("#")) {
+          logLineComment(line, lines.indexOf(line) + 1);
+          continue;
+        } else if (line.trim().isBlank()) {
+          logLineBlank(lines.indexOf(line) + 1);
+          continue;
+        } else if (line.contains(";;")) {
+          logLineError(line, lines.indexOf(line) + 1);
+          continue;
+        } else {
+          createProduct(line, lines.indexOf(line) + 1, fileType);
+          continue;
+        }
+//        System.out.println(line);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private static void createProduct(String data, int index, FileType fileType) {
+    ICreator creator = null;
+    IProduct product = null;
+    switch (fileType) {
+      case ZS:
+        creator = new TrainTrackCreator();
+        break;
+      case ZPS:
+        creator = new WagonCreator();
+        break;
+      case ZK:
+        creator = new TrainTrackCreator();
+        break;
+      default:
+        System.out.println("Error: Nije prepoznat tip datoteke.");
+        return;
+    }
+    try {
+      product = creator.factoryMethod(data);
+    } catch (Exception e) {
+      System.out.println("Error: prilikom parsiranja retka [" + index + "]: " + data);
+      e.printStackTrace();
+      return;
+    }
+    if (product == null) {
+      System.out.println("Error: Null vrijednost prilikom parsiranja retka [" + index + "]: " + data);
+//      e.printStackTrace();
+      return;
+    }
+    RailwaySingleton.getInstance().addProduct(product);
+  }
+
   public static boolean correctFileType(FileType fileType, String arg) {
     final String prefix = "--";
     return arg.startsWith(prefix + fileType.name().toLowerCase());
@@ -147,14 +204,12 @@ public abstract class FileLoader {
       String header = contents.split("\n")[0].replaceAll("\r", "").trim();
       if (header.startsWith("\uFEFF"))
         header = header.substring(1);
-//      System.out.println("Header after cleaning: " + header);
-      if (zsHeaderPattern.matcher(header.trim()).matches()) {
+      if (zsHeaderPattern.matcher(header.trim()).find())
         return FileType.ZS;
-      } else if (zpsHeaderPattern.matcher(header).matches()) {
+      else if (zpsHeaderPattern.matcher(header).find())
         return FileType.ZPS;
-      } else if (zkHeaderPattern.matcher(header).matches()) {
+      else if (zkHeaderPattern.matcher(header).find())
         return FileType.ZK;
-      }
     } catch (Exception e) {
       System.out.println("Greška prilikom čitanja datoteke: " + filePath);
     }

@@ -1,6 +1,8 @@
 package hr.foi.jfletcher20;
 
 import hr.foi.jfletcher20.utils.FileLoader;
+import hr.foi.jfletcher20.utils.RailwaySingletonBuilder;
+import hr.foi.jfletcher20.utils.SystemInitializationDirector;
 
 /*
  * Example run commands:
@@ -51,15 +53,12 @@ import hr.foi.jfletcher20.utils.FileLoader;
  */
 public class Main {
   public static void main(String[] args) {
-
-    System.out.println("Hello World!");
-
-    System.out.println("Arguments: " + String.join(" ", args));
-//    for (String arg : args)
-//      System.out.println(arg);
-
-//    RailwaySingleton railway = RailwaySingleton.getInstance();
-    FileLoader.loadFiles(args);
-
+    putArgsInSingleton(args);
+    var initDirector = new SystemInitializationDirector(new RailwaySingletonBuilder());
+    initDirector.construct();
+  }
+  
+  private static void putArgsInSingleton(String[] args) {
+    RailwaySingleton.getInstance().setInitArgs(args);
   }
 }
