@@ -141,22 +141,21 @@ public abstract class FileLoader {
     try {
       var lines = Files.readAllLines(path);
       // skip the first line
-      lines = lines.subList(1, lines.size());
-      for (var line : lines) {
+      for (int i = 1; i < lines.size(); i++) {
+        String line = lines.get(i);
         if (line.trim().startsWith("#")) {
-          logLineComment(line, lines.indexOf(line) + 1);
+          logLineComment(line, i);
           continue;
         } else if (line.trim().isBlank()) {
-          logLineBlank(lines.indexOf(line) + 1);
+          logLineBlank(i);
           continue;
         } else if (line.contains(";;")) {
-          logLineError(line, lines.indexOf(line) + 1);
+          logLineError(line, i);
           continue;
         } else {
-          createProduct(line, lines.indexOf(line) + 1, fileType);
+          createProduct(line, i, fileType);
           continue;
         }
-//        System.out.println(line);
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -166,27 +165,29 @@ public abstract class FileLoader {
   private static void createProduct(String data, int index, FileType fileType) {
     ICreator creator = null, altCreator = null;
     IProduct product = null, altProduct = null;
-    if(fileType == FileType.ZS) {
-        creator = new StationCreator();
-        altCreator = new TrainTrackCreator();
-    } else if(fileType == FileType.ZPS) {
-        creator = new WagonCreator();
-    } else if(fileType == FileType.ZK) {
-        creator = new TrainCompositionCreator();
+    if (fileType == FileType.ZS) {
+      creator = new StationCreator();
+      altCreator = new TrainTrackCreator();
+    } else if (fileType == FileType.ZPS) {
+      creator = new WagonCreator();
+    } else if (fileType == FileType.ZK) {
+      creator = new TrainCompositionCreator();
     } else {
-        System.out.println("Error: Nije prepoznat tip datoteke.");
-        return;
+      System.out.println("Error: Nije prepoznat tip datoteke.");
+      return;
     }
     try {
       product = creator.factoryMethod(data);
-      if (altCreator != null) altProduct = altCreator.factoryMethod(data);
+      if (altCreator != null)
+        altProduct = altCreator.factoryMethod(data);
     } catch (Exception e) {
       System.out.println("Error: prilikom parsiranja retka [" + index + "]: " + data);
       e.printStackTrace();
       return;
     }
     if (product == null && altProduct == null) {
-      System.out.println("Error: Null vrijednost prilikom parsiranja retka [" + index + "]: " + data);
+      System.out
+          .println("Error: Null vrijednost prilikom parsiranja retka [" + index + "]: " + data);
       return;
     }
     RailwaySingleton.getInstance().addProduct(product);
