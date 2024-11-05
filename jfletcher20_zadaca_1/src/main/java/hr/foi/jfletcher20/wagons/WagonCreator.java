@@ -34,7 +34,11 @@ public class WagonCreator implements ICreator {
       return null;
     }
     String[] parts = data.split(";");
-    return new Wagon(WagonType.fromCSV(parts[4]), // namjena
+    // not used are: oznaka, opis, površina
+    return new Wagon(
+        parts[0], // oznaka
+        parts[1], // opis
+        WagonType.fromCSV(parts[4]), // namjena
         /* TransportType.valueOf( */parts[5]/* .toUpperCase()) */, // vrsta prijevoza
         /* DriveType.valueOf( */ parts[6] /* .toUpperCase()) */, // vrsta pogona
         ParsingUtil.d(parts[8]), // maksimalna snaga
@@ -47,6 +51,7 @@ public class WagonCreator implements ICreator {
         ParsingUtil.i(parts[12]), // broj kreveta
         ParsingUtil.i(parts[13]), // broj automobila
         ParsingUtil.d(parts[14]), // nosivost
+        ParsingUtil.d(parts[15]), // površina
         ParsingUtil.d(parts[16]), // zapremina
         parts[17].equals("I") // status
     );

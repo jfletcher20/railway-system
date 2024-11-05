@@ -17,11 +17,14 @@ import hr.foi.jfletcher20.utils.IProduct;
  * **maksimalna brzina vožnje** (1-200 km/h), **godina proizvodnje**, **proizvođač**, **broj
  * mjesta** (sjedećih, stajaćih, kreveta, bicikala, automobila), **nosivost** (t), **zapremina**
  * (m3), **status** (ispravno, u kvaru -- "I" ili "K").
+ * dodatno trebaju oznaka (string), opis (string), površina (double)
  */
 
 /**
  * Class representing a wagon
  *
+ * @param id wagon unique identifier
+ * @param description wagon description
  * @param purpose Purpose of the wagon
  * @param transportType Type of transport
  * @param driveType Type of drive
@@ -31,10 +34,14 @@ import hr.foi.jfletcher20.utils.IProduct;
  * @param manufacturer Manufacturer
  * @param numberOfSeats Number of seats
  * @param capacity Capacity
+ * @param area Area
  * @param volume Volume
  * @param status Status
  */
-public record Wagon(WagonType purpose, // namjena
+public record Wagon(
+    String id, // oznaka
+    String description, // opis
+    WagonType purpose, // namjena
     /* TransportType */ String transportType, // vrsta prijevoza
     /* DriveType */ String driveType, // vrsta pogona
     double maxPower, // maksimalna snaga
@@ -47,6 +54,7 @@ public record Wagon(WagonType purpose, // namjena
     int numberOfBeds, // broj kreveta
     int numberOfCars, // broj automobila
     double capacity, // nosivost
+    double area, // površina
     double volume, // zapremina
     boolean status // status
 ) implements IProduct {
@@ -54,6 +62,8 @@ public record Wagon(WagonType purpose, // namjena
   /**
    * Constructor for Wagon
    * 
+   * @param id
+   * @param description
    * @param purpose
    * @param transportType
    * @param driveType
@@ -63,6 +73,7 @@ public record Wagon(WagonType purpose, // namjena
    * @param manufacturer
    * @param numberOfSeats
    * @param capacity
+   * @param area
    * @param volume
    * @param status
    */
@@ -83,5 +94,20 @@ public record Wagon(WagonType purpose, // namjena
    */
   public boolean getIsPowered() {
     return this.driveType != /* DriveType.NONE */ "N";
+  }
+  
+  /**
+   * Method to manage the wagon's display
+   */
+  @Override
+   public String toString() {
+     return "Wagon{" + "id='" + id + '\'' + ", description='" + description + '\'' + ", purpose="
+         + purpose + ", transportType='" + transportType + '\'' + ", driveType='" + driveType + '\''
+         + ", maxPower=" + maxPower + ", maxSpeed=" + maxSpeed + ", yearOfProduction="
+         + yearOfProduction + ", manufacturer='" + manufacturer + '\'' + ", numberOfSeats="
+         + numberOfSeats + ", numberOfStandingPlaces=" + numberOfStandingPlaces
+         + ", numberOfBicycles=" + numberOfBicycles + ", numberOfBeds=" + numberOfBeds
+         + ", numberOfCars=" + numberOfCars + ", capacity=" + capacity + ", area=" + area
+         + ", volume=" + volume + ", status=" + status + '}';
   }
 }
