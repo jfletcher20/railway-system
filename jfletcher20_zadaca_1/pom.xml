@@ -2,10 +2,11 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>jfletcher20_zadaca_1</groupId>
+	<groupId>edu.unizg.foi.uzdiz.jfletcher20</groupId>
 	<artifactId>jfletcher20_zadaca_1</artifactId>
 	<version>1</version>
-	<description>Joshua Lee Fletcher - projekt za kolegij "Uzorci dizajna", FOI, 2024.</description>
+	<description>Joshua Lee Fletcher - projekt za kolegij "Uzorci dizajna", FOI,
+		2024.</description>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -22,7 +23,7 @@
 		<maven.install>3.1.1</maven.install>
 	</properties>
 	<build>
-    	<finalName>${project.artifactId}</finalName>
+		<finalName>${project.artifactId}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -53,7 +54,7 @@
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>libs/</classpathPrefix>
 							<mainClass>
-								hr.foi.jfletcher20.Main</mainClass>
+								edu.unizg.foi.uzdiz.jfletcher20.Main</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
