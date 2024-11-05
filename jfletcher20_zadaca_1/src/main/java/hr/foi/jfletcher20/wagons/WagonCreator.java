@@ -56,7 +56,7 @@ public class WagonCreator implements ICreator {
   }
 
   private String columnCountError(int counts) {
-    return "Error: Ocekivano " + columnCount + " stupaca, otkriveno " + counts;
+    return "Error: WagonCreator Ocekivano " + columnCount + " stupaca, otkriveno " + counts;
   }
 
 }

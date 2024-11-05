@@ -5,7 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 import hr.foi.jfletcher20.RailwaySingleton;
+import hr.foi.jfletcher20.compositions.TrainCompositionCreator;
 import hr.foi.jfletcher20.enums.FileType;
+import hr.foi.jfletcher20.stations.StationCreator;
 import hr.foi.jfletcher20.tracks.TrainTrackCreator;
 import hr.foi.jfletcher20.wagons.WagonCreator;
 
@@ -159,38 +161,37 @@ public abstract class FileLoader {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    RailwaySingleton.getInstance().printStats();
   }
 
   private static void createProduct(String data, int index, FileType fileType) {
-    ICreator creator = null;
-    IProduct product = null;
-    switch (fileType) {
-      case ZS:
-        creator = new TrainTrackCreator();
-        break;
-      case ZPS:
+    ICreator creator = null, altCreator = null;
+    IProduct product = null, altProduct = null;
+    if(fileType == FileType.ZS) {
+        creator = new StationCreator();
+        altCreator = new TrainTrackCreator();
+    } else if(fileType == FileType.ZPS) {
         creator = new WagonCreator();
-        break;
-      case ZK:
-        creator = new TrainTrackCreator();
-        break;
-      default:
+    } else if(fileType == FileType.ZK) {
+        creator = new TrainCompositionCreator();
+    } else {
         System.out.println("Error: Nije prepoznat tip datoteke.");
         return;
     }
     try {
       product = creator.factoryMethod(data);
+      if (altCreator != null) altProduct = altCreator.factoryMethod(data);
     } catch (Exception e) {
       System.out.println("Error: prilikom parsiranja retka [" + index + "]: " + data);
       e.printStackTrace();
       return;
     }
-    if (product == null) {
+    if (product == null && altProduct == null) {
       System.out.println("Error: Null vrijednost prilikom parsiranja retka [" + index + "]: " + data);
-//      e.printStackTrace();
       return;
     }
     RailwaySingleton.getInstance().addProduct(product);
+    RailwaySingleton.getInstance().addProduct(altProduct);
   }
 
   public static boolean correctFileType(FileType fileType, String arg) {

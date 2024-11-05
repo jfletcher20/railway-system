@@ -5,9 +5,7 @@ import hr.foi.jfletcher20.utils.IProduct;
 
 public class TrainTrackCreator implements ICreator {
 
-  public TrainTrackCreator() {
-    // TODO Auto-generated constructor stub
-  }
+  public TrainTrackCreator() {}
 
   @Override
   public IProduct factoryMethod(String data) {

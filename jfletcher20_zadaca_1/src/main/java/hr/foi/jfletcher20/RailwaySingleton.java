@@ -118,5 +118,12 @@ public class RailwaySingleton {
     this.clearCompositions();
     this.clearTracks();
   }
+  
+  public void printStats() {
+    System.out.println("Stations: " + this.stations.size());
+    System.out.println("Wagons: " + this.wagons.size());
+    System.out.println("Compositions: " + this.compositions.size());
+    System.out.println("Tracks: " + this.tracks.size());
+  }
 
 }
