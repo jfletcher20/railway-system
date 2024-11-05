@@ -58,7 +58,6 @@ public record Wagon(
     double volume, // zapremina
     boolean status // status
 ) implements IProduct {
-
   /**
    * Constructor for Wagon
    * 

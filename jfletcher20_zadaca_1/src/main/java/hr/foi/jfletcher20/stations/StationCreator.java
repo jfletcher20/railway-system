@@ -5,9 +5,7 @@ import hr.foi.jfletcher20.utils.IProduct;
 
 public class StationCreator implements ICreator {
 
-  public StationCreator() {
-    // TODO Auto-generated constructor stub
-  }
+  public StationCreator() {}
 
   @Override
   public IProduct factoryMethod(String data) {

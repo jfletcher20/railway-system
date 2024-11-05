@@ -4,7 +4,6 @@ package hr.foi.jfletcher20.wagons;
 // import hr.foi.jfletcher20.enums.TransportType;
 import hr.foi.jfletcher20.enums.WagonType;
 import hr.foi.jfletcher20.utils.ICreator;
-import hr.foi.jfletcher20.utils.IProduct;
 import hr.foi.jfletcher20.utils.ParsingUtil;
 
 
@@ -25,7 +24,7 @@ public class WagonCreator implements ICreator {
    * @return Wagon object
    */
   @Override
-  public IProduct factoryMethod(String data) {
+  public Wagon factoryMethod(String data) {
     if (data == null || data.isEmpty()) {
       System.out.println("Error: Prazan redak");
       return null;
@@ -34,7 +33,6 @@ public class WagonCreator implements ICreator {
       return null;
     }
     String[] parts = data.split(";");
-    // not used are: oznaka, opis, površina
     return new Wagon(
         parts[0], // oznaka
         parts[1], // opis
