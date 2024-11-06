@@ -179,8 +179,7 @@ public abstract class FilesUtil {
       emptyCol(index, data);
       return;
     }
-    RailwaySingleton.getInstance().addProduct(product);
-    RailwaySingleton.getInstance().addProduct(altProduct);
+    RailwaySingleton.getInstance().addProduct(product, altProduct);
   }
 
   private static void emptyCol(int index, String data) {

@@ -3,6 +3,8 @@ package edu.unizg.foi.uzdiz.jfletcher20.models.tracks;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackCategory;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackStatus;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
+import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
+import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 
 // Željeznička pruga između dviju željezničkih stanica ima određene osobine: oznaka, kategorija
 // (lokalna, regionalna, međunarodna), način prijevoza (klasično (ugljen, dizel, baterije) ili
@@ -17,6 +19,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
  * @param category Track category
  * @param transportType Type of transport
  * @param trackCount Number of tracks
+ * @param trackLength Length of track
  * @param axleLoad Axle load
  * @param length Length of track
  * @param status Track status
@@ -25,6 +28,7 @@ public record TrainTrack(String id, // oznaka pruge
     TrainTrackCategory category, // kategorija pruge
     String transportType, // vrsta prijevoza
     int trackCount, // broj kolosjeka
+    double trackLength, // dužina pruge u km
     double axleLoad, // DO po osovini
     double linearLoad, // DO po duznom m
     TrainTrackStatus status // status pruge
@@ -36,6 +40,8 @@ public record TrainTrack(String id, // oznaka pruge
       throw new IllegalArgumentException("Kategorija pruge ne smije biti prazna.");
     if (transportType == null || transportType.isEmpty())
       throw new IllegalArgumentException("Vrsta prijevoza ne smije biti prazna.");
+    if (trackLength < 0 || trackLength > 999)
+      throw new IllegalArgumentException("Dužina pruge mora biti između 0 i 999 km.");
     if (trackCount < 1)
       throw new IllegalArgumentException("Broj kolosjeka ne smije biti manji od 1.");
     if (axleLoad < 10 || axleLoad > 50)
@@ -44,6 +50,14 @@ public record TrainTrack(String id, // oznaka pruge
       throw new IllegalArgumentException("DO po dužnom metru mora biti između 2 i 10 t/m.");
     if (status == null)
       throw new IllegalArgumentException("Status pruge mora biti definiran.");
+  }
+  
+  public Station getStartStation() {
+    return RailwaySingleton.getInstance().getStartStation(this.id);
+  }
+  
+  public Station getEndStation() {
+    return RailwaySingleton.getInstance().getEndStation(this.id);
   }
 }
 

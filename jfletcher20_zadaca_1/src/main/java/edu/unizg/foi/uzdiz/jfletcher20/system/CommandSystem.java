@@ -1,6 +1,8 @@
 package edu.unizg.foi.uzdiz.jfletcher20.system;
 
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
 
 /*
  * Nakon što se učitaju sve potrebne datoteke potrebno je pripremiti program za izvršavanje komandi
@@ -22,9 +24,16 @@ public class CommandSystem {
 
   Pattern quitPattern = Pattern.compile("^Q$");
   Pattern viewTracksPattern = Pattern.compile("^IP$");
-  Pattern viewStationsPattern = Pattern.compile("^ISP [A-Z0-9]+ [NO]$");
-  Pattern viewStationsBetweenPattern = Pattern.compile("^ISI2S [A-Za-z]+ [A-Za-z]+$");
-  Pattern viewCompositionPattern = Pattern.compile("^IK [0-9]+$");
+  Pattern viewStationsPattern = Pattern.compile( //
+      "^ISP (?<trackCode>[A-Z0-9]+) (?<order>[NO])$" //
+  );
+  Pattern viewStationsBetweenPattern = Pattern.compile( //
+      "^ISI2S (?<startStation>[A-Za-z]+) (?<endStation>[A-Za-z]+)$" //
+  );
+  Pattern viewCompositionPattern = Pattern.compile( //
+      "^IK (?<compositionCode>[0-9]+)$" //
+  );
+
 
   public static CommandSystem instance = new CommandSystem();
 
@@ -52,16 +61,22 @@ public class CommandSystem {
   }
 
   private boolean identifyCommand(String command) {
-    if (viewTracksPattern.matcher(command).matches()) {
+    Matcher vtMatcher = viewTracksPattern.matcher(command);
+    Matcher vsMatcher = viewStationsPattern.matcher(command);
+    Matcher vsbMatcher = viewStationsBetweenPattern.matcher(command);
+    Matcher vcMatcher = viewCompositionPattern.matcher(command);
+    if (vtMatcher.matches()) {
       Logs.c("Detektirana komanda za pregled pruga.");
+      viewTracks();
       return true;
-    } else if (viewStationsPattern.matcher(command).matches()) {
+    } else if (vsMatcher.matches()) {
       Logs.c("Detektirana komanda za pregled stanica uz prugu.");
+      viewStations(vsMatcher.group("trackCode"), vsMatcher.group("order"));
       return true;
-    } else if (viewStationsBetweenPattern.matcher(command).matches()) {
+    } else if (vsbMatcher.matches()) {
       Logs.c("Detektirana komanda za pregled stanica između dvije stanice.");
       return true;
-    } else if (viewCompositionPattern.matcher(command).matches()) {
+    } else if (vcMatcher.matches()) {
       Logs.c("Detektirana komanda za pregled kompozicija.");
       return true;
     } else {
@@ -91,6 +106,38 @@ public class CommandSystem {
     }, false, true);
     Logs.withPadding(() -> Logs.o("Q - Izlaz iz programa", false), false, true);
     Logs.o("Uzorci dizajna, 2024. - Joshua Lee Fletcher");
+  }
+
+  private void viewTracks() {
+    Logs.header("Pregled pruga", true);
+    for (var track : RailwaySingleton.getInstance().getRailroad().keySet()) {
+      TrainTrack trackObj = RailwaySingleton.getInstance().getTrackById(track);
+      Logs.withPadding(() -> {
+        Logs.o("Oznaka:          " + trackObj.id(), true);
+        Logs.o("Početna stanica: " + trackObj.getStartStation().name(), false);
+        Logs.o("Završna stanica: " + trackObj.getEndStation().name(), false);
+        Logs.o(
+            "Udaljenost (km): " + RailwaySingleton.getInstance().getTotalTrackLength(trackObj.id()),
+            false);
+        Logs.o("Ukupno ima " + RailwaySingleton.getInstance().getRailroad().get(track).size()
+            + " stanica.", false);
+      }, false, true);
+    }
+    Logs.footer(true);
+  }
+
+  private void viewStations(String trackID, String order) {
+    Logs.header("Pregled stanica uz prugu", true);
+    Logs.o("Oznaka pruge: " + trackID);
+    Logs.o("Redoslijed: " + (order.equals("N") ? "Rastući" : "Padajući"));
+    for (var station : RailwaySingleton.getInstance().getRailroad().getStations(trackID)) {
+      Logs.withPadding(() -> {
+        Logs.o("Naziv: " + station.name(), true);
+        Logs.o("Vrsta: " + station.type().toString(), false);
+        Logs.o("Udaljenost: " + station.getDistanceFromStart() + " km", false);
+      }, false, true);
+    }
+    Logs.footer(true);
   }
 
 
