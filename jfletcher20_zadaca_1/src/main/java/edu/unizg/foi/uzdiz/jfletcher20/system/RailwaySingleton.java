@@ -163,6 +163,14 @@ public class RailwaySingleton {
     return getDistanceBetweenStations(currentTrack.id(), currentTrack.getStartStation(), station);
   }
 
+  public double getDistanceFromEnd(Station station) {
+    TrainTrack currentTrack = getTrackOfStation(station);
+    // get the distance from the end station by first calculating how far teh end station is fro mthe start
+    // then calculating how far the current station is from the start
+    // and then reducing the two
+    return getDistanceFromStart(currentTrack.getEndStation()) - getDistanceFromStart(station);
+  }
+
   public double getDistanceBetweenStations(String trackID, Station station1, Station station2) {
     var stations = this.railroad.get(trackID);
     int stationIndex1 = -1, stationIndex2 = -1;

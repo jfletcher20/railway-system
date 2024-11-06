@@ -25,7 +25,7 @@ public class CommandSystem {
   Pattern quitPattern = Pattern.compile("^Q$");
   Pattern viewTracksPattern = Pattern.compile("^IP$");
   Pattern viewStationsPattern = Pattern.compile( //
-      "^ISP (?<trackCode>[A-Z0-9]+) (?<order>[NO])$" //
+      "^ISP (?<trackCode>[A-Za-z0-9]+) (?<order>[NO])$" //
   );
   Pattern viewStationsBetweenPattern = Pattern.compile( //
       "^ISI2S (?<startStation>[A-Za-z]+) (?<endStation>[A-Za-z]+)$" //
@@ -110,35 +110,44 @@ public class CommandSystem {
 
   private void viewTracks() {
     Logs.header("Pregled pruga", true);
+    // should output as table instead of individual lines
+    Logs.o(" Oznaka\t| Početna stanica\t\t| Završna stanica\t\t| Udaljenost (km)", false);
+    Logs.o(" ------\t| ---------------\t\t| ---------------\t\t| ---------------", false);
     for (var track : RailwaySingleton.getInstance().getRailroad().keySet()) {
       TrainTrack trackObj = RailwaySingleton.getInstance().getTrackById(track);
-      Logs.withPadding(() -> {
-        Logs.o("Oznaka:          " + trackObj.id(), true);
-        Logs.o("Početna stanica: " + trackObj.getStartStation().name(), false);
-        Logs.o("Završna stanica: " + trackObj.getEndStation().name(), false);
-        Logs.o(
-            "Udaljenost (km): " + RailwaySingleton.getInstance().getTotalTrackLength(trackObj.id()),
-            false);
-        Logs.o("Ukupno ima " + RailwaySingleton.getInstance().getRailroad().get(track).size()
-            + " stanica.", false);
-      }, false, true);
+      var t1 = trackObj.getStartStation().name();
+      var t2 = trackObj.getEndStation().name();
+      String t1Padding = t1.length() > 13 ? t1.length() > 18 ? "\t" : "\t\t" : "\t\t\t";
+      String t2Padding = t2.length() > 13 ? t2.length() > 18 ? "\t" : "\t\t" : "\t\t\t";
+      Logs.o(" " + trackObj.id() + "\t| " + t1 + t1Padding + "| " + t2 + t2Padding + "| "
+          + RailwaySingleton.getInstance().getTotalTrackLength(trackObj.id()), false);
     }
-    Logs.footer(true);
+
   }
 
   private void viewStations(String trackID, String order) {
     Logs.header("Pregled stanica uz prugu", true);
+    var data = RailwaySingleton.getInstance().getRailroad().get(trackID);
+    if (data == null) {
+      Logs.e("Nepostojeća pruga s oznakom: " + trackID);
+      Logs.footer(true);
+      return;
+    }
     Logs.o("Oznaka pruge: " + trackID);
     Logs.o("Redoslijed: " + (order.equals("N") ? "Rastući" : "Padajući"));
-    var data = RailwaySingleton.getInstance().getRailroad().get(trackID);
+    Logs.o(" Naziv\t\t\t| Vrsta\t\t| Udaljenost od početne stanice (km)", false);
+    Logs.o(" -----\t\t\t| -----\t\t| ----------------------------", false);
     if (order.equals("O"))
       data = data.reversed();
     for (var station : data) {
-      Logs.withPadding(() -> {
-        Logs.o("Naziv: " + station.name(), true);
-        Logs.o("Vrsta: " + station.type().name(), false);
-        Logs.o("Udaljenost: " + station.getDistanceFromStart() + " km", false);
-      }, false, true);
+      String stationName = station.name();
+      String stationPadding =
+          stationName.length() > 8 ? stationName.length() > 18 ? "\t" : "\t\t" : "\t\t\t";
+      String stationType = station.type().toString();
+      String stationTypePadding =
+          stationType.length() > 8 ? stationType.length() > 18 ? "\t" : "\t" : "\t";
+      Logs.o(" " + stationName + stationPadding + "| " + station.type() + stationTypePadding + "| "
+          + (order.equals("O") ? station.getDistanceFromEnd() : station.getDistanceFromStart()), false);
     }
     Logs.footer(true);
   }

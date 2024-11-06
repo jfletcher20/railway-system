@@ -1,16 +1,15 @@
 package edu.unizg.foi.uzdiz.jfletcher20.system;
 
-import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IBuilder;
-
 public class SystemInitializationDirector {
-  private IBuilder builder;
-  public SystemInitializationDirector(IBuilder builder) {
+  private RailwaySingletonBuilder builder;
+
+  public SystemInitializationDirector(RailwaySingletonBuilder builder) {
     this.builder = builder;
   }
-  
+
   public Object construct() {
-      this.builder.buildPart();
-      return this.builder.getResult();
+    this.builder.loadFiles().initCommandSystem().runCommandSystem();
+    return this.builder.getResult();
   }
 
 }

@@ -19,4 +19,17 @@ public enum StationType {
         throw new IllegalArgumentException("Nepoznat tip stanice: " + value);
     }
   }
+  
+  @Override
+  public String toString() {
+    switch (this) {
+      case STATION:
+        return "kolodvor";
+      case HALT:
+        return "stajalište";
+      default:
+        throw new IllegalArgumentException("Nepoznat tip stanice: " + this);
+    }
+  }
+  
 }

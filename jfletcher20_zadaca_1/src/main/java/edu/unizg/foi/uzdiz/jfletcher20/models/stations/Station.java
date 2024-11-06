@@ -63,5 +63,9 @@ public record Station(String name, // Stanica
   public double getDistanceFromStart() {
     return RailwaySingleton.getInstance().getDistanceFromStart(this);
   }
+  
+  public double getDistanceFromEnd() {
+    return RailwaySingleton.getInstance().getDistanceFromEnd(this);
+  }
 
 }
