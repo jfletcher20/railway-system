@@ -174,8 +174,9 @@ public class RailwaySingleton {
     }
     List<TrainTrack> tracks = this.tracks.stream().filter(t -> t.id().equals(trackID)).toList();
     tracks = tracks.subList(stationIndex1, stationIndex2 + 1);
-    Logs.i("getDistanceBetweenStations: " + tracks.size() + " tracks between [" + stationIndex1
-        + "]::" + station1.name() + " and [" + stationIndex2 + "]::" + station2.name());
+    Logs.i("RailwaySingleton getDistanceBetweenStations: " + tracks.size() + " tracks between ["
+        + stationIndex1 + "]::" + station1.name() + " and [" + stationIndex2 + "]::"
+        + station2.name());
     return tracks.stream().mapToDouble(TrainTrack::trackLength).sum();
   }
 

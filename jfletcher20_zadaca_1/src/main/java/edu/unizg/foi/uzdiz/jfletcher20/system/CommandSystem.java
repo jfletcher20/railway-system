@@ -130,7 +130,10 @@ public class CommandSystem {
     Logs.header("Pregled stanica uz prugu", true);
     Logs.o("Oznaka pruge: " + trackID);
     Logs.o("Redoslijed: " + (order.equals("N") ? "Rastući" : "Padajući"));
-    for (var station : RailwaySingleton.getInstance().getRailroad().get(trackID)) {
+    var data = RailwaySingleton.getInstance().getRailroad().get(trackID);
+    if (order.equals("O"))
+      data = data.reversed();
+    for (var station : data) {
       Logs.withPadding(() -> {
         Logs.o("Naziv: " + station.name(), true);
         Logs.o("Vrsta: " + station.type().name(), false);

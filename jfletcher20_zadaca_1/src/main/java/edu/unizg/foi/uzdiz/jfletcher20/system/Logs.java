@@ -102,7 +102,7 @@ public abstract class Logs {
 
     static private volatile LogsSingleton instance = new Logs.LogsSingleton();
     private int errorCount = 0;
-    public boolean logWarnings = false, logInfo = true;
+    public boolean logWarnings = false, logInfo = false;
 
     private LogsSingleton() {}
 
