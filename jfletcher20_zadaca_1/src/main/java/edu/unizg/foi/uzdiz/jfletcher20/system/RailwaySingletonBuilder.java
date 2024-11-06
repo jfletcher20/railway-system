@@ -13,8 +13,12 @@ public class RailwaySingletonBuilder implements IBuilder {
     if (RailwaySingleton.getInstance().getInitArgs() != null) {
       var initArgs = RailwaySingleton.getInstance().getInitArgs();
       FilesUtil.loadFiles(initArgs);
+      CommandSystem commandSystem = CommandSystem.getInstance();
+      RailwaySingleton.getInstance().setCommandSystem(commandSystem);
+      RailwaySingleton.getInstance().printStats();
+      RailwaySingleton.getInstance().getCommandSystem().startCommandSystem();
     } else {
-      System.out.println("Error: Singleton nema argumenata. Je li program pravilno pokrenut?");
+      Logs.e("RailwaySingletonBuilder buildPart: RailwaySingleton instance does not have initArgs set!");
     }
   }
 

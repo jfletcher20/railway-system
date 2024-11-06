@@ -1,4 +1,4 @@
-package edu.unizg.foi.uzdiz.jfletcher20.errors;
+package edu.unizg.foi.uzdiz.jfletcher20.models;
 
 public class IncorrectColumnCountException extends Exception {
   private static final long serialVersionUID = -5007696035554692545L;

@@ -1,4 +1,4 @@
-package edu.unizg.foi.uzdiz.jfletcher20.wagons;
+package edu.unizg.foi.uzdiz.jfletcher20.models.wagons;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.WagonType;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ICreator;

@@ -1,4 +1,4 @@
-package edu.unizg.foi.uzdiz.jfletcher20.tracks;
+package edu.unizg.foi.uzdiz.jfletcher20.models.tracks;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackCategory;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackStatus;

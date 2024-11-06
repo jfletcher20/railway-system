@@ -1,4 +1,4 @@
-package edu.unizg.foi.uzdiz.jfletcher20.compositions;
+package edu.unizg.foi.uzdiz.jfletcher20.models.compositions;
 
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ICreator;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;

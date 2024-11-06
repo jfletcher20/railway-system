@@ -6,15 +6,15 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-import edu.unizg.foi.uzdiz.jfletcher20.compositions.TrainCompositionCreator;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.FileType;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ICreator;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
-import edu.unizg.foi.uzdiz.jfletcher20.stations.StationCreator;
+import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainCompositionCreator;
+import edu.unizg.foi.uzdiz.jfletcher20.models.stations.StationCreator;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackCreator;
+import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.WagonCreator;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
-import edu.unizg.foi.uzdiz.jfletcher20.tracks.TrainTrackCreator;
-import edu.unizg.foi.uzdiz.jfletcher20.wagons.WagonCreator;
 
 /*
  * Example run commands:

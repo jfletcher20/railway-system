@@ -1,4 +1,4 @@
-package edu.unizg.foi.uzdiz.jfletcher20.stations;
+package edu.unizg.foi.uzdiz.jfletcher20.models.stations;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.StationActivity;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.StationType;

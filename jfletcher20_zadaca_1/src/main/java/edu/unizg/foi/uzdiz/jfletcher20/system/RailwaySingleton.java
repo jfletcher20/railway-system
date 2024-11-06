@@ -4,15 +4,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import edu.unizg.foi.uzdiz.jfletcher20.compositions.TrainComposition;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
-import edu.unizg.foi.uzdiz.jfletcher20.stations.Station;
-import edu.unizg.foi.uzdiz.jfletcher20.tracks.TrainTrack;
-import edu.unizg.foi.uzdiz.jfletcher20.wagons.Wagon;
+import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposition;
+import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
+import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.Wagon;
 
 public class RailwaySingleton {
 
   static private volatile RailwaySingleton instance = new RailwaySingleton();
+  private CommandSystem commandSystem = null;
 
   private List<Station> stations = new ArrayList<>();
   private List<Wagon> wagons = new ArrayList<>();
@@ -22,7 +23,7 @@ public class RailwaySingleton {
   private String[] initArgs = null;
 
   private RailwaySingleton() {
-    System.out.println("Singleton created");
+    Logs.i("RailwaySingleton instance created. Values are not initialized.");
   }
 
   public static RailwaySingleton getInstance() {
@@ -31,10 +32,20 @@ public class RailwaySingleton {
 
   public void setInitArgs(String[] args) {
     this.initArgs = args;
+    Logs.i("RailwaySingleton initArgs set.");
   }
 
   public String[] getInitArgs() {
     return this.initArgs;
+  }
+
+  public void setCommandSystem(CommandSystem commandSystem) {
+    this.commandSystem = commandSystem;
+    Logs.i("RailwaySingleton CommandSystem initialized");
+  }
+
+  public CommandSystem getCommandSystem() {
+    return this.commandSystem;
   }
 
   public IProduct addProduct(IProduct product) {
@@ -139,11 +150,13 @@ public class RailwaySingleton {
   }
 
   public void printStats() {
-    System.out.println("Stations: " + this.stations.size());
-    System.out.println("Wagons: " + this.wagons.size());
-    System.out.println("Compositions: " + this.compositions.size() + " ("
-        + this.getCompositionsList().size() + ")");
-    System.out.println("Tracks: " + this.tracks.size());
+    Logs.header("JLF Željeznica: Statistika", true);
+    Logs.o("Stanice: " + this.stations.size());
+    Logs.o("Vozila: " + this.wagons.size());
+    Logs.o("Kompozicije: " + this.compositions.size() + " (" + this.getCompositionsList().size()
+        + ")");
+    Logs.o("Pruge: " + this.tracks.size());
+    Logs.footer(true);
   }
 
 }
