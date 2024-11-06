@@ -1,8 +1,10 @@
 package edu.unizg.foi.uzdiz.jfletcher20.system;
 
+import java.lang.annotation.Repeatable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
+import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 
 /*
  * Nakon što se učitaju sve potrebne datoteke potrebno je pripremiti program za izvršavanje komandi
@@ -54,7 +56,7 @@ public class CommandSystem {
         Logs.c("Prekidanje programa...");
         break;
       }
-//      Logs.c("Detektirana komanda " + command);
+      // Logs.c("Detektirana komanda " + command);
       identifyCommand(command);
     }
     Logs.footer(true);
@@ -75,9 +77,15 @@ public class CommandSystem {
       return true;
     } else if (vsbMatcher.matches()) {
       Logs.c("Detektirana komanda za pregled stanica između dvije stanice.");
+      viewStationsBetween(vsbMatcher.group("startStation"), vsbMatcher.group("endStation"));
       return true;
     } else if (vcMatcher.matches()) {
       Logs.c("Detektirana komanda za pregled kompozicija.");
+      try {
+        viewComposition(ParsingUtil.i(vcMatcher.group("compositionCode")));
+      } catch (NumberFormatException e) {
+        Logs.e("Neispravna oznaka kompozicije: " + vcMatcher.group("compositionCode"));
+      }
       return true;
     } else {
       Logs.c("Nepoznata komanda. Dostupne komande su:");
@@ -98,11 +106,11 @@ public class CommandSystem {
       Logs.o("\t- Pregled stanica uz prugu u rastućem ili padajućem redoslijedu", false);
     }, false, true);
     Logs.withPadding(() -> {
-      Logs.o("ISI2S [station1] [station2]", false);
+      Logs.o("ISI2S [nazivStanice1] [nazivStanice2]", false);
       Logs.o("\t- Pregled stanica između dvije stanice", false);
     }, false, true);
     Logs.withPadding(() -> {
-      Logs.o("IK [compositionID]", false);
+      Logs.o("IK [oznakaKompozicije]", false);
       Logs.o("\t- Pregled kompozicija", false);
     }, false, true);
     Logs.withPadding(() -> Logs.o("Q - Izlaz iz programa", false), false, true);
@@ -111,7 +119,6 @@ public class CommandSystem {
 
   private void viewTracks() {
     Logs.header("Pregled pruga", true);
-    // should output as table instead of individual lines
     Logs.o(" Oznaka\t| Početna stanica\t\t| Završna stanica\t\t| Udaljenost (km)", false);
     Logs.o(" ------\t| ---------------\t\t| ---------------\t\t| ---------------", false);
     for (var track : RailwaySingleton.getInstance().getRailroad().keySet()) {
@@ -123,7 +130,6 @@ public class CommandSystem {
       Logs.o(" " + trackObj.id() + "\t| " + t1 + t1Padding + "| " + t2 + t2Padding + "| "
           + RailwaySingleton.getInstance().getTotalTrackLength(trackObj.id()), false);
     }
-
   }
 
   private void viewStations(String trackID, String order) {
@@ -143,16 +149,66 @@ public class CommandSystem {
     for (var station : data) {
       String stationName = station.name();
       String stationPadding =
-          stationName.length() > 8 ? stationName.length() > 18 ? "\t" : "\t\t" : "\t\t\t";
+          stationName.length() > 8 ? stationName.length() > 17 ? "\t" : "\t\t" : "\t\t\t";
       String stationType = station.type().toString();
       String stationTypePadding =
-          stationType.length() > 8 ? stationType.length() > 18 ? "\t" : "\t" : "\t";
-      Logs.o(" " + stationName + stationPadding + "| " + station.type() + stationTypePadding + "| "
-          + (order.equals("O") ? station.getDistanceFromEnd() : station.getDistanceFromStart()), false);
+          stationType.length() > 8 ? stationType.length() > 17 ? "\t" : "\t" : "\t";
+      Logs.o(
+          " " + stationName + stationPadding + "| " + station.type() + stationTypePadding + "| "
+              + (order.equals("O") ? station.getDistanceFromEnd() : station.getDistanceFromStart()),
+          false);
     }
     Logs.footer(true);
   }
 
+  private void viewStationsBetween(String startStation, String endStation) {
+    Logs.header("Pregled stanica između " + startStation + " - " + endStation, true);
+    var data = RailwaySingleton.getInstance().getRailroad();
+    for (var track : data.keySet()) {
+      var stations = data.get(track);
+      int start = -1, end = -1;
+      for (int i = 0; i < stations.size(); i++) {
+        if (stations.get(i).name().equals(startStation))
+          start = i;
+        if (stations.get(i).name().equals(endStation))
+          end = i;
+      }
+      if (start != -1 && end != -1) {
+        Logs.i("Pronađene stanice na pruzi " + track + ": " + startStation + " i " + endStation);
+        Logs.i("Između stanica " + startStation + " i " + endStation + " nalazi se " + (end - start)
+            + " stanica.");
+        break;
+      }
+    }
+
+    Logs.footer(true);
+  }
+
+  private void viewComposition(int trainId) {
+    Logs.header("Pregled kompozicija", true);
+    var data = RailwaySingleton.getInstance().getCompositionsInTrain(trainId);
+    if (data == null || data.isEmpty()) {
+      Logs.e("Nepostojeća kompozicija s oznakom: " + trainId);
+      Logs.footer(true);
+      return;
+    }
+    int maxDescLength =
+        data.stream().mapToInt(c -> c.getWagon().description().length()).max().getAsInt();
+    Logs.o("Oznaka\t| Uloga\t| Opis" + " ".repeat(maxDescLength - "Opis".length())
+        + " | Godina\t| Namjena\t| Vrsta pogona\t| Maks. brzina", false);
+    Logs.o("------\t| -----\t| ----" + " ".repeat(maxDescLength - "----".length())
+        + " | ------\t| -------\t| ------------\t| ------------", false);
+    for (var composition : data) {
+      String purpose = composition.getWagon().purpose().toString();
+      String purposePadding = purpose.length() > 6 ? "\t" : "\t\t";
+      Logs.o(" " + composition.getWagon().id() + "\t| " + composition.role() + "\t| "
+          + composition.getWagon().description()
+          + " ".repeat(maxDescLength - composition.getWagon().description().length()) + " | "
+          + composition.getWagon().yearOfProduction() + "\t| " + purpose + purposePadding + "| " + composition.getWagon().driveType() + "\t\t| "
+          + composition.getWagon().maxSpeed(), false);
+    }
+    Logs.footer(true);
+  }
 
 }
 

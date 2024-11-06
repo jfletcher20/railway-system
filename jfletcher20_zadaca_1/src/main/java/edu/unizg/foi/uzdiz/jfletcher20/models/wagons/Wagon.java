@@ -14,8 +14,8 @@ import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
  * dizel, baterije, električna struja), **maksimalna snaga** (-1 (nije poznato), 0,0-10 MW),
  * **maksimalna brzina vožnje** (1-200 km/h), **godina proizvodnje**, **proizvođač**, **broj
  * mjesta** (sjedećih, stajaćih, kreveta, bicikala, automobila), **nosivost** (t), **zapremina**
- * (m3), **status** (ispravno, u kvaru -- "I" ili "K").
- * dodatno trebaju oznaka (string), opis (string), površina (double)
+ * (m3), **status** (ispravno, u kvaru -- "I" ili "K"). dodatno trebaju oznaka (string), opis
+ * (string), površina (double)
  */
 
 /**
@@ -36,8 +36,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
  * @param volume Volume
  * @param status Status
  */
-public record Wagon(
-    String id, // oznaka
+public record Wagon(String id, // oznaka
     String description, // opis
     WagonType purpose, // namjena
     /* TransportType */ String transportType, // vrsta prijevoza
@@ -85,26 +84,26 @@ public record Wagon(
   }
 
   /**
-   * Method to check if the wagon is powered
+   * Method to check if the wagon is powered for traction
    * 
    * @return boolean
    */
   public boolean getIsPowered() {
-    return this.driveType != /* DriveType.NONE */ "N";
+    return purpose == WagonType.SELF_POWERED_FOR_TRACTION;
   }
-  
+
   /**
    * Method to manage the wagon's display
    */
   @Override
-   public String toString() {
-     return "Wagon{" + "id='" + id + '\'' + ", description='" + description + '\'' + ", purpose="
-         + purpose + ", transportType='" + transportType + '\'' + ", driveType='" + driveType + '\''
-         + ", maxPower=" + maxPower + ", maxSpeed=" + maxSpeed + ", yearOfProduction="
-         + yearOfProduction + ", manufacturer='" + manufacturer + '\'' + ", numberOfSeats="
-         + numberOfSeats + ", numberOfStandingPlaces=" + numberOfStandingPlaces
-         + ", numberOfBicycles=" + numberOfBicycles + ", numberOfBeds=" + numberOfBeds
-         + ", numberOfCars=" + numberOfCars + ", capacity=" + capacity + ", area=" + area
-         + ", volume=" + volume + ", status=" + status + '}';
+  public String toString() {
+    return "Wagon{" + "id='" + id + '\'' + ", description='" + description + '\'' + ", purpose="
+        + purpose + ", transportType='" + transportType + '\'' + ", driveType='" + driveType + '\''
+        + ", maxPower=" + maxPower + ", maxSpeed=" + maxSpeed + ", yearOfProduction="
+        + yearOfProduction + ", manufacturer='" + manufacturer + '\'' + ", numberOfSeats="
+        + numberOfSeats + ", numberOfStandingPlaces=" + numberOfStandingPlaces
+        + ", numberOfBicycles=" + numberOfBicycles + ", numberOfBeds=" + numberOfBeds
+        + ", numberOfCars=" + numberOfCars + ", capacity=" + capacity + ", area=" + area
+        + ", volume=" + volume + ", status=" + status + '}';
   }
 }

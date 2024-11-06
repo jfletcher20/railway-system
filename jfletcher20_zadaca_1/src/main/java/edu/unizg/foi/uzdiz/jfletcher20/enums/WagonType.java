@@ -30,4 +30,18 @@ public enum WagonType {
         throw new IllegalArgumentException("Nepoznat tip vagona: " + value);
     }
   }
+  
+  @Override
+  public String toString() {
+    switch (this) {
+      case SELF_POWERED:
+        return "+PSVP";
+      case SELF_POWERED_FOR_TRACTION:
+        return "+PSVPVK";
+      case UNPOWERED:
+        return "-PSBP";
+      default:
+        throw new IllegalArgumentException("Nepoznat tip vagona: " + this);
+    }
+  }
 }

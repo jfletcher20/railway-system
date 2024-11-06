@@ -17,7 +17,8 @@ public class RailwaySingleton {
 
   private List<TrainTrack> tracks = new ArrayList<>();
   private List<Wagon> wagons = new ArrayList<>();
-  private Map<Integer, List<TrainComposition>> compositions = new HashMap<>();
+  private List<TrainComposition> compositions = new ArrayList<>();
+  private Map<Integer, List<Wagon>> trains = new HashMap<>();
   private Map<String, List<Station>> railroad = new HashMap<>();
 
   private String[] initArgs = null;
@@ -98,16 +99,24 @@ public class RailwaySingleton {
     return this.wagons;
   }
 
-  public Map<Integer, List<TrainComposition>> getCompositions() {
+  public Wagon getWagon(String wagonId) {
+    return this.wagons.stream().filter(w -> w.id().equals(wagonId)).findFirst().orElse(null);
+  }
+
+  public Map<Integer, List<Wagon>> getTrains() {
+    return this.trains;
+  }
+
+  public List<TrainComposition> getCompositions() {
     return this.compositions;
   }
 
-  public List<TrainComposition> getCompositionsList() {
-    return getCompositions().values().stream().flatMap(List::stream).toList();
+  public List<Wagon> getWagonsInTrain(int compositionID) {
+    return this.trains.get(compositionID);
   }
 
-  public List<TrainComposition> getCompositionsListByCompositionID(int compositionID) {
-    return getCompositions().get(compositionID);
+  public List<TrainComposition> getCompositionsInTrain(int compositionId) {
+    return this.compositions.stream().filter(c -> c.trainId() == compositionId).toList();
   }
 
   public List<TrainTrack> getTracks() {
@@ -165,7 +174,8 @@ public class RailwaySingleton {
 
   public double getDistanceFromEnd(Station station) {
     TrainTrack currentTrack = getTrackOfStation(station);
-    // get the distance from the end station by first calculating how far teh end station is fro mthe start
+    // get the distance from the end station by first calculating how far teh end station is fro
+    // mthe start
     // then calculating how far the current station is from the start
     // and then reducing the two
     return getDistanceFromStart(currentTrack.getEndStation()) - getDistanceFromStart(station);
@@ -201,14 +211,64 @@ public class RailwaySingleton {
 
   public void addWagon(Wagon wagon) {
     this.wagons.add(wagon);
+    for (var composition : this.compositions) {
+      if (composition.wagonId().equals(wagon.id())) {
+        if (this.trains.containsKey(composition.trainId())) {
+          this.trains.get(composition.trainId()).add(wagon);
+        } else {
+          this.trains.put(composition.trainId(), new ArrayList<>());
+          this.trains.get(composition.trainId()).add(wagon);
+        }
+      }
+    }
   }
 
   public void addComposition(TrainComposition composition) {
-    if (this.compositions.containsKey(composition.ID())) {
-      this.compositions.get(composition.ID()).add(composition);
+    this.compositions.add(composition);
+    if (this.trains.containsKey(composition.trainId())) {
+      Wagon wagon = composition.getWagon();
+      if (wagon != null)
+        this.trains.get(composition.trainId()).add(wagon);
     } else {
-      this.compositions.put(composition.ID(), new ArrayList<TrainComposition>());
-      this.compositions.get(composition.ID()).add(composition);
+      this.trains.put(composition.trainId(), new ArrayList<>());
+      Wagon wagon = composition.getWagon();
+      if (wagon != null)
+        this.trains.get(composition.trainId()).add(wagon);
+    }
+  }
+
+  public void removeEmptyCompositions() {
+    for (var composition : this.compositions) {
+      if (!this.trains.containsKey(composition.trainId())) {
+        Logs.e("Kompozicija " + composition.trainId() + " nema prijevozna sredstva.");
+        this.compositions.remove(composition);
+        continue;
+      }
+    }
+  }
+
+  public void verifyCompositions() {
+    removeEmptyCompositions();
+    for (TrainComposition composition : this.compositions) {
+      if (this.trains.get(composition.trainId()).size() < 2) {
+        Logs.e("Kompozicija " + composition.trainId() + " nema dovoljno prijevoznih sredstava.");
+        this.compositions.remove(composition);
+        continue;
+      }
+      if (composition.getTrainWagonsWithDriveRole() == null)
+        continue;
+      boolean hasLocomotive = false;
+      for (var wagon : this.trains.get(composition.trainId())) {
+        if (wagon.getIsPowered()) {
+          hasLocomotive = true;
+          break;
+        }
+      }
+      if (!hasLocomotive) {
+        Logs.e("Kompozicija " + composition.trainId() + " nema lokomotivu te se uklanja.");
+        this.compositions.remove(composition);
+        continue;
+      }
     }
   }
 
@@ -230,7 +290,8 @@ public class RailwaySingleton {
   }
 
   public void removeComposition(TrainComposition composition) {
-    this.compositions.get(composition.ID()).removeIf(c -> c.equals(composition));
+    this.compositions.remove(composition);
+    this.trains.remove(composition.trainId());
   }
 
   public void removeTrack(TrainTrack track) {
@@ -271,8 +332,7 @@ public class RailwaySingleton {
     Logs.header("JLF Željeznica: Statistika", true);
     Logs.o("Stanice: " + this.getStations().size());
     Logs.o("Vozila: " + this.wagons.size());
-    Logs.o("Kompozicije: " + this.compositions.size() + " (" + this.getCompositionsList().size()
-        + ")");
+    Logs.o("Kompozicije: " + this.trains.size() + " (" + this.getCompositions().size() + ")");
     Logs.o("Pruge: " + this.tracks.size());
     Logs.footer(true);
   }

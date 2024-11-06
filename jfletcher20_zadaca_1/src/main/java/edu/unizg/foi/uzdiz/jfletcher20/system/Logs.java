@@ -184,8 +184,6 @@ public abstract class Logs {
       System.out.println(prefix + decoration + suffix);
     }
 
-
-
     public void logPadding() {
       System.out.println("");
     }
