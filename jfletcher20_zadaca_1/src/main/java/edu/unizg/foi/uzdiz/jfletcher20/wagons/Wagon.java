@@ -1,7 +1,7 @@
 package edu.unizg.foi.uzdiz.jfletcher20.wagons;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.WagonType;
-import edu.unizg.foi.uzdiz.jfletcher20.utils.IProduct;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 
 /*
  * Postoje sljedeći atributi prijevoznih sredstava: **namjena** (prijevozno sredstvo s vlastitim

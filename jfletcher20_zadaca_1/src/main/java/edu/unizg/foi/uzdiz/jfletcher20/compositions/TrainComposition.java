@@ -1,6 +1,6 @@
 package edu.unizg.foi.uzdiz.jfletcher20.compositions;
 
-import edu.unizg.foi.uzdiz.jfletcher20.utils.IProduct;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 
 public record TrainComposition(int ID, // Oznaka
     String wagonID, // Oznaka prijevoznog sredstva

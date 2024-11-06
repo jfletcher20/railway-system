@@ -2,8 +2,8 @@ package edu.unizg.foi.uzdiz.jfletcher20.stations;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.StationActivity;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.StationType;
-import edu.unizg.foi.uzdiz.jfletcher20.utils.ICreator;
-import edu.unizg.foi.uzdiz.jfletcher20.utils.Logs;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ICreator;
+import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 
 public class StationCreator implements ICreator {

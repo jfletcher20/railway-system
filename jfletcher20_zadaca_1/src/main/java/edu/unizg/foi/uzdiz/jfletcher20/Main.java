@@ -1,7 +1,8 @@
 package edu.unizg.foi.uzdiz.jfletcher20;
 
-import edu.unizg.foi.uzdiz.jfletcher20.utils.RailwaySingletonBuilder;
-import edu.unizg.foi.uzdiz.jfletcher20.utils.SystemInitializationDirector;
+import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
+import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingletonBuilder;
+import edu.unizg.foi.uzdiz.jfletcher20.system.SystemInitializationDirector;
 
 /*
  * Example run commands:

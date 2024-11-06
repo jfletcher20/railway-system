@@ -6,10 +6,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-import edu.unizg.foi.uzdiz.jfletcher20.RailwaySingleton;
 import edu.unizg.foi.uzdiz.jfletcher20.compositions.TrainCompositionCreator;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.FileType;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ICreator;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.stations.StationCreator;
+import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
+import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 import edu.unizg.foi.uzdiz.jfletcher20.tracks.TrainTrackCreator;
 import edu.unizg.foi.uzdiz.jfletcher20.wagons.WagonCreator;
 
@@ -63,9 +66,9 @@ import edu.unizg.foi.uzdiz.jfletcher20.wagons.WagonCreator;
  */
 
 /**
- * FileLoader class
+ * FilesUtil class
  */
-public abstract class FileLoader {
+public abstract class FilesUtil {
 
   private static Pattern pattern = Pattern.compile(
       "^(--zs|--zps|--zk)\\s\\w+.csv (--zs|--zps|--zk)\\s\\w+.csv (--zs|--zps|--zk)\\s\\w+.csv$");
@@ -105,7 +108,7 @@ public abstract class FileLoader {
   }
 
   public static void loadFiles(String[] args) {
-    LogsSingleton.getInstance().logInfo("Učitavanje datoteka...");
+    Logs.i("Učitavanje datoteka...");
     if (!checkArgs(args)) {
       Logs.e("Neispravni argumenti za pokretanje programa.");
       return;

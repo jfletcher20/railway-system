@@ -2,7 +2,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.stations;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.StationActivity;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.StationType;
-import edu.unizg.foi.uzdiz.jfletcher20.utils.IProduct;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 
 /*
  * example CSV file data: --zs [has 14 columns] Stanica;Oznaka pruge;Vrsta stanice;Status

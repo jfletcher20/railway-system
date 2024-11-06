@@ -1,8 +1,8 @@
 package edu.unizg.foi.uzdiz.jfletcher20.wagons;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.WagonType;
-import edu.unizg.foi.uzdiz.jfletcher20.utils.ICreator;
-import edu.unizg.foi.uzdiz.jfletcher20.utils.Logs;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ICreator;
+import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 
 /**

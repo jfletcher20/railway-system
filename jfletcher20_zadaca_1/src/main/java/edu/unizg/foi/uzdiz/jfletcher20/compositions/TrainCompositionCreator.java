@@ -1,8 +1,8 @@
 package edu.unizg.foi.uzdiz.jfletcher20.compositions;
 
-import edu.unizg.foi.uzdiz.jfletcher20.utils.ICreator;
-import edu.unizg.foi.uzdiz.jfletcher20.utils.IProduct;
-import edu.unizg.foi.uzdiz.jfletcher20.utils.Logs;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ICreator;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
+import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 
 public class TrainCompositionCreator implements ICreator {
 

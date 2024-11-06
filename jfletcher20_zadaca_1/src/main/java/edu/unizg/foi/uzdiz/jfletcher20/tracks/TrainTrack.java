@@ -2,7 +2,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.tracks;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackCategory;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackStatus;
-import edu.unizg.foi.uzdiz.jfletcher20.utils.IProduct;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 
 // Željeznička pruga između dviju željezničkih stanica ima određene osobine: oznaka, kategorija
 // (lokalna, regionalna, međunarodna), način prijevoza (klasično (ugljen, dizel, baterije) ili

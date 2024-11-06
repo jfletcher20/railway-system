@@ -1,4 +1,6 @@
-package edu.unizg.foi.uzdiz.jfletcher20.utils;
+package edu.unizg.foi.uzdiz.jfletcher20.system;
+
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IBuilder;
 
 public class SystemInitializationDirector {
   private IBuilder builder;

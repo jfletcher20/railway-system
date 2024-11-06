@@ -1,13 +1,13 @@
-package edu.unizg.foi.uzdiz.jfletcher20;
+package edu.unizg.foi.uzdiz.jfletcher20.system;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import edu.unizg.foi.uzdiz.jfletcher20.compositions.TrainComposition;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.tracks.TrainTrack;
-import edu.unizg.foi.uzdiz.jfletcher20.utils.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.wagons.Wagon;
 
 public class RailwaySingleton {
