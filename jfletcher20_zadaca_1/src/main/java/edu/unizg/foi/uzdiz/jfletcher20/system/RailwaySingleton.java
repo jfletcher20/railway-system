@@ -128,43 +128,55 @@ public class RailwaySingleton {
 
   public Station getStartStationFromIndexOfStation(String trackID, String stationName) {
     var stationsOnTrack = this.railroad.get(trackID);
-    return stationsOnTrack.stream()
-        .filter(s -> s.name().equals(stationName)).findFirst().orElse(null);
+    return stationsOnTrack.stream().filter(s -> s.name().equals(stationName)).findFirst()
+        .orElse(null);
   }
 
   public Station getEndStationFromIndexOfStation(String trackID, String stationName) {
     var stationsOnTrack = this.railroad.get(trackID);
-    return stationsOnTrack.stream()
-        .filter(s -> s.name().equals(stationName)).findFirst().orElse(null);
+    return stationsOnTrack.stream().filter(s -> s.name().equals(stationName)).findFirst()
+        .orElse(null);
   }
-  
+
   public List<Station> getStationsOnTrack(String trackID) {
     return this.railroad.get(trackID);
   }
 
-  public double getDistanceBetweenStations(String trackID, Station station1, Station station2) {
-    List<Station> railroadStations = this.railroad.get(trackID);
-    int index1 = railroadStations.indexOf(station1);
-    int index2 = railroadStations.indexOf(station2) + 1;
-    
-    if (index1 < index2) {
-      int temp = index1;
-      index1 = index2 - 1;
-      index2 = temp + 1;
+  public TrainTrack getTrackOfStation(Station station) {
+    for (String trackID : this.railroad.keySet()) {
+      var stations = this.railroad.get(trackID);
+      int stationIndex = -1;
+      for (int i = 0; i < stations.size(); i++) {
+        if (stations.get(i) == station) {
+          stationIndex = i;
+          break;
+        }
+      }
+      if (stationIndex != -1)
+        return this.tracks.stream().filter(t -> t.id().equals(trackID)).toList().get(stationIndex);
     }
+    return null;
+  }
 
-    // stations between (and including) station1 and station2
-    // var stationsBetween = railroadStations.subList(index1, index2);
-    // var stationObjects = this.stations.stream().filter(s ->
-    // stationsBetween.contains(s.name())).toList();
+  public double getDistanceFromStart(Station station) {
+    TrainTrack currentTrack = getTrackOfStation(station);
+    return getDistanceBetweenStations(currentTrack.id(), currentTrack.getStartStation(), station);
+  }
 
-    // get all tracks with that ID
-    var trackObjects = this.tracks.stream().filter(t -> t.id().equals(trackID)).toList();
-    trackObjects = trackObjects.subList(index1, index2);
-    double sum = 0;
-    for (TrainTrack track : trackObjects)
-      sum += track.trackLength();
-    return sum;
+  public double getDistanceBetweenStations(String trackID, Station station1, Station station2) {
+    var stations = this.railroad.get(trackID);
+    int stationIndex1 = -1, stationIndex2 = -1;
+    for (int i = 0; i < stations.size(); i++) {
+      if (stations.get(i) == station1)
+        stationIndex1 = i;
+      if (stations.get(i) == station2)
+        stationIndex2 = i;
+    }
+    List<TrainTrack> tracks = this.tracks.stream().filter(t -> t.id().equals(trackID)).toList();
+    tracks = tracks.subList(stationIndex1, stationIndex2 + 1);
+    Logs.i("getDistanceBetweenStations: " + tracks.size() + " tracks between [" + stationIndex1
+        + "]::" + station1.name() + " and [" + stationIndex2 + "]::" + station2.name());
+    return tracks.stream().mapToDouble(TrainTrack::trackLength).sum();
   }
 
   public double getTotalTrackLength(String trackID) {
@@ -174,9 +186,9 @@ public class RailwaySingleton {
     return sum;
   }
 
-//  public void addStation(Station station) {
-//    this.railroad.put(station.name(), new ArrayList<>());
-//  }
+  // public void addStation(Station station) {
+  // this.railroad.put(station.name(), new ArrayList<>());
+  // }
 
   public void addWagon(Wagon wagon) {
     this.wagons.add(wagon);

@@ -3,6 +3,8 @@ package edu.unizg.foi.uzdiz.jfletcher20.models.stations;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.StationActivity;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.StationType;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
+import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 
 /*
  * example CSV file data: --zs [has 14 columns] Stanica;Oznaka pruge;Vrsta stanice;Status
@@ -52,6 +54,14 @@ public record Station(String name, // Stanica
       throw new IllegalArgumentException("Nepoznato ime stanice");
     if (type == null)
       throw new IllegalArgumentException("Nepoznat tip stanice");
+  }
+
+  public TrainTrack getTrack() {
+    return RailwaySingleton.getInstance().getTrackOfStation(this);
+  }
+
+  public double getDistanceFromStart() {
+    return RailwaySingleton.getInstance().getDistanceFromStart(this);
   }
 
 }

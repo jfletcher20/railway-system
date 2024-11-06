@@ -134,7 +134,7 @@ public class CommandSystem {
       Logs.withPadding(() -> {
         Logs.o("Naziv: " + station.name(), true);
         Logs.o("Vrsta: " + station.type().name(), false);
-        Logs.o("Udaljenost: " + -1 + " km", false);
+        Logs.o("Udaljenost: " + station.getDistanceFromStart() + " km", false);
       }, false, true);
     }
     Logs.footer(true);
