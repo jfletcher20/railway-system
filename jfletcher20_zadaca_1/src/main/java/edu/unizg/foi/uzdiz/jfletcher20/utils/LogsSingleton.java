@@ -1,6 +1,6 @@
-package edu.unizg.foi.uzdiz.jfletcher20.errors;
+package edu.unizg.foi.uzdiz.jfletcher20.utils;
 
-public class LogsSingleton {
+class LogsSingleton {
 
   static private volatile LogsSingleton instance = new LogsSingleton();
   private int errorCount = 0;
@@ -40,6 +40,16 @@ public class LogsSingleton {
   public void logInfo(int row, String message) {
     if (logInfo)
       System.out.println("  [?] <r" + row + "> Info: " + message);
+  }
+
+  public boolean toggleInfo() {
+    logInfo = !logInfo;
+    return logInfo;
+  }
+  
+  public boolean toggleWarnings() {
+    logWarnings = !logWarnings;
+    return logWarnings;
   }
 
 }

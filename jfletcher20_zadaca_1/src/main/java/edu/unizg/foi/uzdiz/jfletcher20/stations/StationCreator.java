@@ -3,6 +3,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.stations;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.StationActivity;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.StationType;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ICreator;
+import edu.unizg.foi.uzdiz.jfletcher20.utils.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 
 public class StationCreator implements ICreator {
@@ -11,12 +12,12 @@ public class StationCreator implements ICreator {
   public StationCreator() {}
 
   @Override
-  public Station factoryMethod(String data) {
+  public Station factoryMethod(String data, int row) {
     if (data == null || data.isEmpty()) {
-      System.out.println("Error: Prazan redak");
+      Logs.e(row, "StationCreator Prazan redak");
       return null;
     } else if (data.split(";").length != columnCount) {
-      System.out.println(columnCountError(data.split(";").length));
+      Logs.e(row, columnCountError(data.split(";").length));
       return null;
     }
     String[] parts = data.split(";");
@@ -29,7 +30,7 @@ public class StationCreator implements ICreator {
   }
   
   private String columnCountError(int counts) {
-    return "Error: StationCreator Ocekivano " + columnCount + " stupaca, otkriveno " + counts;
+    return "StationCreator Ocekivano " + columnCount + " stupaca, otkriveno " + counts;
   }
 
 }

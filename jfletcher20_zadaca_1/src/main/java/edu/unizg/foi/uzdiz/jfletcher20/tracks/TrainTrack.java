@@ -31,19 +31,19 @@ public record TrainTrack(String id, // oznaka pruge
 ) implements IProduct {
   public TrainTrack {
     if (id == null || id.isEmpty())
-      throw new IllegalArgumentException("Error: Oznaka pruge ne smije biti prazna.");
+      throw new IllegalArgumentException("Oznaka pruge ne smije biti prazna.");
     if (category == null)
-      throw new IllegalArgumentException("Error: Kategorija pruge ne smije biti prazna.");
+      throw new IllegalArgumentException("Kategorija pruge ne smije biti prazna.");
     if (transportType == null || transportType.isEmpty())
-      throw new IllegalArgumentException("Error: Vrsta prijevoza ne smije biti prazna.");
+      throw new IllegalArgumentException("Vrsta prijevoza ne smije biti prazna.");
     if (trackCount < 1)
-      throw new IllegalArgumentException("Error: Broj kolosjeka ne smije biti manji od 1.");
+      throw new IllegalArgumentException("Broj kolosjeka ne smije biti manji od 1.");
     if (axleLoad < 10 || axleLoad > 50)
-      throw new IllegalArgumentException("Error: DO po osovini mora biti između 10 i 50 t/os.");
+      throw new IllegalArgumentException("DO po osovini mora biti između 10 i 50 t/os.");
     if (linearLoad < 2 || linearLoad > 10)
-      throw new IllegalArgumentException("Error: DO po dužnom metru mora biti između 2 i 10 t/m.");
+      throw new IllegalArgumentException("DO po dužnom metru mora biti između 2 i 10 t/m.");
     if (status == null)
-      throw new IllegalArgumentException("Error: Status pruge mora biti definiran.");
+      throw new IllegalArgumentException("Status pruge mora biti definiran.");
   }
 }
 

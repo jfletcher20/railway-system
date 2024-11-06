@@ -3,6 +3,8 @@ package edu.unizg.foi.uzdiz.jfletcher20.utils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 import edu.unizg.foi.uzdiz.jfletcher20.RailwaySingleton;
 import edu.unizg.foi.uzdiz.jfletcher20.compositions.TrainCompositionCreator;
@@ -80,33 +82,32 @@ public abstract class FileLoader {
 
   public static boolean checkArgs(String[] args) {
     if (args.length != 6) {
-      System.out.println("Invalidan broj argumenata. Treba biti 6, a uneseno je: " + args.length);
+      Logs.w("Argumenti nisu ispravno postavljeni. "
+          + "Program očekuje 6 argumenata, a primljeno je: " + args.length);
       return false;
     }
     for (int i = 0; i < args.length; i += 2)
       for (int j = i + 2; j < args.length; j += 2)
         if (args[i].equals(args[j])) {
-          System.out.println("Argumenti nisu ispravno postavljeni. "
+          Logs.w("Argumenti nisu ispravno postavljeni. "
               + "Argumenti ne smiju imati duplicirane tipove datoteka:  " + args[i] + " i "
               + args[j]);
           return false;
         }
     String argsString = String.join(" ", args);
     if (!pattern.matcher(argsString).matches()) {
-      System.out
-          .println("Argumenti nisu ispravno postavljeni. " + "Argumenti trebaju biti u obliku: "
-              + "--tipDat1 <nazivCsvDat1> --tipDat2 <nazivCsvDat2> --tipDat3 <nazivCsvDat3>, "
-              + "gdje su tipovi datoteke --zs, --zps ili --zk.");
+      Logs.w("Argumenti nisu ispravno postavljeni. " + "Argumenti trebaju biti u obliku: "
+          + "--tipDat1 <nazivCsvDat1> --tipDat2 <nazivCsvDat2> --tipDat3 <nazivCsvDat3>, "
+          + "gdje su tipovi datoteke --zs, --zps ili --zk.");
       return false;
     }
     return true;
   }
 
   public static void loadFiles(String[] args) {
-    System.out.println("Priprema sustava...");
+    LogsSingleton.getInstance().logInfo("Učitavanje datoteka...");
     if (!checkArgs(args)) {
-      System.out.println("Argumenti nisu validni.");
-      System.out.println("Prekidanje...");
+      Logs.e("Neispravni argumenti za pokretanje programa.");
       return;
     }
     for (int i = 0; i < args.length; i += 2) {
@@ -115,26 +116,11 @@ public abstract class FileLoader {
       FileType fileType = getFileType(path);
       boolean correctFileType = correctFileType(fileType, args[i]);
       if (!correctFileType) {
-        System.out.println("Datoteka " + fileName + " ne odgovara uzorku za tip " + args[i]);
+        Logs.e("Datoteka " + fileName + " nije ispravnog tipa: " + fileType);
         continue;
       }
       loadFile(path, fileType);
     }
-  }
-
-  private static void logLineError(String line, int lineNum) {
-    String output = ("\t" + lineNum + ": " + "Greska: '" + line.replaceAll(";", " ") + "'");
-    System.out.println(output.substring(0, output.length() > 40 ? 40 : output.length()));
-  }
-
-  private static void logLineComment(String line, int lineNum) {
-    String output = ("\t" + lineNum + ": " + "Komentar: '" + line + "'");
-    System.out.println(output.substring(0, output.length() > 40 ? 40 : output.length()));
-  }
-
-  private static void logLineBlank(int lineNum) {
-    String output = ("\t" + lineNum + ": " + "Prazan redak.");
-    System.out.println(output.substring(0, output.length() > 40 ? 40 : output.length()));
   }
 
   public static void loadFile(Path path, FileType fileType) {
@@ -144,13 +130,14 @@ public abstract class FileLoader {
       for (int i = 1; i < lines.size(); i++) {
         String line = lines.get(i);
         if (line.trim().startsWith("#")) {
-          logLineComment(line, i);
+          Logs.i(i, "Preskačem komentar: " + line);
           continue;
         } else if (line.trim().isBlank()) {
-          logLineBlank(i);
+          Logs.i(i, "Preskačem prazan redak.");
           continue;
         } else if (line.contains(";;")) {
-          logLineError(line, i);
+          Logs.e(i, "Redak sadrži praznu vrijednost na poziciji: " + line.indexOf(";;")
+              + ", preskačem redak: " + line);
           continue;
         } else {
           createProduct(line, i, fileType);
@@ -173,25 +160,36 @@ public abstract class FileLoader {
     } else if (fileType == FileType.ZK) {
       creator = new TrainCompositionCreator();
     } else {
-      System.out.println("Error: Nije prepoznat tip datoteke.");
+      Logs.e(index, "Nepoznati tip datoteke: " + fileType);
       return;
     }
     try {
-      product = creator.factoryMethod(data);
+      product = creator.factoryMethod(data, index);
       if (altCreator != null)
-        altProduct = altCreator.factoryMethod(data);
+        altProduct = altCreator.factoryMethod(data, index);
     } catch (Exception e) {
-      System.out.println("Error: prilikom parsiranja retka [" + index + "]: " + data);
-      e.printStackTrace();
+      Logs.e(index, "Greška " + e.getClass().getSimpleName() + "::" + e.getMessage()
+          + " prilikom parsiranja retka: " + data);
       return;
     }
     if (product == null && altProduct == null) {
-      System.out
-          .println("Error: Null vrijednost prilikom parsiranja retka [" + index + "]: " + data);
+      emptyCol(index, data);
       return;
     }
     RailwaySingleton.getInstance().addProduct(product);
     RailwaySingleton.getInstance().addProduct(altProduct);
+  }
+
+  private static void emptyCol(int index, String data) {
+    List<String> emptyColumns = new ArrayList<>();
+    String[] parts = (data + " ").split(";");
+    for (int i = 0; i < parts.length; i++) {
+      Logs.i("parts[" + i + "/" + (parts.length - 1) + "].trim(): " + parts[i].trim());
+      if (parts[i].trim().isBlank() || parts[i].trim().isEmpty() || parts[i].trim().equals(""))
+        emptyColumns.add(String.valueOf(i));
+    }
+    Logs.e(index, "Nije moguće parsirati redak zbog null podataka na pozicijama: "
+        + emptyColumns.toString() + ": " + data);
   }
 
   public static boolean correctFileType(FileType fileType, String arg) {
@@ -212,7 +210,7 @@ public abstract class FileLoader {
       else if (zkHeaderPattern.matcher(header).find())
         return FileType.ZK;
     } catch (Exception e) {
-      System.out.println("Greška prilikom čitanja datoteke: " + filePath);
+      Logs.e("Datoteka " + filePath + " nema validan format zaglavlja (provg retka).");
     }
     return null;
   }

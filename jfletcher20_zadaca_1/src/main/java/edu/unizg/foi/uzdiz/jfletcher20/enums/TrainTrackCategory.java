@@ -12,8 +12,7 @@ public enum TrainTrackCategory {
       case "M":
         return INTERNATIONAL;
       default:
-        System.out.println("Error: Nepoznata vrijednost TrainTrackCategory: " + value);
-        return null;
+        throw new IllegalArgumentException("Nepoznata kategorija pruge: " + value);
     }
   }
 }

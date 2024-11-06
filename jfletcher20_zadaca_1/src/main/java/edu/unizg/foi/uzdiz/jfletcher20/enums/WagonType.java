@@ -27,8 +27,7 @@ public enum WagonType {
       case "PSBP":
         return UNPOWERED;
       default:
-        System.out.println("Error: Nije prepoznat tip vagona: " + value);
-        return null;
+        throw new IllegalArgumentException("Nepoznat tip vagona: " + value);
     }
   }
 }

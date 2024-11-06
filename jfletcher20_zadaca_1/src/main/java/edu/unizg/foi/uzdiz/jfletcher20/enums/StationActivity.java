@@ -12,6 +12,6 @@ public enum StationActivity {
       return PASSENGER;
     } else if (isCargo)
       return CARGO;
-    return null;
+    throw new IllegalArgumentException("Nepoznata aktivnost stanice: " + passengerActivity + ";" + cargoActivity);
   }
 }

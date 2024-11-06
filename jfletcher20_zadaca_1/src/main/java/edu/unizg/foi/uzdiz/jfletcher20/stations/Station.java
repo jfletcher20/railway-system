@@ -47,7 +47,11 @@ public record Station(String name, // Stanica
     if (platformCount < 1 || platformCount > 99)
       throw new IllegalArgumentException("Broj perona mora biti između 1 i 99");
     if (status == null || status.isBlank())
-      throw new IllegalArgumentException("Status ne smije biti prazan");
+      throw new IllegalArgumentException("Nepoznat status stanice");
+    if (name == null || name.isBlank())
+      throw new IllegalArgumentException("Nepoznato ime stanice");
+    if (type == null)
+      throw new IllegalArgumentException("Nepoznat tip stanice");
   }
 
 }

@@ -14,7 +14,7 @@ public enum TrainTrackStatus {
       case "Z":
         return CLOSED;
       default:
-        throw new IllegalArgumentException("Error: Nepoznat status pruge: " + value);
+        throw new IllegalArgumentException("Nepoznat status pruge: " + value);
     }
   }
 }

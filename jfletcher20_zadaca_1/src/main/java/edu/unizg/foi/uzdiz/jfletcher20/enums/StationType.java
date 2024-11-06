@@ -16,8 +16,7 @@ public enum StationType {
       case "staj.":
         return HALT;
       default:
-        System.out.println("Error: Nepoznat tip stajališta: " + value);
-        return null;
+        throw new IllegalArgumentException("Nepoznat tip stanice: " + value);
     }
   }
 }

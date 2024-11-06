@@ -2,8 +2,8 @@ package edu.unizg.foi.uzdiz.jfletcher20.wagons;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.WagonType;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ICreator;
+import edu.unizg.foi.uzdiz.jfletcher20.utils.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
-
 
 /**
  * Factory class for creating Wagon objects. Each Wagon object represents a single train car.
@@ -22,12 +22,12 @@ public class WagonCreator implements ICreator {
    * @return Wagon object
    */
   @Override
-  public Wagon factoryMethod(String data) {
+  public Wagon factoryMethod(String data, int row) {
     if (data == null || data.isEmpty()) {
-      System.out.println("Error: Prazan redak");
+      Logs.e(row, "WagonCreator Prazan redak.");
       return null;
     } else if (data.split(";").length != columnCount) {
-      System.out.println(columnCountError(data.split(";").length));
+      Logs.e(row, columnCountError(data.split(";").length));
       return null;
     }
     String[] parts = data.split(";");
@@ -54,7 +54,7 @@ public class WagonCreator implements ICreator {
   }
 
   private String columnCountError(int counts) {
-    return "Error: WagonCreator Ocekivano " + columnCount + " stupaca, otkriveno " + counts;
+    return "WagonCreator Ocekivano " + columnCount + " stupaca, otkriveno " + counts;
   }
 
 }
