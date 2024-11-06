@@ -15,11 +15,10 @@ public class RailwaySingleton {
   static private volatile RailwaySingleton instance = new RailwaySingleton();
   private CommandSystem commandSystem = null;
 
-  private List<Station> stations = new ArrayList<>();
   private List<TrainTrack> tracks = new ArrayList<>();
   private List<Wagon> wagons = new ArrayList<>();
   private Map<Integer, List<TrainComposition>> compositions = new HashMap<>();
-  private Map<String, List<String>> railroad = new HashMap<>();
+  private Map<String, List<Station>> railroad = new HashMap<>();
 
   private String[] initArgs = null;
 
@@ -51,7 +50,7 @@ public class RailwaySingleton {
 
   public IProduct addProduct(IProduct product) {
     if (product instanceof Station) {
-      this.addStation((Station) product);
+      // not gonna add the station here since it's been added to the railroad
     } else if (product instanceof Wagon) {
       this.addWagon((Wagon) product);
     } else if (product instanceof TrainComposition) {
@@ -78,20 +77,20 @@ public class RailwaySingleton {
 
   public boolean addRailroad(TrainTrack track, Station station) {
     if (this.railroad.containsKey(track.id())) {
-      this.railroad.get(track.id()).add(station.name());
+      this.railroad.get(track.id()).add(station);
       return true;
     } else {
-      this.railroad.put(track.id(), new ArrayList<String>());
-      this.railroad.get(track.id()).add(station.name());
+      this.railroad.put(track.id(), new ArrayList<>());
+      this.railroad.get(track.id()).add(station);
     }
     return true;
   }
 
   public List<Station> getStations() {
-    return this.stations;
+    return this.railroad.values().stream().flatMap(List::stream).toList();
   }
 
-  public Map<String, List<String>> getRailroad() {
+  public Map<String, List<Station>> getRailroad() {
     return this.railroad;
   }
 
@@ -120,63 +119,39 @@ public class RailwaySingleton {
   }
 
   public Station getStartStation(String trackID) {
-    int stationIndexOnTrack =
-        this.railroad.get(trackID).indexOf(this.railroad.get(trackID).getFirst());
-    int trackIndexOnRailroad = this.railroad.keySet().stream().toList().indexOf(trackID);
-    int totalStationsBeforeTrack = 0;
-    for (int i = 0; i < trackIndexOnRailroad; i++)
-      totalStationsBeforeTrack +=
-          this.railroad.get(this.railroad.keySet().stream().toList().get(i)).size();
-    int realStationIndex = totalStationsBeforeTrack + stationIndexOnTrack;
-    return this.stations.get(realStationIndex);
+    return this.railroad.get(trackID).getFirst();
   }
 
   public Station getEndStation(String trackID) {
-    int stationIndexOnTrack =
-        this.railroad.get(trackID).indexOf(this.railroad.get(trackID).getLast());
-    int trackIndexOnRailroad = this.railroad.keySet().stream().toList().indexOf(trackID);
-    Logs.i("End Station index on track: " + stationIndexOnTrack);
-    Logs.i("Track index on railroad: " + trackIndexOnRailroad);
-    int totalStationsBeforeTrack = 0;
-    for (int i = 0; i < trackIndexOnRailroad; i++)
-      totalStationsBeforeTrack +=
-          this.railroad.get(this.railroad.keySet().stream().toList().get(i)).size();
-    int realStationIndex = totalStationsBeforeTrack + stationIndexOnTrack;
-    return this.stations.get(realStationIndex);
+    return this.railroad.get(trackID).getLast();
   }
 
   public Station getStartStationFromIndexOfStation(String trackID, String stationName) {
-    return this.stations.stream().filter(s -> this.railroad.get(trackID)
-        .subList(this.railroad.get(trackID).indexOf(stationName), this.railroad.get(trackID).size())
-        .contains(s.name())).findFirst().orElse(null);
+    var stationsOnTrack = this.railroad.get(trackID);
+    return stationsOnTrack.stream()
+        .filter(s -> s.name().equals(stationName)).findFirst().orElse(null);
   }
 
   public Station getEndStationFromIndexOfStation(String trackID, String stationName) {
-    return this.stations.stream()
-        .filter(s -> this.railroad.get(trackID)
-            .subList(this.railroad.get(trackID).indexOf(stationName),
-                this.railroad.get(trackID).size())
-            .contains(s.name()))
-        .reduce((first, second) -> second).orElse(null);
+    var stationsOnTrack = this.railroad.get(trackID);
+    return stationsOnTrack.stream()
+        .filter(s -> s.name().equals(stationName)).findFirst().orElse(null);
   }
   
   public List<Station> getStationsOnTrack(String trackID) {
-    var stationNames = this.railroad.get(trackID);
-    List<Station> stationsOnTrack = new ArrayList<>();
-    int trackIndex = this.railroad.keySet().stream().toList().indexOf(trackID);
-    int totalStationsBeforeTrack = 0;
-    for (int i = 0; i < trackIndex; i++)
-      totalStationsBeforeTrack +=
-          this.railroad.get(this.railroad.keySet().stream().toList().get(i)).size();
-    for (int i = 0; i < stationNames.size(); i++)
-      stationsOnTrack.add(this.stations.get(totalStationsBeforeTrack + i));
-    return stationsOnTrack;
+    return this.railroad.get(trackID);
   }
 
-  public double getDistanceBetweenStations(String trackID, String station1, String station2) {
-    List<String> railroadStations = this.railroad.get(trackID);
+  public double getDistanceBetweenStations(String trackID, Station station1, Station station2) {
+    List<Station> railroadStations = this.railroad.get(trackID);
     int index1 = railroadStations.indexOf(station1);
     int index2 = railroadStations.indexOf(station2) + 1;
+    
+    if (index1 < index2) {
+      int temp = index1;
+      index1 = index2 - 1;
+      index2 = temp + 1;
+    }
 
     // stations between (and including) station1 and station2
     // var stationsBetween = railroadStations.subList(index1, index2);
@@ -199,10 +174,9 @@ public class RailwaySingleton {
     return sum;
   }
 
-
-  public void addStation(Station station) {
-    this.stations.add(station);
-  }
+//  public void addStation(Station station) {
+//    this.railroad.put(station.name(), new ArrayList<>());
+//  }
 
   public void addWagon(Wagon wagon) {
     this.wagons.add(wagon);
@@ -222,10 +196,8 @@ public class RailwaySingleton {
   }
 
   public void removeStation(Station station) {
-    var stationsLists = this.railroad.values();
-    for (List<String> stationList : stationsLists)
-      stationList.removeIf(s -> s.equals(station.name()));
-    this.stations.remove(station);
+    for (var track : this.railroad.keySet())
+      this.railroad.get(track).removeIf(s -> s.equals(station));
   }
 
   public void removeWagon(Wagon wagon) {
@@ -246,7 +218,6 @@ public class RailwaySingleton {
   }
 
   public void clearStations() {
-    this.stations.clear();
     this.railroad.values().forEach(List::clear);
   }
 
@@ -277,7 +248,7 @@ public class RailwaySingleton {
 
   public void printStats() {
     Logs.header("JLF Željeznica: Statistika", true);
-    Logs.o("Stanice: " + this.stations.size());
+    Logs.o("Stanice: " + this.getStations().size());
     Logs.o("Vozila: " + this.wagons.size());
     Logs.o("Kompozicije: " + this.compositions.size() + " (" + this.getCompositionsList().size()
         + ")");
