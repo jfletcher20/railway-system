@@ -164,7 +164,7 @@ public abstract class Logs {
     String prefix = " >-", suffix = "-< ";
     String decorationCharacter = "-";
     String headerWrapperPrefix = " [ ", headerWrapperSuffix = " ] ";
-    int decoLength = 32, minDecoLength = 3;
+    int decoLength = 32, minDecoLength = 6;
     int latestHeaderLength = 0, latestDecoLength = 0;
 
     public void logHeader(String header) {

@@ -54,7 +54,7 @@ public class CommandSystem {
         Logs.c("Prekidanje programa...");
         break;
       }
-      Logs.c("Detektirana komanda " + command);
+//      Logs.c("Detektirana komanda " + command);
       identifyCommand(command);
     }
     Logs.footer(true);
@@ -80,7 +80,8 @@ public class CommandSystem {
       Logs.c("Detektirana komanda za pregled kompozicija.");
       return true;
     } else {
-      Logs.c("Nepoznata komanda.");
+      Logs.c("Nepoznata komanda. Dostupne komande su:");
+      outputMenu();
       return false;
     }
   }
