@@ -1,8 +1,10 @@
 package edu.unizg.foi.uzdiz.jfletcher20.system;
 
 import java.lang.annotation.Repeatable;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 
@@ -30,7 +32,10 @@ public class CommandSystem {
       "^ISP (?<trackCode>[A-Za-z0-9]+) (?<order>[NO])$" //
   );
   Pattern viewStationsBetweenPattern = Pattern.compile( //
-      "^ISI2S (?<startStation>[A-Za-z]+) (?<endStation>[A-Za-z]+)$" //
+      // "^ISI2S (?<startStation>[A-Za-z]+) (?<endStation>[A-Za-z]+)$" // this pattern is almost
+      // there, but it needs to allow for as many words as wanted before a dash and then as many
+      // words as wanted; each group of words should be grouped accordingly
+      "^ISI2S (?<startStation>.+) - (?<endStation>.+)$" //
   );
   Pattern viewCompositionPattern = Pattern.compile( //
       "^IK (?<compositionCode>[0-9]+)$" //
@@ -56,7 +61,6 @@ public class CommandSystem {
         Logs.c("Prekidanje programa...");
         break;
       }
-      // Logs.c("Detektirana komanda " + command);
       identifyCommand(command);
     }
     Logs.footer(true);
@@ -77,6 +81,8 @@ public class CommandSystem {
       return true;
     } else if (vsbMatcher.matches()) {
       Logs.c("Detektirana komanda za pregled stanica između dvije stanice.");
+      Logs.o("Početna stanica:    " + vsbMatcher.group("startStation"));
+      Logs.o("Posljednja stanica: " + vsbMatcher.group("endStation"));
       viewStationsBetween(vsbMatcher.group("startStation"), vsbMatcher.group("endStation"));
       return true;
     } else if (vcMatcher.matches()) {
@@ -97,21 +103,14 @@ public class CommandSystem {
   private void outputMenu() {
     Logs.header("JLF Željeznica: Interaktivni način rada", true);
     Logs.withPadding(() -> Logs.o("Validne komande:"), false, true);
+    Logs.o("IP\t\t\t\t\t- Pregled pruga", false);
+    Logs.o(
+        "ISP [oznakaPruge] [N|O]\t\t\t- Pregled stanica uz prugu u normalnom ili obrnutom redoslijedu",
+        false);
+    Logs.o("ISI2S [nazivStanice1] - [nazivStanice2]\t- Pregled stanica između dvije stanice",
+        false);
     Logs.withPadding(() -> {
-      Logs.o("IP", false);
-      Logs.o("\t- Pregled pruga", false);
-    }, false, true);
-    Logs.withPadding(() -> {
-      Logs.o("ISP [oznakaPruge] [N|O]", false);
-      Logs.o("\t- Pregled stanica uz prugu u rastućem ili padajućem redoslijedu", false);
-    }, false, true);
-    Logs.withPadding(() -> {
-      Logs.o("ISI2S [nazivStanice1] [nazivStanice2]", false);
-      Logs.o("\t- Pregled stanica između dvije stanice", false);
-    }, false, true);
-    Logs.withPadding(() -> {
-      Logs.o("IK [oznakaKompozicije]", false);
-      Logs.o("\t- Pregled kompozicija", false);
+      Logs.o("IK [oznakaKompozicije]\t\t\t- Pregled kompozicija", false);
     }, false, true);
     Logs.withPadding(() -> Logs.o("Q - Izlaz iz programa", false), false, true);
     Logs.o("Uzorci dizajna, 2024. - Joshua Lee Fletcher");
@@ -164,20 +163,43 @@ public class CommandSystem {
   private void viewStationsBetween(String startStation, String endStation) {
     Logs.header("Pregled stanica između " + startStation + " - " + endStation, true);
     var data = RailwaySingleton.getInstance().getRailroad();
-    for (var track : data.keySet()) {
-      var stations = data.get(track);
-      int start = -1, end = -1;
-      for (int i = 0; i < stations.size(); i++) {
-        if (stations.get(i).name().equals(startStation))
-          start = i;
-        if (stations.get(i).name().equals(endStation))
-          end = i;
-      }
-      if (start != -1 && end != -1) {
-        Logs.i("Pronađene stanice na pruzi " + track + ": " + startStation + " i " + endStation);
-        Logs.i("Između stanica " + startStation + " i " + endStation + " nalazi se " + (end - start)
-            + " stanica.");
-        break;
+
+    List<Station> firstStationPossibilities =
+        RailwaySingleton.getInstance().getStationsByName(startStation);
+    List<Station> lastStationPossibilities =
+        RailwaySingleton.getInstance().getStationsByName(endStation);
+
+    if (firstStationPossibilities.isEmpty() || lastStationPossibilities.isEmpty()) {
+      Logs.e("Nepostojeće stanice: " + (firstStationPossibilities.isEmpty() ? startStation : "")
+          + (lastStationPossibilities.isEmpty() ? endStation : ""));
+      Logs.footer(true);
+      return;
+    }
+
+    // construct a list of all applicable tracks for each station
+    List<TrainTrack> tracksForFirstStation =
+        firstStationPossibilities.stream().map(station -> station.getTrack()).toList();
+
+    List<TrainTrack> tracksForLastStation =
+        lastStationPossibilities.stream().map(station -> station.getTrack()).toList();
+
+    List<List<Station>> routes =
+        RailwaySingleton.getInstance().getRoutesBetweenStations(firstStationPossibilities,
+            lastStationPossibilities, tracksForFirstStation, tracksForLastStation);
+    for (List<Station> stations : routes) {
+      boolean normalDirection =
+          stations.get(0).getDistanceFromStart() < stations.get(1).getDistanceFromStart();
+      for (Station station : stations) {
+        String stationName = station.name();
+        String stationPadding =
+            stationName.length() > 8 ? stationName.length() > 17 ? "\t" : "\t\t" : "\t\t\t";
+        String stationType = station.type().toString();
+        String stationTypePadding =
+            stationType.length() > 8 ? stationType.length() > 17 ? "\t" : "\t" : "\t";
+        Logs.o(" " + stationName + stationPadding + "| " + station.type() + stationTypePadding
+            + "| " + (normalDirection ? station.getDistanceFromStart(stations.getFirst())
+                : station.getDistanceFromEnd(stations.getLast(), stations.getFirst())),
+            false);
       }
     }
 
@@ -201,11 +223,13 @@ public class CommandSystem {
     for (var composition : data) {
       String purpose = composition.getWagon().purpose().toString();
       String purposePadding = purpose.length() > 6 ? "\t" : "\t\t";
-      Logs.o(" " + composition.getWagon().id() + "\t| " + composition.role() + "\t| "
-          + composition.getWagon().description()
-          + " ".repeat(maxDescLength - composition.getWagon().description().length()) + " | "
-          + composition.getWagon().yearOfProduction() + "\t| " + purpose + purposePadding + "| " + composition.getWagon().driveType() + "\t\t| "
-          + composition.getWagon().maxSpeed(), false);
+      Logs.o(
+          " " + composition.getWagon().id() + "\t| " + composition.role() + "\t| "
+              + composition.getWagon().description()
+              + " ".repeat(maxDescLength - composition.getWagon().description().length()) + " | "
+              + composition.getWagon().yearOfProduction() + "\t| " + purpose + purposePadding + "| "
+              + composition.getWagon().driveType() + "\t\t| " + composition.getWagon().maxSpeed(),
+          false);
     }
     Logs.footer(true);
   }

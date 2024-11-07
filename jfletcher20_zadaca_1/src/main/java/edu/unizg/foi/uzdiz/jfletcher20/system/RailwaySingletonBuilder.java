@@ -19,6 +19,11 @@ public class RailwaySingletonBuilder implements IBuilder {
     return this;
   }
   
+  public RailwaySingletonBuilder verifyCompositions() {
+    RailwaySingleton.getInstance().verifyCompositions();
+    return this;
+  }
+  
   public RailwaySingletonBuilder initCommandSystem() {
     CommandSystem commandSystem = CommandSystem.getInstance();
     RailwaySingleton.getInstance().setCommandSystem(commandSystem);

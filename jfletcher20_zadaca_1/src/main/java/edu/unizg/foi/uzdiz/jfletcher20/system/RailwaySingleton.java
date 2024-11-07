@@ -2,8 +2,10 @@ package edu.unizg.foi.uzdiz.jfletcher20.system;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposition;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
@@ -172,6 +174,11 @@ public class RailwaySingleton {
     return getDistanceBetweenStations(currentTrack.id(), currentTrack.getStartStation(), station);
   }
 
+  public double getDistanceFromStart(Station firstStation, Station currentStation) {
+    TrainTrack currentTrack = getTrackOfStation(currentStation);
+    return getDistanceBetweenStations(currentTrack.id(), firstStation, currentStation);
+  }
+
   public double getDistanceFromEnd(Station station) {
     TrainTrack currentTrack = getTrackOfStation(station);
     // get the distance from the end station by first calculating how far teh end station is fro
@@ -179,6 +186,12 @@ public class RailwaySingleton {
     // then calculating how far the current station is from the start
     // and then reducing the two
     return getDistanceFromStart(currentTrack.getEndStation()) - getDistanceFromStart(station);
+  }
+
+  public double getDistanceFromEnd(Station lastStation, Station firstStation,
+      Station currentStation) {
+    return Math.abs(getDistanceFromStart(lastStation, currentStation)
+        - getDistanceFromStart(lastStation, firstStation));
   }
 
   public double getDistanceBetweenStations(String trackID, Station station1, Station station2) {
@@ -335,6 +348,73 @@ public class RailwaySingleton {
     Logs.o("Kompozicije: " + this.trains.size() + " (" + this.getCompositions().size() + ")");
     Logs.o("Pruge: " + this.tracks.size());
     Logs.footer(true);
+  }
+
+  public List<Station> getStationsByName(String station) {
+    return getStations().stream().filter(s -> s.name().equals(station)).toList();
+  }
+
+  // Method to find all possible routes between stations
+  public List<List<Station>> getRoutesBetweenStations(List<Station> startStations,
+      List<Station> endStations, List<TrainTrack> startTracks, List<TrainTrack> endTracks) {
+
+    List<List<Station>> allRoutes = new ArrayList<>();
+
+    for (Station startStation : startStations) {
+      for (Station endStation : endStations) {
+        Set<Station> visited = new HashSet<>();
+        List<Station> currentRoute = new ArrayList<>();
+        dfs(startStation, endStation, visited, currentRoute, allRoutes);
+      }
+    }
+
+    return allRoutes;
+  }
+
+  // DFS helper method
+  private void dfs(Station currentStation, Station targetStation, Set<Station> visited,
+      List<Station> currentRoute, List<List<Station>> allRoutes) {
+
+    // Mark the current station as visited and add it to the current route
+    visited.add(currentStation);
+    currentRoute.add(currentStation);
+
+    // If we've reached the target station, save the current route as a valid path
+    if (currentStation.equals(targetStation)) {
+      allRoutes.add(new ArrayList<>(currentRoute));
+    } else {
+      // Recursively visit each neighboring station that hasn't been visited
+      List<Station> neighbors = getConnectedStations(currentStation);
+      for (Station neighbor : neighbors) {
+        if (!visited.contains(neighbor)) {
+          dfs(neighbor, targetStation, visited, currentRoute, allRoutes);
+        }
+      }
+    }
+
+    // Backtrack: remove the current station from the path and mark it as unvisited
+    currentRoute.remove(currentRoute.size() - 1);
+    visited.remove(currentStation);
+  }
+
+  // Helper method to get connected stations for a given station
+  private List<Station> getConnectedStations(Station station) {
+    List<Station> connectedStations = new ArrayList<>();
+
+    TrainTrack track = getTrackOfStation(station);
+    if (track != null) {
+      List<Station> stationsOnTrack = getStationsOnTrack(track.id());
+
+      int index = stationsOnTrack.indexOf(station);
+      if (index > 0) {
+        connectedStations.add(stationsOnTrack.get(index - 1)); // Previous station
+      }
+      if (index < stationsOnTrack.size() - 1) {
+        connectedStations.add(stationsOnTrack.get(index + 1)); // Next station
+      }
+    }
+
+    return connectedStations;
   }
 
 }
