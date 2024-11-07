@@ -58,11 +58,11 @@ public abstract class FilesUtil {
     return true;
   }
 
-  public static void loadFiles(String[] args) {
+  public static boolean loadFiles(String[] args) {
     Logs.i("Učitavanje datoteka...");
     if (!checkArgs(args)) {
       Logs.e("Neispravni argumenti za pokretanje programa.");
-      return;
+      return false;
     }
     for (int i = 0; i < args.length; i += 2) {
       String fileName = args[i + 1];
@@ -75,6 +75,7 @@ public abstract class FilesUtil {
       }
       loadFile(path, fileType);
     }
+    return true;
   }
 
   public static void loadFile(Path path, FileType fileType) {

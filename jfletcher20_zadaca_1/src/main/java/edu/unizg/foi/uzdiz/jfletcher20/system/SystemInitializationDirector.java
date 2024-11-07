@@ -8,7 +8,10 @@ public class SystemInitializationDirector {
   }
 
   public Object construct() {
-    this.builder.loadFiles().verifyCompositions().initCommandSystem().runCommandSystem();
+    try {
+      this.builder.loadFiles().verifyCompositions().initCommandSystem().runCommandSystem();
+    } catch (Exception e) {
+    }
     return this.builder.getResult();
   }
 

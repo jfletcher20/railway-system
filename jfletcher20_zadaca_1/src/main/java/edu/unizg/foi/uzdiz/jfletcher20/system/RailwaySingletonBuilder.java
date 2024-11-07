@@ -10,7 +10,9 @@ public class RailwaySingletonBuilder implements IBuilder {
   public RailwaySingletonBuilder loadFiles() {
     if (RailwaySingleton.getInstance().getInitArgs() != null) {
       var initArgs = RailwaySingleton.getInstance().getInitArgs();
-      FilesUtil.loadFiles(initArgs);
+      if (!FilesUtil.loadFiles(initArgs)) {
+        return null;
+      }
       RailwaySingleton.getInstance().printStats();
     } else {
       Logs.e(
