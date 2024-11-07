@@ -176,16 +176,8 @@ public class CommandSystem {
       return;
     }
 
-    // construct a list of all applicable tracks for each station
-    List<TrainTrack> tracksForFirstStation =
-        firstStationPossibilities.stream().map(station -> station.getTrack()).toList();
-
-    List<TrainTrack> tracksForLastStation =
-        lastStationPossibilities.stream().map(station -> station.getTrack()).toList();
-
-    List<List<Station>> routes =
-        RailwaySingleton.getInstance().getRoutesBetweenStations(firstStationPossibilities,
-            lastStationPossibilities, tracksForFirstStation, tracksForLastStation);
+    var routes = RailwaySingleton.getInstance()
+        .getRoutesBetweenStations(firstStationPossibilities, lastStationPossibilities);
     for (List<Station> stations : routes) {
       boolean normalDirection =
           stations.get(0).getDistanceFromStart() < stations.get(1).getDistanceFromStart();

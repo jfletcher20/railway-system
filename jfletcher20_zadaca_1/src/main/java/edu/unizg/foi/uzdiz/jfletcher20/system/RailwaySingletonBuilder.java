@@ -14,22 +14,23 @@ public class RailwaySingletonBuilder implements IBuilder {
       FilesUtil.loadFiles(initArgs);
       RailwaySingleton.getInstance().printStats();
     } else {
-      Logs.e("RailwaySingletonBuilder buildPart: RailwaySingleton instance does not have initArgs set!");
+      Logs.e(
+          "RailwaySingletonBuilder buildPart: RailwaySingleton instance does not have initArgs set!");
     }
     return this;
   }
-  
+
   public RailwaySingletonBuilder verifyCompositions() {
     RailwaySingleton.getInstance().verifyCompositions();
     return this;
   }
-  
+
   public RailwaySingletonBuilder initCommandSystem() {
     CommandSystem commandSystem = CommandSystem.getInstance();
     RailwaySingleton.getInstance().setCommandSystem(commandSystem);
     return this;
   }
-  
+
   public RailwaySingletonBuilder runCommandSystem() {
     RailwaySingleton.getInstance().getCommandSystem().startCommandSystem();
     return this;

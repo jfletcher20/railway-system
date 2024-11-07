@@ -356,7 +356,7 @@ public class RailwaySingleton {
 
   // Method to find all possible routes between stations
   public List<List<Station>> getRoutesBetweenStations(List<Station> startStations,
-      List<Station> endStations, List<TrainTrack> startTracks, List<TrainTrack> endTracks) {
+      List<Station> endStations) {
 
     List<List<Station>> allRoutes = new ArrayList<>();
 
