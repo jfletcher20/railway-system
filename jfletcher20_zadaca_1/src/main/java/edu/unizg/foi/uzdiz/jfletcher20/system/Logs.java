@@ -11,19 +11,19 @@ public abstract class Logs {
   }
 
   public static void w(String message) {
-    LogsSingleton.getInstance().logWarning(message);
+    // LogsSingleton.getInstance().logWarning(message);
   }
 
   public static void w(int row, String message) {
-    LogsSingleton.getInstance().logWarning(row, message);
+    // LogsSingleton.getInstance().logWarning(row, message);
   }
 
   public static void i(String message) {
-    LogsSingleton.getInstance().logInfo(message);
+    // LogsSingleton.getInstance().logInfo(message);
   }
 
   public static void i(int row, String message) {
-    LogsSingleton.getInstance().logInfo(row, message);
+    // LogsSingleton.getInstance().logInfo(row, message);
   }
 
   public static void o(String message) {
@@ -67,11 +67,13 @@ public abstract class Logs {
    * @param function
    */
   public static void withPadding(Runnable function, boolean top, boolean bottom) {
-    if (top) LogsSingleton.getInstance().logPadding();
+    if (top)
+      LogsSingleton.getInstance().logPadding();
     function.run();
-    if (bottom) LogsSingleton.getInstance().logPadding();
+    if (bottom)
+      LogsSingleton.getInstance().logPadding();
   }
-  
+
   public static void header(String header, boolean addPadding) {
     if (addPadding)
       withPadding(() -> LogsSingleton.getInstance().logHeader(header));
@@ -120,30 +122,30 @@ public abstract class Logs {
       errorCount++;
     }
 
-    public void logWarning(String message) {
-      if (logWarnings)
-        System.out.println("   [-] Warning: " + message);
-    }
-
-    public void logWarning(int row, String message) {
-      if (logWarnings)
-        System.out.println("   [-] <w" + row + "> Warning: " + message);
-    }
-
-    public void logInfo(String message) {
-      if (logInfo)
-        System.out.println("   [?] Info: " + message);
-    }
-
-    public void logInfo(int row, String message) {
-      if (logInfo)
-        System.out.println("   [?] <r" + row + "> Info: " + message);
-    }
+    // public void logWarning(String message) {
+    // if (logWarnings)
+    // System.out.println(" [-] Warning: " + message);
+    // }
+    //
+    // public void logWarning(int row, String message) {
+    // if (logWarnings)
+    // System.out.println(" [-] <w" + row + "> Warning: " + message);
+    // }
+    //
+    // public void logInfo(String message) {
+    // if (logInfo)
+    // System.out.println(" [?] Info: " + message);
+    // }
+    //
+    // public void logInfo(int row, String message) {
+    // if (logInfo)
+    // System.out.println(" [?] <r" + row + "> Info: " + message);
+    // }
 
     public void logConsoleMessage(String message) {
       System.out.println("  [>] " + message);
     }
-    
+
     public void logConsoleMessage(String message, boolean usePrefixSymbol) {
       String prefix = usePrefixSymbol ? "[>]" : "   ";
       System.out.println("  " + prefix + " " + message);
@@ -175,13 +177,17 @@ public abstract class Logs {
       this.latestDecoLength = decoRightLength;
       header = headerWrapperPrefix + header + headerWrapperSuffix;
       String decoration = header + decorationCharacter.repeat(decoRightLength);
-      System.out.println(prefix + decoration + suffix);
+      decoration.trim();
+      prefix.trim();
+      suffix.trim();
+      // System.out.println(prefix + decoration + suffix);
     }
 
     public void logFooter() {
       String decoration =
           decorationCharacter.repeat(this.latestDecoLength + this.latestHeaderLength);
-      System.out.println(prefix + decoration + suffix);
+      // System.out.println(prefix + decoration + suffix);
+      decoration.trim();
     }
 
     public void logPadding() {

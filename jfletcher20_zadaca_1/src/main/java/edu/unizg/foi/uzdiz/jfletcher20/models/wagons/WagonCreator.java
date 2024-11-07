@@ -13,6 +13,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 public class WagonCreator implements ICreator {
 
   private static int columnCount = 18;
+
   public WagonCreator() {}
 
   /**
@@ -31,8 +32,7 @@ public class WagonCreator implements ICreator {
       return null;
     }
     String[] parts = data.split(";");
-    return new Wagon(
-        parts[0], // oznaka
+    return new Wagon(parts[0], // oznaka
         parts[1], // opis
         WagonType.fromCSV(parts[4]), // namjena
         /* TransportType.valueOf( */parts[5]/* .toUpperCase()) */, // vrsta prijevoza
@@ -58,18 +58,3 @@ public class WagonCreator implements ICreator {
   }
 
 }
-
-/*
- * // the header for the csv file for wagons: private static Pattern zpsHeaderPattern =
- * Pattern.compile("^Oznaka;Opis;Proizvođač;Godina;Namjena;Vrsta prijevoza;" +
- * "Vrsta pogona;Maks brzina;Maks snaga;Broj sjedećih mjesta;" +
- * "Broj stajaćih mjesta;Broj bicikala;Broj kreveta;Broj automobila;Nosivost;Površina;Zapremina;Status$"
- * );
- *
- * // the file has columns out of which we need to extract the following, which are in a different
- * order: public record Wagon(WagonType purpose, // namjena TransportType transportType, // vrsta
- * prijevoza DriveType driveType, // vrsta pogona double maxPower, // maksimalna snaga int maxSpeed,
- * // maksimalna brzina vožnje int yearOfProduction, // godina proizvodnje String manufacturer, //
- * proizvođač int numberOfSeats, // broj sjedećih mjesta double capacity, // nosivost double volume,
- * // zapremina boolean status // status )
- */

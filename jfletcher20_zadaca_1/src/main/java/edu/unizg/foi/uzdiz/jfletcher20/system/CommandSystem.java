@@ -1,18 +1,11 @@
 package edu.unizg.foi.uzdiz.jfletcher20.system;
 
-import java.lang.annotation.Repeatable;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
-
-/*
- * Nakon što se učitaju sve potrebne datoteke potrebno je pripremiti program za izvršavanje komandi
- * u interaktivnom načinu rada. Tijekom rada programa može se izvršiti više komandi sve dok se ne
- * upiše komanda Q.
- */
 
 /**
  * The CommandSystem class is responsible for handling the command system of the program.
@@ -32,9 +25,6 @@ public class CommandSystem {
       "^ISP (?<trackCode>[A-Za-z0-9]+) (?<order>[NO])$" //
   );
   Pattern viewStationsBetweenPattern = Pattern.compile( //
-      // "^ISI2S (?<startStation>[A-Za-z]+) (?<endStation>[A-Za-z]+)$" // this pattern is almost
-      // there, but it needs to allow for as many words as wanted before a dash and then as many
-      // words as wanted; each group of words should be grouped accordingly
       "^ISI2S (?<startStation>.+) - (?<endStation>.+)$" //
   );
   Pattern viewCompositionPattern = Pattern.compile( //
@@ -72,21 +62,19 @@ public class CommandSystem {
     Matcher vsbMatcher = viewStationsBetweenPattern.matcher(command);
     Matcher vcMatcher = viewCompositionPattern.matcher(command);
     if (vtMatcher.matches()) {
-      Logs.c("Detektirana komanda za pregled pruga.");
+      // Logs.c("Detektirana komanda za pregled pruga.");
       viewTracks();
       return true;
     } else if (vsMatcher.matches()) {
-      Logs.c("Detektirana komanda za pregled stanica uz prugu.");
+      // Logs.c("Detektirana komanda za pregled stanica uz prugu.");
       viewStations(vsMatcher.group("trackCode"), vsMatcher.group("order"));
       return true;
     } else if (vsbMatcher.matches()) {
-      Logs.c("Detektirana komanda za pregled stanica između dvije stanice.");
-      Logs.o("Početna stanica:    " + vsbMatcher.group("startStation"));
-      Logs.o("Posljednja stanica: " + vsbMatcher.group("endStation"));
+      // Logs.c("Detektirana komanda za pregled stanica između dvije stanice.");
       viewStationsBetween(vsbMatcher.group("startStation"), vsbMatcher.group("endStation"));
       return true;
     } else if (vcMatcher.matches()) {
-      Logs.c("Detektirana komanda za pregled kompozicija.");
+      // Logs.c("Detektirana komanda za pregled kompozicija.");
       try {
         viewComposition(ParsingUtil.i(vcMatcher.group("compositionCode")));
       } catch (NumberFormatException e) {
@@ -94,7 +82,7 @@ public class CommandSystem {
       }
       return true;
     } else {
-      Logs.c("Nepoznata komanda. Dostupne komande su:");
+      Logs.c("Nepoznata komanda.");
       outputMenu();
       return false;
     }
@@ -139,8 +127,8 @@ public class CommandSystem {
       Logs.footer(true);
       return;
     }
-    Logs.o("Oznaka pruge: " + trackID);
-    Logs.o("Redoslijed: " + (order.equals("N") ? "Rastući" : "Padajući"));
+    // Logs.o("Oznaka pruge: " + trackID);
+    // Logs.o("Redoslijed: " + (order.equals("N") ? "Rastući" : "Padajući"));
     Logs.o(" Naziv\t\t\t| Vrsta\t\t| Udaljenost od početne stanice (km)", false);
     Logs.o(" -----\t\t\t| -----\t\t| ----------------------------", false);
     if (order.equals("O"))
@@ -161,6 +149,8 @@ public class CommandSystem {
   }
 
   private void viewStationsBetween(String startStation, String endStation) {
+    // Logs.o("Početna stanica: " + startStation);
+    // Logs.o("Posljednja stanica: " + endStation);
     Logs.header("Pregled stanica između " + startStation + " - " + endStation, true);
     List<Station> st1 = RailwaySingleton.getInstance().getStationsByName(startStation);
     List<Station> st2 = RailwaySingleton.getInstance().getStationsByName(endStation);
@@ -170,6 +160,8 @@ public class CommandSystem {
       Logs.footer(true);
       return;
     }
+    Logs.o(" Naziv\t\t\t| Vrsta\t\t| Udaljenost od početne stanice (km)", false);
+    Logs.o(" -----\t\t\t| -----\t\t| ----------------------------------", false);
     traverseStationsBetween(st1.getFirst(), st2.getFirst());
     Logs.footer(true);
   }
@@ -214,7 +206,6 @@ public class CommandSystem {
     Logs.toggleInfo();
   }
 
-  // Helper method to output station details
   private void outputStation(Station station, double distanceSoFar) {
     String stationName = station.name();
     String stationPadding =
@@ -257,26 +248,3 @@ public class CommandSystem {
   }
 
 }
-
-/*
- * Korisniku se daje mogućnost da izvrši sljedeće komande za aktivnosti: ● Pregled pruga ○ Sintaksa:
- * ■ IP ○ Primjer: ■ IP ○ Opis primjera: ■ Ispis tablice s prugama (oznaka, početna i završna
- * željeznička stanica, ukupan broj kilometara). ● Pregled željezničkih stanica za odabranoj pruzi ○
- * Sintaksa: ■ ISP oznakaPruge redoslijed ○ Primjer: ■ ISP M501 N ○ Opis primjera: ■ Ispis tablice
- * sa željezničkim stanicama na odabranoj pruzi (naziv željezničke stanice, vrsta, broj kilometara
- * od početne željezničke stanice) prema normalnom redoslijedu. Npr. kod M501 ide od Kotoriba do
- * Macinec. ○ Primjer: ■ ISP M501 O ○ Opis primjera: ■ Ispis tablice sa željezničkim stanicama na
- * odabranoj pruzi (naziv željezničke stanice, vrsta, broj kilometara od početne željezničke
- * stanice) prema obrnutom redoslijedu. Npr. kod M501 ide od Macinec do Kotoriba. ● Pregled
- * željezničkih stanica između dviju željezničke stanica ○ Sintaksa: ■ ISI2S polaznaStanica -
- * odredišnaStanica ○ Primjer: ■ ISI2S Donji Kraljevec - Čakovec ○ Opis primjera: 4 Kolegij: Uzorci
- * dizajna Akademska godina: 2024./2025. ■ Ispis tablice sa željezničkim stanicama između dviju
- * željezničke stanica (naziv željezničke stanice, vrsta, broj kilometara od početne željezničke
- * stanice). U primjeru su stanice koje su na istoj pruzi. ○ Primjer: ■ ISI2S Donji Kraljevec -
- * Zagreb glavni kolodvor ○ Opis primjera: ■ Ispis tablice sa željezničkim stanicama na odabranoj
- * pruzi (naziv željezničke stanice, vrsta, broj kilometara od početne željezničke stanice) U
- * primjeru su željezničke stanice koje su na različitim prugama. ● Pregled kompozicije ○ Sintaksa:
- * ■ IK oznaka ○ Primjer: ■ IK 8001 ○ Opis primjera: ■ Ispis tablice sa prijevoznim sredstvima u
- * kompoziciji (oznaka, uloga, opis, godina, namjena, vrsta pogona, maks. brzina). ● Prekid rada
- * programa ○ Sintaksa: ■ Q
- */

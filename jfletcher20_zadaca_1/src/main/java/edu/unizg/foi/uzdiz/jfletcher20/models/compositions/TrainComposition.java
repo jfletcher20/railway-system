@@ -1,6 +1,5 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.compositions;
 
-import java.util.Collection;
 import java.util.List;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.Wagon;
@@ -54,8 +53,8 @@ public record TrainComposition(int trainId, // Oznaka
       for (int i = 0; i < driveWagons.size(); i++) {
         if (!getTrainWagons().get(i).equals(driveWagons.get(i))) {
           Logs.e("Ukloniti će se kompozicija " + trainId + " jer nisu sve lokomotive u kompoziciji "
-              + trainId + " na početku kompozicije: "
-              + driveWagons.get(i).id() + " nije na početku kompozicije.");
+              + trainId + " na početku kompozicije: " + driveWagons.get(i).id()
+              + " nije na početku kompozicije.");
           RailwaySingleton.getInstance().removeComposition(trainId);
           return null;
         }

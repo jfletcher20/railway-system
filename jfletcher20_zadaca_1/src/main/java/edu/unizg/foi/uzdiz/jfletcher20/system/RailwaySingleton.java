@@ -181,10 +181,6 @@ public class RailwaySingleton {
 
   public double getDistanceFromEnd(Station station) {
     TrainTrack currentTrack = getTrackOfStation(station);
-    // get the distance from the end station by first calculating how far teh end station is fro
-    // mthe start
-    // then calculating how far the current station is from the start
-    // and then reducing the two
     return getDistanceFromStart(currentTrack.getEndStation()) - getDistanceFromStart(station);
   }
 
@@ -340,10 +336,10 @@ public class RailwaySingleton {
 
   public void printStats() {
     Logs.header("JLF Željeznica: Statistika", true);
-    Logs.o("Stanice: " + this.getStations().size());
-    Logs.o("Vozila: " + this.wagons.size());
-    Logs.o("Kompozicije: " + this.trains.size() + " (" + this.getCompositions().size() + ")");
-    Logs.o("Pruge: " + this.tracks.size());
+    // Logs.o("Stanice: " + this.getStations().size());
+    // Logs.o("Vozila: " + this.wagons.size());
+    // Logs.o("Kompozicije: " + this.trains.size() + " (" + this.getCompositions().size() + ")");
+    // Logs.o("Pruge: " + this.tracks.size());
     Logs.footer(true);
   }
 
@@ -426,6 +422,3 @@ public class RailwaySingleton {
   }
 
 }
-/*
- * ISI2S Macinec - Zaprešić
- */

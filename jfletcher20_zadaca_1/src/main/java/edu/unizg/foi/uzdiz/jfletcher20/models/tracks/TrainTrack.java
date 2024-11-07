@@ -6,12 +6,6 @@ import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 
-// Željeznička pruga između dviju željezničkih stanica ima određene osobine: oznaka, kategorija
-// (lokalna, regionalna, međunarodna), način prijevoza (klasično (ugljen, dizel, baterije) ili
-// električna struja (podrazumijeva da može i klasično)), broj kolosijeka (jedan ili dva), dužina
-// (0-999 km), dopušteno opterećenje po osovini (10-50 t/os), dopušteno opterećenje po dužnom metru
-// (2-10 t/m), status (ispravna, u kvaru, zatvorena)
-
 /**
  * Train track object represents a train track.
  * 
@@ -51,20 +45,12 @@ public record TrainTrack(String id, // oznaka pruge
     if (status == null)
       throw new IllegalArgumentException("Status pruge mora biti definiran.");
   }
-  
+
   public Station getStartStation() {
     return RailwaySingleton.getInstance().getStartStation(this.id);
   }
-  
+
   public Station getEndStation() {
     return RailwaySingleton.getInstance().getEndStation(this.id);
   }
 }
-
-/*
- * example CSV file data: --zs [has 14 columns] Stanica;Oznaka pruge;Vrsta stanice;Status
- * stanice;Putnici ul/iz;Roba ut/ist;Kategorija pruge;Broj perona;Vrsta pruge;Broj kolosjeka;DO po
- * osovini;DO po duznom m;Status pruge;Dužina Kotoriba;M501;kol.;O;DA;DA;M;1;K;1;22,5;8,0;I;0 Donji
- * Mihaljevec;M501;staj.;O;DA;NE;M;1;K;1;22,5;8,0;I;7 Donji
- * Kraljevec;M501;kol.;O;DA;DA;M;1;K;1;22,5;8,0;I;6
- */
