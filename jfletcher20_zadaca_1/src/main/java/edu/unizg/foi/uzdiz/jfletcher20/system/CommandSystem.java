@@ -182,28 +182,42 @@ public class CommandSystem {
       for (int i = 0; i < stations.size(); i++) {
         Station currentStation = stations.get(i);
 
-        // If there's a previous station, find and output intermediate stations on the track
+        Station intermediateStation = null;
         if (i > 0) {
           Station previousStation = stations.get(i - 1);
           TrainTrack track = previousStation.getTrack();
 
           // Find stations between previousStation and currentStation on the same track
-          List<Station> trackStations = RailwaySingleton.getInstance().getRailroad().get(track.id());
+          List<Station> trackStations =
+              RailwaySingleton.getInstance().getRailroad().get(track.id());
           int startIndex = trackStations.indexOf(previousStation);
           int endIndex = trackStations.indexOf(currentStation);
 
-          if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
-            for (int j = startIndex + 1; j < endIndex; j++) {
-              Station intermediateStation = trackStations.get(j);
-              cumulativeDistance += intermediateStation.getTrack().trackLength();
+          if (startIndex != -1 && endIndex != -1) {
+            if (startIndex < endIndex) {
+              // Traverse in forward order
+              for (int j = startIndex + 1; j < endIndex; j++) {
+                intermediateStation = trackStations.get(j);
+                cumulativeDistance += intermediateStation.getTrack().trackLength();
+                outputStation(intermediateStation, cumulativeDistance);
+              }
+            } else {
+              // Traverse in reverse order
+              for (int j = startIndex - 1; j > endIndex; j--) {
+                intermediateStation = trackStations.get(j);
+                // calculate the cumulativeDistance as if it were traversed in forward order, and then simply reduce it by the total track length
+                cumulativeDistance += intermediateStation.getTrack().trackLength();
+                outputStation(intermediateStation, cumulativeDistance);
+              }
 
-              outputStation(intermediateStation, cumulativeDistance);
             }
           }
         }
 
-        // Output the main route station
-        cumulativeDistance += currentStation.getTrack().trackLength();
+        if (i > 0)
+          cumulativeDistance += currentStation.getTrack().trackLength();
+        if (i == stations.size() - 1 && stations.size() > 1 && intermediateStation != null)
+          cumulativeDistance += stations.getFirst().getTrack().trackLength();
         outputStation(currentStation, cumulativeDistance);
       }
     }
@@ -224,6 +238,7 @@ public class CommandSystem {
     Logs.o(" " + stationName + stationPadding + "| " + stationType + stationTypePadding + "| "
         + distanceSoFar, false);
   }
+
 
   private void viewComposition(int trainId) {
     Logs.header("Pregled kompozicija", true);
