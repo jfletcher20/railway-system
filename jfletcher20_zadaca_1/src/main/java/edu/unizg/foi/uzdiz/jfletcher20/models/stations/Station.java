@@ -61,22 +61,19 @@ public record Station(String name, // Stanica
   }
 
   public double getDistanceFromStart() {
-    return RailwaySingleton.getInstance().getDistanceBetweenStations(getTrack().getStartStation(),
-        this);
+    return RailwaySingleton.getInstance().getDistanceFromStart(this);
   }
 
   public double getDistanceFromEnd() {
-    return RailwaySingleton.getInstance().getDistanceBetweenStations(getTrack().getEndStation(),
-        this);
+    return RailwaySingleton.getInstance().getDistanceFromEnd(this);
   }
 
   public double getDistanceFromStart(Station first) {
-    // return RailwaySingleton.getInstance().getDistanceFromStart(first, this);
-    return RailwaySingleton.getInstance().getDistanceBetweenStations(first, this);
+    return RailwaySingleton.getInstance().getDistanceFromStart(first, this);
   }
 
-  public double getDistanceFromEnd(Station last) {
-    return RailwaySingleton.getInstance().getDistanceBetweenStations(last, this);
+  public double getDistanceFromEnd(Station last, Station first) {
+    return RailwaySingleton.getInstance().getDistanceFromEnd(last, first, this);
   }
 
 }

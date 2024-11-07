@@ -187,9 +187,9 @@ public class CommandSystem {
         String stationType = station.type().toString();
         String stationTypePadding =
             stationType.length() > 8 ? stationType.length() > 17 ? "\t" : "\t" : "\t";
-        Logs.o(" " + stationName + stationPadding + "| " + station.type() + stationTypePadding
-            + "| "
-            + RailwaySingleton.getInstance().getDistanceBetweenStations(st1.getFirst(), station),
+        Logs.o(
+            " " + stationName + stationPadding + "| " + station.type() + stationTypePadding + "| "
+                + "unkown", // TODO: calculate distance between stations
             false);
       }
     }

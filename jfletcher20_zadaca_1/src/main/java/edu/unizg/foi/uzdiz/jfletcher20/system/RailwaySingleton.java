@@ -169,51 +169,46 @@ public class RailwaySingleton {
     return null;
   }
 
-  public double getDistanceBetweenStations(Station station1, Station station2) {
-    if (station1 == null || station2 == null)
-      return -99999;
+  public double getDistanceFromStart(Station station) {
+    TrainTrack currentTrack = getTrackOfStation(station);
+    return getDistanceBetweenStations(currentTrack.id(), currentTrack.getStartStation(), station);
+  }
 
-    var stations = this.railroad.get(station1.getTrack().id());
-    if (stations == null)
-      return -99999;
+  public double getDistanceFromStart(Station firstStation, Station currentStation) {
+    TrainTrack currentTrack = getTrackOfStation(currentStation);
+    return getDistanceBetweenStations(currentTrack.id(), firstStation, currentStation);
+  }
 
+  public double getDistanceFromEnd(Station station) {
+    TrainTrack currentTrack = getTrackOfStation(station);
+    // get the distance from the end station by first calculating how far teh end station is fro
+    // mthe start
+    // then calculating how far the current station is from the start
+    // and then reducing the two
+    return getDistanceFromStart(currentTrack.getEndStation()) - getDistanceFromStart(station);
+  }
+
+  public double getDistanceFromEnd(Station lastStation, Station firstStation,
+      Station currentStation) {
+    return Math.abs(getDistanceFromStart(lastStation, currentStation)
+        - getDistanceFromStart(lastStation, firstStation));
+  }
+
+  public double getDistanceBetweenStations(String trackID, Station station1, Station station2) {
+    var stations = this.railroad.get(trackID);
     int stationIndex1 = -1, stationIndex2 = -1;
-
     for (int i = 0; i < stations.size(); i++) {
-      if (stations.get(i).equals(station1))
+      if (stations.get(i) == station1)
         stationIndex1 = i;
-      if (stations.get(i).equals(station2))
+      if (stations.get(i) == station2)
         stationIndex2 = i;
     }
-
-    // If either station wasn't found
-    if (stationIndex1 == -1 || stationIndex2 == -1)
-      return -99999;
-
-    // Get track segments
-    List<TrainTrack> trackSegments =
-        this.tracks.stream().filter(t -> t.id().equals(station1.getTrack().id())).toList();
-
-    // Calculate based on direction
-    int start = Math.min(stationIndex1, stationIndex2);
-    int end = Math.max(stationIndex1, stationIndex2);
-
-    double totalDistance = 0;
-    // Include the segment between end-1 and end
-    for (int i = start; i < end; i++) {
-      totalDistance += trackSegments.get(i).trackLength();
-    }
-
-    // If we're going backwards (station1 comes after station2 in the track)
-//    if (stationIndex1 > stationIndex2) {
-//      totalDistance = -totalDistance;
-//    }
-
-    Logs.i(String.format("Distance: %.2f units from [%d]::%s to [%d]::%s (%d segments)",
-        totalDistance, stationIndex1, station1.name(), stationIndex2, station2.name(),
-        Math.abs(stationIndex2 - stationIndex1)));
-
-    return totalDistance;
+    List<TrainTrack> tracks = this.tracks.stream().filter(t -> t.id().equals(trackID)).toList();
+    tracks = tracks.subList(stationIndex1, stationIndex2 + 1);
+    Logs.i("RailwaySingleton getDistanceBetweenStations: " + tracks.size() + " tracks between ["
+        + stationIndex1 + "]::" + station1.name() + " and [" + stationIndex2 + "]::"
+        + station2.name());
+    return tracks.stream().mapToDouble(TrainTrack::trackLength).sum();
   }
 
   public double getTotalTrackLength(String trackID) {
@@ -360,7 +355,10 @@ public class RailwaySingleton {
   public List<List<Station>> getRoutesBetweenStations(Station startStation, Station endStation) {
 
     if (startStation == null || endStation == null) {
-      Logs.e("Ne može se pronaći ruta između stanica koje ne postoje.");
+      Logs.e("Ne može se pronaći ruta između stanica koje ne postoje:" + // log only the ones that
+                                                                         // don't exist
+          (startStation == null ? " [početna stanica]" : "")
+          + (endStation == null ? " [posljednja stanica]" : ""));
       return null;
     }
 
@@ -448,11 +446,6 @@ public class RailwaySingleton {
 
     visited.remove(currentStation);
     currentRoute.remove(currentRoute.size() - 1);
-  }
-
-  public boolean tracksIntersect(TrainTrack track1, TrainTrack track2) {
-    return getStationsOnTrack(track1.id()).stream().anyMatch(
-        s -> getStationsOnTrack(track2.id()).stream().anyMatch(s2 -> s.name().equals(s2.name())));
   }
 
 }
