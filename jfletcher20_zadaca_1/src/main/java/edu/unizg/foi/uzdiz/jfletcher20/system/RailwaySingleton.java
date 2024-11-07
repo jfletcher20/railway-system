@@ -351,24 +351,18 @@ public class RailwaySingleton {
     return getStations().stream().filter(s -> s.name().equals(station)).toList();
   }
 
-  // Method to find all possible routes between stations
+  // Method to find all stations on which the track changes en route to the end station
   public List<List<Station>> getRoutesBetweenStations(Station startStation, Station endStation) {
-
     if (startStation == null || endStation == null) {
-      Logs.e("Ne može se pronaći ruta između stanica koje ne postoje:" + // log only the ones that
-                                                                         // don't exist
-          (startStation == null ? " [početna stanica]" : "")
+      Logs.e("Ne može se pronaći ruta između stanica koje ne postoje:"
+          + (startStation == null ? " [početna stanica]" : "")
           + (endStation == null ? " [posljednja stanica]" : ""));
       return null;
     }
-
-    if (startStation == endStation) {
+    if (startStation == endStation)
       return List.of(List.of(startStation, endStation));
-    }
-
     List<List<Station>> allRoutes = new ArrayList<>();
     Set<TrainTrack> visitedTracks = new HashSet<>();
-
     Set<Station> visited = new HashSet<>();
     List<Station> currentRoute = new ArrayList<>();
 
@@ -380,65 +374,28 @@ public class RailwaySingleton {
 
   }
 
-
-  // Depth First Search algorithm to find all possible routes between stations
-  // recursively iterate over every station:
-  // check if there are other tracks with a station with that station.name()
-  // if there are, add that station to the current route and switch to that track
-  // if the station is the end station, add the current route to allRoutes
-  // else, continue the search down the current track
-  //
-  // if the station is not the end station, remove the station from the current route and
-  // continue the search
-
   public void dfs(Station currentStation, Station endStation, Set<Station> visited,
       List<Station> currentRoute, List<List<Station>> allRoutes, Set<TrainTrack> visitedTracks) {
-
     visited.add(currentStation);
     currentRoute.add(currentStation);
-
     if (currentStation.name().equals(endStation.name())) {
       allRoutes.add(new ArrayList<>(currentRoute));
     } else {
-      // Get all tracks that have stations with the same name as the current station
       Set<TrainTrack> connectedTracks = new HashSet<>();
       for (Map.Entry<String, List<Station>> entry : getRailroad().entrySet()) {
         if (entry.getValue().stream().anyMatch(s -> s.name().equals(currentStation.name()))) {
           connectedTracks.add(getTrackById(entry.getKey()));
         }
       }
-
-      // For each connected track
       for (TrainTrack track : connectedTracks) {
         if (!visitedTracks.contains(track)) {
           visitedTracks.add(track);
-
-          // Get the station object on this track that matches current station name
           Station trackStation = getStationsOnTrack(track.id()).stream()
               .filter(s -> s.name().equals(currentStation.name())).findFirst().orElse(null);
-
           if (trackStation != null) {
-            // Get all next stations on this track
-            List<Station> trackStations = getStationsOnTrack(track.id());
-            int currentIndex = trackStations.indexOf(trackStation);
-
-            // Check stations after current station
-            for (int i = currentIndex + 1; i < trackStations.size(); i++) {
-              Station nextStation = trackStations.get(i);
-              if (!visited.contains(nextStation)) {
-                dfs(nextStation, endStation, visited, currentRoute, allRoutes, visitedTracks);
-              }
-            }
-
-            // Check stations before current station
-            for (int i = currentIndex - 1; i >= 0; i--) {
-              Station nextStation = trackStations.get(i);
-              if (!visited.contains(nextStation)) {
-                dfs(nextStation, endStation, visited, currentRoute, allRoutes, visitedTracks);
-              }
-            }
+            validTrackStation(trackStation, endStation, visited, currentRoute, allRoutes,
+                visitedTracks, track);
           }
-
           visitedTracks.remove(track);
         }
       }
@@ -446,6 +403,26 @@ public class RailwaySingleton {
 
     visited.remove(currentStation);
     currentRoute.remove(currentRoute.size() - 1);
+  }
+
+  private void validTrackStation(Station trackStation, Station endStation, Set<Station> visited,
+      List<Station> currentRoute, List<List<Station>> allRoutes, Set<TrainTrack> visitedTracks,
+      TrainTrack track) {
+
+    List<Station> trackStations = getStationsOnTrack(track.id());
+    int currentIndex = trackStations.indexOf(trackStation);
+    for (int i = currentIndex + 1; i < trackStations.size(); i++) {
+      Station nextStation = trackStations.get(i);
+      if (!visited.contains(nextStation)) {
+        dfs(nextStation, endStation, visited, currentRoute, allRoutes, visitedTracks);
+      }
+    }
+    for (int i = currentIndex - 1; i >= 0; i--) {
+      Station nextStation = trackStations.get(i);
+      if (!visited.contains(nextStation)) {
+        dfs(nextStation, endStation, visited, currentRoute, allRoutes, visitedTracks);
+      }
+    }
   }
 
 }

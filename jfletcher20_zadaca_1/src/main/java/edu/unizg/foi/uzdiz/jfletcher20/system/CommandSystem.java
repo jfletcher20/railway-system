@@ -162,7 +162,6 @@ public class CommandSystem {
 
   private void viewStationsBetween(String startStation, String endStation) {
     Logs.header("Pregled stanica između " + startStation + " - " + endStation, true);
-
     List<Station> st1 = RailwaySingleton.getInstance().getStationsByName(startStation);
     List<Station> st2 = RailwaySingleton.getInstance().getStationsByName(endStation);
 
@@ -174,29 +173,56 @@ public class CommandSystem {
     }
 
     Logs.toggleInfo();
+    var routes = RailwaySingleton.getInstance().getRoutesBetweenStations(st1.get(0), st2.get(0));
 
-    var routes =
-        RailwaySingleton.getInstance().getRoutesBetweenStations(st1.getFirst(), st2.getFirst());
     for (List<Station> stations : routes) {
-      Logs.withPadding(() -> {
-      }, false, true);
-      for (Station station : stations) {
-        String stationName = station.name();
-        String stationPadding =
-            stationName.length() > 8 ? stationName.length() > 17 ? "\t" : "\t\t" : "\t\t\t";
-        String stationType = station.type().toString();
-        String stationTypePadding =
-            stationType.length() > 8 ? stationType.length() > 17 ? "\t" : "\t" : "\t";
-        Logs.o(
-            " " + stationName + stationPadding + "| " + station.type() + stationTypePadding + "| "
-                + "unkown", // TODO: calculate distance between stations
-            false);
+      Logs.o("", false);
+      double cumulativeDistance = 0.0;
+
+      for (int i = 0; i < stations.size(); i++) {
+        Station currentStation = stations.get(i);
+
+        // If there's a previous station, find and output intermediate stations on the track
+        if (i > 0) {
+          Station previousStation = stations.get(i - 1);
+          TrainTrack track = previousStation.getTrack();
+
+          // Find stations between previousStation and currentStation on the same track
+          List<Station> trackStations = RailwaySingleton.getInstance().getRailroad().get(track.id());
+          int startIndex = trackStations.indexOf(previousStation);
+          int endIndex = trackStations.indexOf(currentStation);
+
+          if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
+            for (int j = startIndex + 1; j < endIndex; j++) {
+              Station intermediateStation = trackStations.get(j);
+              cumulativeDistance += intermediateStation.getTrack().trackLength();
+
+              outputStation(intermediateStation, cumulativeDistance);
+            }
+          }
+        }
+
+        // Output the main route station
+        cumulativeDistance += currentStation.getTrack().trackLength();
+        outputStation(currentStation, cumulativeDistance);
       }
     }
 
     Logs.toggleInfo();
-
     Logs.footer(true);
+  }
+
+  // Helper method to output station details
+  private void outputStation(Station station, double distanceSoFar) {
+    String stationName = station.name();
+    String stationPadding =
+        stationName.length() > 8 ? stationName.length() > 17 ? "\t" : "\t\t" : "\t\t\t";
+    String stationType = station.type().toString();
+    String stationTypePadding =
+        stationType.length() > 8 ? stationType.length() > 17 ? "\t" : "\t" : "\t";
+
+    Logs.o(" " + stationName + stationPadding + "| " + stationType + stationTypePadding + "| "
+        + distanceSoFar, false);
   }
 
   private void viewComposition(int trainId) {
