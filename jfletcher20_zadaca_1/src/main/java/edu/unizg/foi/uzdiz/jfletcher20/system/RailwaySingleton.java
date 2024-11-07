@@ -169,58 +169,60 @@ public class RailwaySingleton {
     return null;
   }
 
-  public double getDistanceFromStart(Station station) {
-    TrainTrack currentTrack = getTrackOfStation(station);
-    return getDistanceBetweenStations(currentTrack.id(), currentTrack.getStartStation(), station);
-  }
+  public double getDistanceBetweenStations(Station station1, Station station2) {
+    if (station1 == null || station2 == null)
+      return -99999;
 
-  public double getDistanceFromStart(Station firstStation, Station currentStation) {
-    TrainTrack currentTrack = getTrackOfStation(currentStation);
-    return getDistanceBetweenStations(currentTrack.id(), firstStation, currentStation);
-  }
+    var stations = this.railroad.get(station1.getTrack().id());
+    if (stations == null)
+      return -99999;
 
-  public double getDistanceFromEnd(Station station) {
-    TrainTrack currentTrack = getTrackOfStation(station);
-    // get the distance from the end station by first calculating how far teh end station is fro
-    // mthe start
-    // then calculating how far the current station is from the start
-    // and then reducing the two
-    return getDistanceFromStart(currentTrack.getEndStation()) - getDistanceFromStart(station);
-  }
-
-  public double getDistanceFromEnd(Station lastStation, Station firstStation,
-      Station currentStation) {
-    return Math.abs(getDistanceFromStart(lastStation, currentStation)
-        - getDistanceFromStart(lastStation, firstStation));
-  }
-
-  public double getDistanceBetweenStations(String trackID, Station station1, Station station2) {
-    var stations = this.railroad.get(trackID);
     int stationIndex1 = -1, stationIndex2 = -1;
+
     for (int i = 0; i < stations.size(); i++) {
-      if (stations.get(i) == station1)
+      if (stations.get(i).equals(station1))
         stationIndex1 = i;
-      if (stations.get(i) == station2)
+      if (stations.get(i).equals(station2))
         stationIndex2 = i;
     }
-    List<TrainTrack> tracks = this.tracks.stream().filter(t -> t.id().equals(trackID)).toList();
-    tracks = tracks.subList(stationIndex1, stationIndex2 + 1);
-    Logs.i("RailwaySingleton getDistanceBetweenStations: " + tracks.size() + " tracks between ["
-        + stationIndex1 + "]::" + station1.name() + " and [" + stationIndex2 + "]::"
-        + station2.name());
-    return tracks.stream().mapToDouble(TrainTrack::trackLength).sum();
+
+    // If either station wasn't found
+    if (stationIndex1 == -1 || stationIndex2 == -1)
+      return -99999;
+
+    // Get track segments
+    List<TrainTrack> trackSegments =
+        this.tracks.stream().filter(t -> t.id().equals(station1.getTrack().id())).toList();
+
+    // Calculate based on direction
+    int start = Math.min(stationIndex1, stationIndex2);
+    int end = Math.max(stationIndex1, stationIndex2);
+
+    double totalDistance = 0;
+    // Include the segment between end-1 and end
+    for (int i = start; i < end; i++) {
+      totalDistance += trackSegments.get(i).trackLength();
+    }
+
+    // If we're going backwards (station1 comes after station2 in the track)
+//    if (stationIndex1 > stationIndex2) {
+//      totalDistance = -totalDistance;
+//    }
+
+    Logs.i(String.format("Distance: %.2f units from [%d]::%s to [%d]::%s (%d segments)",
+        totalDistance, stationIndex1, station1.name(), stationIndex2, station2.name(),
+        Math.abs(stationIndex2 - stationIndex1)));
+
+    return totalDistance;
   }
 
   public double getTotalTrackLength(String trackID) {
-    double sum = 0;
-    for (var track : this.tracks.stream().filter(t -> t.id().equals(trackID)).toList())
-      sum += track.trackLength();
-    return sum;
-  }
+    if (trackID == null)
+      return 0;
 
-  // public void addStation(Station station) {
-  // this.railroad.put(station.name(), new ArrayList<>());
-  // }
+    return this.tracks.stream().filter(t -> t.id().equals(trackID))
+        .mapToDouble(TrainTrack::trackLength).sum();
+  }
 
   public void addWagon(Wagon wagon) {
     this.wagons.add(wagon);
@@ -355,66 +357,105 @@ public class RailwaySingleton {
   }
 
   // Method to find all possible routes between stations
-  public List<List<Station>> getRoutesBetweenStations(List<Station> startStations,
-      List<Station> endStations) {
+  public List<List<Station>> getRoutesBetweenStations(Station startStation, Station endStation) {
 
-    List<List<Station>> allRoutes = new ArrayList<>();
-
-    for (Station startStation : startStations) {
-      for (Station endStation : endStations) {
-        Set<Station> visited = new HashSet<>();
-        List<Station> currentRoute = new ArrayList<>();
-        dfs(startStation, endStation, visited, currentRoute, allRoutes);
-      }
+    if (startStation == null || endStation == null) {
+      Logs.e("Ne može se pronaći ruta između stanica koje ne postoje.");
+      return null;
     }
 
+    if (startStation == endStation) {
+      return List.of(List.of(startStation, endStation));
+    }
+
+    List<List<Station>> allRoutes = new ArrayList<>();
+    Set<TrainTrack> visitedTracks = new HashSet<>();
+
+    Set<Station> visited = new HashSet<>();
+    List<Station> currentRoute = new ArrayList<>();
+
+    Logs.w("Found " + allRoutes.size() + " routes between " + startStation.name() + " and "
+        + endStation.name() + " with " + visited.size() + " stations visited.");
+
+    dfs(startStation, endStation, visited, currentRoute, allRoutes, visitedTracks);
     return allRoutes;
+
   }
 
-  // DFS helper method
-  private void dfs(Station currentStation, Station targetStation, Set<Station> visited,
-      List<Station> currentRoute, List<List<Station>> allRoutes) {
 
-    // Mark the current station as visited and add it to the current route
+  // Depth First Search algorithm to find all possible routes between stations
+  // recursively iterate over every station:
+  // check if there are other tracks with a station with that station.name()
+  // if there are, add that station to the current route and switch to that track
+  // if the station is the end station, add the current route to allRoutes
+  // else, continue the search down the current track
+  //
+  // if the station is not the end station, remove the station from the current route and
+  // continue the search
+
+  public void dfs(Station currentStation, Station endStation, Set<Station> visited,
+      List<Station> currentRoute, List<List<Station>> allRoutes, Set<TrainTrack> visitedTracks) {
+
     visited.add(currentStation);
     currentRoute.add(currentStation);
 
-    // If we've reached the target station, save the current route as a valid path
-    if (currentStation.equals(targetStation)) {
+    if (currentStation.name().equals(endStation.name())) {
       allRoutes.add(new ArrayList<>(currentRoute));
     } else {
-      // Recursively visit each neighboring station that hasn't been visited
-      List<Station> neighbors = getConnectedStations(currentStation);
-      for (Station neighbor : neighbors) {
-        if (!visited.contains(neighbor)) {
-          dfs(neighbor, targetStation, visited, currentRoute, allRoutes);
+      // Get all tracks that have stations with the same name as the current station
+      Set<TrainTrack> connectedTracks = new HashSet<>();
+      for (Map.Entry<String, List<Station>> entry : getRailroad().entrySet()) {
+        if (entry.getValue().stream().anyMatch(s -> s.name().equals(currentStation.name()))) {
+          connectedTracks.add(getTrackById(entry.getKey()));
+        }
+      }
+
+      // For each connected track
+      for (TrainTrack track : connectedTracks) {
+        if (!visitedTracks.contains(track)) {
+          visitedTracks.add(track);
+
+          // Get the station object on this track that matches current station name
+          Station trackStation = getStationsOnTrack(track.id()).stream()
+              .filter(s -> s.name().equals(currentStation.name())).findFirst().orElse(null);
+
+          if (trackStation != null) {
+            // Get all next stations on this track
+            List<Station> trackStations = getStationsOnTrack(track.id());
+            int currentIndex = trackStations.indexOf(trackStation);
+
+            // Check stations after current station
+            for (int i = currentIndex + 1; i < trackStations.size(); i++) {
+              Station nextStation = trackStations.get(i);
+              if (!visited.contains(nextStation)) {
+                dfs(nextStation, endStation, visited, currentRoute, allRoutes, visitedTracks);
+              }
+            }
+
+            // Check stations before current station
+            for (int i = currentIndex - 1; i >= 0; i--) {
+              Station nextStation = trackStations.get(i);
+              if (!visited.contains(nextStation)) {
+                dfs(nextStation, endStation, visited, currentRoute, allRoutes, visitedTracks);
+              }
+            }
+          }
+
+          visitedTracks.remove(track);
         }
       }
     }
 
-    // Backtrack: remove the current station from the path and mark it as unvisited
-    currentRoute.remove(currentRoute.size() - 1);
     visited.remove(currentStation);
+    currentRoute.remove(currentRoute.size() - 1);
   }
 
-  // Helper method to get connected stations for a given station
-  private List<Station> getConnectedStations(Station station) {
-    List<Station> connectedStations = new ArrayList<>();
-
-    TrainTrack track = getTrackOfStation(station);
-    if (track != null) {
-      List<Station> stationsOnTrack = getStationsOnTrack(track.id());
-
-      int index = stationsOnTrack.indexOf(station);
-      if (index > 0) {
-        connectedStations.add(stationsOnTrack.get(index - 1)); // Previous station
-      }
-      if (index < stationsOnTrack.size() - 1) {
-        connectedStations.add(stationsOnTrack.get(index + 1)); // Next station
-      }
-    }
-
-    return connectedStations;
+  public boolean tracksIntersect(TrainTrack track1, TrainTrack track2) {
+    return getStationsOnTrack(track1.id()).stream().anyMatch(
+        s -> getStationsOnTrack(track2.id()).stream().anyMatch(s2 -> s.name().equals(s2.name())));
   }
 
 }
+/*
+ * ISI2S Macinec - Zaprešić
+ */

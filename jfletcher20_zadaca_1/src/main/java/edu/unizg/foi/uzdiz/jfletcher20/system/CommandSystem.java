@@ -162,25 +162,24 @@ public class CommandSystem {
 
   private void viewStationsBetween(String startStation, String endStation) {
     Logs.header("Pregled stanica između " + startStation + " - " + endStation, true);
-    var data = RailwaySingleton.getInstance().getRailroad();
 
-    List<Station> firstStationPossibilities =
-        RailwaySingleton.getInstance().getStationsByName(startStation);
-    List<Station> lastStationPossibilities =
-        RailwaySingleton.getInstance().getStationsByName(endStation);
+    List<Station> st1 = RailwaySingleton.getInstance().getStationsByName(startStation);
+    List<Station> st2 = RailwaySingleton.getInstance().getStationsByName(endStation);
 
-    if (firstStationPossibilities.isEmpty() || lastStationPossibilities.isEmpty()) {
-      Logs.e("Nepostojeće stanice: " + (firstStationPossibilities.isEmpty() ? startStation : "")
-          + (lastStationPossibilities.isEmpty() ? endStation : ""));
+    if (st1.isEmpty() || st2.isEmpty()) {
+      Logs.e("Nepostojeće stanice:" + (st1.isEmpty() ? " " + startStation : "")
+          + (st2.isEmpty() ? " " + endStation : ""));
       Logs.footer(true);
       return;
     }
 
-    var routes = RailwaySingleton.getInstance()
-        .getRoutesBetweenStations(firstStationPossibilities, lastStationPossibilities);
+    Logs.toggleInfo();
+
+    var routes =
+        RailwaySingleton.getInstance().getRoutesBetweenStations(st1.getFirst(), st2.getFirst());
     for (List<Station> stations : routes) {
-      boolean normalDirection =
-          stations.get(0).getDistanceFromStart() < stations.get(1).getDistanceFromStart();
+      Logs.withPadding(() -> {
+      }, false, true);
       for (Station station : stations) {
         String stationName = station.name();
         String stationPadding =
@@ -189,11 +188,13 @@ public class CommandSystem {
         String stationTypePadding =
             stationType.length() > 8 ? stationType.length() > 17 ? "\t" : "\t" : "\t";
         Logs.o(" " + stationName + stationPadding + "| " + station.type() + stationTypePadding
-            + "| " + (normalDirection ? station.getDistanceFromStart(stations.getFirst())
-                : station.getDistanceFromEnd(stations.getLast(), stations.getFirst())),
+            + "| "
+            + RailwaySingleton.getInstance().getDistanceBetweenStations(st1.getFirst(), station),
             false);
       }
     }
+
+    Logs.toggleInfo();
 
     Logs.footer(true);
   }
