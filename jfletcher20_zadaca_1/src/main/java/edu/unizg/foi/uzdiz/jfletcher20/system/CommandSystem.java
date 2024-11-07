@@ -164,56 +164,46 @@ public class CommandSystem {
     Logs.header("Pregled stanica između " + startStation + " - " + endStation, true);
     List<Station> st1 = RailwaySingleton.getInstance().getStationsByName(startStation);
     List<Station> st2 = RailwaySingleton.getInstance().getStationsByName(endStation);
-
     if (st1.isEmpty() || st2.isEmpty()) {
       Logs.e("Nepostojeće stanice:" + (st1.isEmpty() ? " " + startStation : "")
           + (st2.isEmpty() ? " " + endStation : ""));
       Logs.footer(true);
       return;
     }
+    traverseStationsBetween(st1.getFirst(), st2.getFirst());
+    Logs.footer(true);
+  }
 
+  private void traverseStationsBetween(Station startStation, Station endStation) {
     Logs.toggleInfo();
-    var routes = RailwaySingleton.getInstance().getRoutesBetweenStations(st1.get(0), st2.get(0));
-
+    var routes = RailwaySingleton.getInstance().getRoutesBetweenStations(startStation, endStation);
     for (List<Station> stations : routes) {
       Logs.o("", false);
       double cumulativeDistance = 0.0;
-
       for (int i = 0; i < stations.size(); i++) {
-        Station currentStation = stations.get(i);
-
-        Station intermediateStation = null;
+        Station currentStation = stations.get(i), intermediateStation = null;
         if (i > 0) {
           Station previousStation = stations.get(i - 1);
           TrainTrack track = previousStation.getTrack();
-
-          // Find stations between previousStation and currentStation on the same track
           List<Station> trackStations =
               RailwaySingleton.getInstance().getRailroad().get(track.id());
           int startIndex = trackStations.indexOf(previousStation);
           int endIndex = trackStations.indexOf(currentStation);
-
           if (startIndex != -1 && endIndex != -1) {
             if (startIndex < endIndex) {
-              // Traverse in forward order
               for (int j = startIndex + 1; j < endIndex; j++) {
                 intermediateStation = trackStations.get(j);
                 cumulativeDistance += intermediateStation.getTrack().trackLength();
                 outputStation(intermediateStation, cumulativeDistance);
               }
-            } else {
-              // Traverse in reverse order
+            } else
               for (int j = startIndex - 1; j > endIndex; j--) {
                 intermediateStation = trackStations.get(j);
-                // calculate the cumulativeDistance as if it were traversed in forward order, and then simply reduce it by the total track length
                 cumulativeDistance += intermediateStation.getTrack().trackLength();
                 outputStation(intermediateStation, cumulativeDistance);
               }
-
-            }
           }
         }
-
         if (i > 0)
           cumulativeDistance += currentStation.getTrack().trackLength();
         if (i == stations.size() - 1 && stations.size() > 1 && intermediateStation != null)
@@ -221,9 +211,7 @@ public class CommandSystem {
         outputStation(currentStation, cumulativeDistance);
       }
     }
-
     Logs.toggleInfo();
-    Logs.footer(true);
   }
 
   // Helper method to output station details
