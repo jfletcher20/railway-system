@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposition;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
@@ -352,60 +354,63 @@ public class RailwaySingleton {
   // station
   public List<List<Station>> getRoutesBetweenStations(Station startStation, Station endStation) {
     if (startStation == null || endStation == null) {
-      Logs.e("Ne može se pronaći ruta između stanica koje ne postoje:"
-          + (startStation == null ? " [početna stanica]" : "")
-          + (endStation == null ? " [posljednja stanica]" : ""));
+      Logs.e("Cannot find route between non-existent stations:"
+          + (startStation == null ? " [start station]" : "")
+          + (endStation == null ? " [end station]" : ""));
       return null;
     }
     List<List<Station>> allRoutes = new ArrayList<>();
     List<Station> currentRoute = new ArrayList<>();
     Set<Station> visitedStations = new HashSet<>();
+    Set<String> uniqueRoutes = new HashSet<>();
 
-    dfs(startStation, endStation, visitedStations, currentRoute, allRoutes);
+    dfs(startStation, endStation, visitedStations, currentRoute, allRoutes, uniqueRoutes);
 
     return allRoutes;
   }
 
   private void dfs(Station currentStation, Station endStation, Set<Station> visitedStations,
-      List<Station> currentRoute, List<List<Station>> allRoutes) {
+      List<Station> currentRoute, List<List<Station>> allRoutes, Set<String> uniqueRoutes) {
     visitedStations.add(currentStation);
     currentRoute.add(currentStation);
 
     if (currentStation.equals(endStation)) {
-      allRoutes.add(new ArrayList<>(currentRoute));
+      String routeSignature = getRouteSignature(currentRoute);
+      if (uniqueRoutes.add(routeSignature)) {
+        allRoutes.add(new ArrayList<>(currentRoute));
+      }
     } else {
-      // Get all neighboring stations from the current station
       List<Station> neighbors = getNeighboringStations(currentStation);
       for (Station neighbor : neighbors) {
         if (!visitedStations.contains(neighbor)) {
-          dfs(neighbor, endStation, visitedStations, currentRoute, allRoutes);
+          dfs(neighbor, endStation, visitedStations, currentRoute, allRoutes, uniqueRoutes);
         }
       }
     }
 
-    // Backtrack
     visitedStations.remove(currentStation);
     currentRoute.remove(currentRoute.size() - 1);
   }
 
   private List<Station> getNeighboringStations(Station station) {
     List<Station> neighbors = new ArrayList<>();
-    // Iterate over all tracks that include the current station
-    for (Map.Entry<String, List<Station>> entry : getRailroad().entrySet()) {
-      List<Station> trackStations = entry.getValue();
-      int index = trackStations.indexOf(station);
-      if (index != -1) {
-        // Add previous station if it exists
-        if (index > 0) {
-          neighbors.add(trackStations.get(index - 1));
-        }
-        // Add next station if it exists
-        if (index < trackStations.size() - 1) {
-          neighbors.add(trackStations.get(index + 1));
+    for (List<Station> trackStations : getRailroad().values()) {
+      for (int i = 0; i < trackStations.size(); i++) {
+        if (trackStations.get(i).equals(station)) {
+          if (i > 0) {
+            neighbors.add(trackStations.get(i - 1));
+          }
+          if (i < trackStations.size() - 1) {
+            neighbors.add(trackStations.get(i + 1));
+          }
         }
       }
     }
     return neighbors;
+  }
+
+  private String getRouteSignature(List<Station> route) {
+    return route.stream().map(Station::name).collect(Collectors.joining("->"));
   }
 
 }
