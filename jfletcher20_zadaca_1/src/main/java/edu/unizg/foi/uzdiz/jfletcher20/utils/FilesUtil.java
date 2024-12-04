@@ -91,8 +91,9 @@ public abstract class FilesUtil {
           Logs.i(i, "Preskačem prazan redak.");
           continue;
         } else if (line.contains(";;")) {
-          Logs.e(i, "Redak sadrži praznu vrijednost na poziciji: " + line.indexOf(";;")
-              + ", preskačem redak: " + line);
+          // Logs.e(i, "Redak sadrži praznu vrijednost na poziciji: " + line.indexOf(";;")
+          //     + ", preskačem redak: " + line);
+          Logs.i(i, "Redak je prazan. Preskačem redak: " + line);
           continue;
         } else {
           createProduct(line, i, fileType);

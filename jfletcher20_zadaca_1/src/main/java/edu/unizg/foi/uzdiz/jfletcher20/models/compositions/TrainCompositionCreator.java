@@ -14,10 +14,10 @@ public class TrainCompositionCreator implements ICreator {
   public IProduct factoryMethod(String data, int row) {
     
     if (data == null || data.isEmpty()) {
-      Logs.e(row, "TrainCompositionCreator Prazan redak.");
+      Logs.w(row, "TrainCompositionCreator Prazan redak.");
       return null;
     } else if (data.split(";").length != 3) {
-      Logs.e(row, columnCountError(data.split(";").length));
+      Logs.w(row, columnCountError(data.split(";").length));
       return null;
     }
     

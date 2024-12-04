@@ -1,5 +1,6 @@
 package edu.unizg.foi.uzdiz.jfletcher20.system;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -8,11 +9,14 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 
 /**
- * The CommandSystem class is responsible for handling the command system of the program.
+ * The CommandSystem class is responsible for handling the command system of the
+ * program.
  * 
  * <p>
- * After all necessary files are loaded, the program must be prepared to execute commands in
- * interactive mode. During the program's operation, multiple commands can be executed until the
+ * After all necessary files are loaded, the program must be prepared to execute
+ * commands in
+ * interactive mode. During the program's operation, multiple commands can be
+ * executed until the
  * command Q is entered.
  * </p>
  * 
@@ -31,10 +35,10 @@ public class CommandSystem {
       "^IK (?<compositionCode>[0-9]+)$" //
   );
 
-
   public static CommandSystem instance = new CommandSystem();
 
-  private CommandSystem() {}
+  private CommandSystem() {
+  }
 
   public static CommandSystem getInstance() {
     return instance;
@@ -106,17 +110,25 @@ public class CommandSystem {
 
   private void viewTracks() {
     Logs.header("Pregled pruga", true);
-    Logs.o(" Oznaka\t| Početna stanica\t\t| Završna stanica\t\t| Udaljenost (km)", false);
-    Logs.o(" ------\t| ---------------\t\t| ---------------\t\t| ---------------", false);
-    for (var track : RailwaySingleton.getInstance().getRailroad().keySet()) {
-      TrainTrack trackObj = RailwaySingleton.getInstance().getTrackById(track);
-      var t1 = trackObj.getStartStation().name();
-      var t2 = trackObj.getEndStation().name();
-      String t1Padding = t1.length() > 13 ? t1.length() > 18 ? "\t" : "\t\t" : "\t\t\t";
-      String t2Padding = t2.length() > 13 ? t2.length() > 18 ? "\t" : "\t\t" : "\t\t\t";
-      Logs.o(" " + trackObj.id() + "\t| " + t1 + t1Padding + "| " + t2 + t2Padding + "| "
-          + RailwaySingleton.getInstance().getTotalTrackLength(trackObj.id()), false);
+
+    List<String> header = Arrays.asList("Oznaka", "Početna stanica", "Završna stanica", "Udaljenost (km)");
+    Logs.tableHeader(header);
+
+    for (var trackId : RailwaySingleton.getInstance().getRailroad().keySet()) {
+      TrainTrack track = RailwaySingleton.getInstance().getTrackById(trackId);
+      String startStationName = track.getStartStation().name();
+      String endStationName = track.getEndStation().name();
+      String distance = String.format("%.2f", RailwaySingleton.getInstance().getTotalTrackLength(track.id()));
+
+      List<String> row = Arrays.asList(
+          track.id(),
+          startStationName,
+          endStationName,
+          distance);
+
+      Logs.tableRow(row);
     }
+    Logs.printTable();
   }
 
   private void viewStations(String trackID, String order) {
@@ -135,11 +147,9 @@ public class CommandSystem {
       data = data.reversed();
     for (var station : data) {
       String stationName = station.name();
-      String stationPadding =
-          stationName.length() > 8 ? stationName.length() > 17 ? "\t" : "\t\t" : "\t\t\t";
+      String stationPadding = stationName.length() > 8 ? stationName.length() > 17 ? "\t" : "\t\t" : "\t\t\t";
       String stationType = station.type().toString();
-      String stationTypePadding =
-          stationType.length() > 8 ? stationType.length() > 17 ? "\t" : "\t" : "\t";
+      String stationTypePadding = stationType.length() > 8 ? stationType.length() > 17 ? "\t" : "\t" : "\t";
       Logs.o(
           " " + stationName + stationPadding + "| " + station.type() + stationTypePadding + "| "
               + (order.equals("O") ? station.getDistanceFromEnd() : station.getDistanceFromStart()),
@@ -177,8 +187,7 @@ public class CommandSystem {
         if (i > 0) {
           Station previousStation = stations.get(i - 1);
           TrainTrack track = previousStation.getTrack();
-          List<Station> trackStations =
-              RailwaySingleton.getInstance().getRailroad().get(track.id());
+          List<Station> trackStations = RailwaySingleton.getInstance().getRailroad().get(track.id());
           int startIndex = trackStations.indexOf(previousStation);
           int endIndex = trackStations.indexOf(currentStation);
           if (startIndex != -1 && endIndex != -1) {
@@ -208,16 +217,13 @@ public class CommandSystem {
 
   private void outputStation(Station station, double distanceSoFar) {
     String stationName = station.name();
-    String stationPadding =
-        stationName.length() > 8 ? stationName.length() > 17 ? "\t" : "\t\t" : "\t\t\t";
+    String stationPadding = stationName.length() > 8 ? stationName.length() > 17 ? "\t" : "\t\t" : "\t\t\t";
     String stationType = station.type().toString();
-    String stationTypePadding =
-        stationType.length() > 8 ? stationType.length() > 17 ? "\t" : "\t" : "\t";
+    String stationTypePadding = stationType.length() > 8 ? stationType.length() > 17 ? "\t" : "\t" : "\t";
 
     Logs.o(" " + stationName + stationPadding + "| " + stationType + stationTypePadding + "| "
         + distanceSoFar, false);
   }
-
 
   private void viewComposition(int trainId) {
     Logs.header("Pregled kompozicija", true);
@@ -227,8 +233,7 @@ public class CommandSystem {
       Logs.footer(true);
       return;
     }
-    int maxDescLength =
-        data.stream().mapToInt(c -> c.getWagon().description().length()).max().getAsInt();
+    int maxDescLength = data.stream().mapToInt(c -> c.getWagon().description().length()).max().getAsInt();
     Logs.o("Oznaka\t| Uloga\t| Opis" + " ".repeat(maxDescLength - "Opis".length())
         + " | Godina\t| Namjena\t| Vrsta pogona\t| Maks. brzina", false);
     Logs.o("------\t| -----\t| ----" + " ".repeat(maxDescLength - "----".length())

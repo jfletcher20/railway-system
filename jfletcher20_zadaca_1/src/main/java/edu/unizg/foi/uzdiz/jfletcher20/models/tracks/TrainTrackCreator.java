@@ -16,10 +16,10 @@ public class TrainTrackCreator implements ICreator {
   public TrainTrack factoryMethod(String data, int row) {
 
     if (data == null || data.isEmpty()) {
-      Logs.e(row, "TrainTrackCreator Prazan redak.");
+      Logs.w(row, "TrainTrackCreator Prazan redak.");
       return null;
     } else if (data.split(";").length != 14) {
-      Logs.e(row, columnCountError(data.split(";").length));
+      Logs.w(row, columnCountError(data.split(";").length));
       return null;
     }
 

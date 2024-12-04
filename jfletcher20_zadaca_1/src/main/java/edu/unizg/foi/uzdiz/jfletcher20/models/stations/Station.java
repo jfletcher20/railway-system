@@ -9,12 +9,13 @@ import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 /**
  * Station object represents a single train station.
  * 
- * @param name Station name
- * @param type Station type (kolodvor, stajalište)
- * @param activity Passenger activity (ulaz/izlaz putnika), cargo activity (utovar/istovar robe),
- *        both
+ * @param name          Station name
+ * @param type          Station type (kolodvor, stajalište)
+ * @param activity      Passenger activity (ulaz/izlaz putnika), cargo activity
+ *                      (utovar/istovar robe),
+ *                      both
  * @param platformCount Number of platforms (1-99)
- * @param status Status of the station (otvorena, zatvorena)
+ * @param status        Status of the station (otvorena, zatvorena)
  */
 public record Station(String name, // Stanica
     StationType type, // Vrsta stanice
@@ -52,6 +53,21 @@ public record Station(String name, // Stanica
 
   public double getDistanceFromEnd(Station last, Station first) {
     return RailwaySingleton.getInstance().getDistanceFromEnd(last, first, this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (!(obj instanceof Station))
+      return false;
+    Station other = (Station) obj;
+    return name().equals(other.name());
+  }
+
+  @Override
+  public int hashCode() {
+    return name().hashCode();
   }
 
 }

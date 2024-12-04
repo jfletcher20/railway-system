@@ -26,6 +26,7 @@ public class RailwaySingleton {
   private Map<String, List<Station>> railroad = new HashMap<>();
 
   private String[] initArgs = null;
+  private RailwaySingletonAdapter adapter = new RailwaySingletonAdapter();
 
   private RailwaySingleton() {
     Logs.i("RailwaySingleton instance created. Values are not initialized.");
@@ -51,6 +52,81 @@ public class RailwaySingleton {
 
   public CommandSystem getCommandSystem() {
     return this.commandSystem;
+  }
+
+  public RailwaySingletonAdapter getAdapter() {
+    return this.adapter;
+  }
+
+  public class RailwaySingletonAdapter {
+
+    private Map<String, StationNode> graph;
+
+    public RailwaySingletonAdapter() {
+      buildGraph();
+    }
+
+    private void buildGraph() {
+      graph = new HashMap<>();
+
+      // Iterate over all tracks
+      for (List<Station> trackStations : getRailroad().values()) {
+        for (int i = 0; i < trackStations.size() - 1; i++) {
+          Station stationA = trackStations.get(i);
+          Station stationB = trackStations.get(i + 1);
+
+          String nameA = stationA.name();
+          String nameB = stationB.name();
+
+          // Get or create nodes for stations with the same name
+          StationNode nodeA = graph.computeIfAbsent(nameA, k -> new StationNode(stationA));
+          StationNode nodeB = graph.computeIfAbsent(nameB, k -> new StationNode(stationB));
+
+          // Calculate distance between stationA and stationB
+          double distance = calculateDistance(stationA, stationB);
+
+          // Add edge between nodeA and nodeB, with appropriate weight
+          nodeA.addNeighbor(nodeB, distance);
+          nodeB.addNeighbor(nodeA, distance); // Assuming bidirectional edges
+        }
+      }
+    }
+
+    private double calculateDistance(Station a, Station b) {
+      return Math.abs(a.getDistanceFromStart() - b.getDistanceFromStart());
+    }
+
+    // Getter for the graph
+    public Map<String, StationNode> getGraph() {
+      return graph;
+    }
+
+    // Inner class representing a node in the graph
+    public class StationNode {
+      private Station station;
+      private Map<StationNode, Double> neighbors;
+
+      public StationNode(Station name) {
+        this.station = name;
+        this.neighbors = new HashMap<>();
+      }
+
+      public void addNeighbor(StationNode neighbor, double weight) {
+        neighbors.put(neighbor, weight);
+      }
+
+      public Station getStation() {
+        return station;
+      }
+
+      public String getName() {
+        return station.name();
+      }
+
+      public Map<StationNode, Double> getNeighbors() {
+        return neighbors;
+      }
+    }
   }
 
   public IProduct addProduct(IProduct product) {
@@ -354,9 +430,9 @@ public class RailwaySingleton {
   // station
   public List<List<Station>> getRoutesBetweenStations(Station startStation, Station endStation) {
     if (startStation == null || endStation == null) {
-      Logs.e("Cannot find route between non-existent stations:"
-          + (startStation == null ? " [start station]" : "")
-          + (endStation == null ? " [end station]" : ""));
+      Logs.e("Ne može se pronaći ruta između stanica koje ne postoje:"
+          + (startStation == null ? " [početna stanica]" : "")
+          + (endStation == null ? " [posljednja stanica]" : ""));
       return null;
     }
     List<List<Station>> allRoutes = new ArrayList<>();

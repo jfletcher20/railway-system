@@ -15,10 +15,10 @@ public class StationCreator implements ICreator {
   @Override
   public Station factoryMethod(String data, int row) {
     if (data == null || data.isEmpty()) {
-      Logs.e(row, "StationCreator Prazan redak");
+      Logs.w(row, "StationCreator Prazan redak");
       return null;
     } else if (data.split(";").length != columnCount) {
-      Logs.e(row, columnCountError(data.split(";").length));
+      Logs.w(row, columnCountError(data.split(";").length));
       return null;
     }
     String[] parts = data.split(";");

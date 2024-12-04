@@ -25,10 +25,10 @@ public class WagonCreator implements ICreator {
   @Override
   public Wagon factoryMethod(String data, int row) {
     if (data == null || data.isEmpty()) {
-      Logs.e(row, "WagonCreator Prazan redak.");
+      Logs.w(row, "WagonCreator Prazan redak.");
       return null;
     } else if (data.split(";").length != columnCount) {
-      Logs.e(row, columnCountError(data.split(";").length));
+      Logs.w(row, columnCountError(data.split(";").length));
       return null;
     }
     String[] parts = data.split(";");
