@@ -1,6 +1,7 @@
 package edu.unizg.foi.uzdiz.jfletcher20.system;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -139,28 +140,23 @@ public class CommandSystem {
       Logs.footer(true);
       return;
     }
-    // Logs.o("Oznaka pruge: " + trackID);
-    // Logs.o("Redoslijed: " + (order.equals("N") ? "Rastući" : "Padajući"));
-    Logs.o(" Naziv\t\t\t| Vrsta\t\t| Udaljenost od početne stanice (km)", false);
-    Logs.o(" -----\t\t\t| -----\t\t| ----------------------------", false);
-    if (order.equals("O"))
-      data = data.reversed();
+    List<String> header = Arrays.asList("Naziv", "Vrsta", "Udaljenost od početne stanice (km)");
+    Logs.tableHeader(header);
+    if ("O".equalsIgnoreCase(order))
+      Collections.reverse(data);
     for (var station : data) {
-      String stationName = station.name();
-      String stationPadding = stationName.length() > 8 ? stationName.length() > 17 ? "\t" : "\t\t" : "\t\t\t";
-      String stationType = station.type().toString();
-      String stationTypePadding = stationType.length() > 8 ? stationType.length() > 17 ? "\t" : "\t" : "\t";
-      Logs.o(
-          " " + stationName + stationPadding + "| " + station.type() + stationTypePadding + "| "
-              + (order.equals("O") ? station.getDistanceFromEnd() : station.getDistanceFromStart()),
-          false);
+      double distance = "O".equalsIgnoreCase(order) ? station.getDistanceFromEnd() : station.getDistanceFromStart();
+      List<String> row = Arrays.asList(
+          station.name(),
+          station.type().toString(),
+          String.format("%.2f", distance));
+      Logs.tableRow(row);
     }
+    Logs.printTable();
     Logs.footer(true);
   }
 
   private void viewStationsBetween(String startStation, String endStation) {
-    // Logs.o("Početna stanica: " + startStation);
-    // Logs.o("Posljednja stanica: " + endStation);
     Logs.header("Pregled stanica između " + startStation + " - " + endStation, true);
     List<Station> st1 = RailwaySingleton.getInstance().getStationsByName(startStation);
     List<Station> st2 = RailwaySingleton.getInstance().getStationsByName(endStation);
@@ -170,17 +166,14 @@ public class CommandSystem {
       Logs.footer(true);
       return;
     }
-    Logs.o(" Naziv\t\t\t| Vrsta\t\t| Udaljenost od početne stanice (km)", false);
-    Logs.o(" -----\t\t\t| -----\t\t| ----------------------------------", false);
     traverseStationsBetween(st1.getFirst(), st2.getFirst());
     Logs.footer(true);
   }
 
   private void traverseStationsBetween(Station startStation, Station endStation) {
-    Logs.toggleInfo();
     var routes = RailwaySingleton.getInstance().getRoutesBetweenStations(startStation, endStation);
     for (List<Station> stations : routes) {
-      Logs.o("", false);
+      Logs.tableHeader(Arrays.asList("Naziv", "Vrsta", "Udaljenost od početne stanice (km)"));
       double cumulativeDistance = 0.0;
       for (int i = 0; i < stations.size(); i++) {
         Station currentStation = stations.get(i), intermediateStation = null;
@@ -211,18 +204,16 @@ public class CommandSystem {
           cumulativeDistance += stations.getFirst().getTrack().trackLength();
         outputStation(currentStation, cumulativeDistance);
       }
+      Logs.printTable();
     }
     Logs.toggleInfo();
   }
 
   private void outputStation(Station station, double distanceSoFar) {
-    String stationName = station.name();
-    String stationPadding = stationName.length() > 8 ? stationName.length() > 17 ? "\t" : "\t\t" : "\t\t\t";
-    String stationType = station.type().toString();
-    String stationTypePadding = stationType.length() > 8 ? stationType.length() > 17 ? "\t" : "\t" : "\t";
-
-    Logs.o(" " + stationName + stationPadding + "| " + stationType + stationTypePadding + "| "
-        + distanceSoFar, false);
+    Logs.tableRow(Arrays.asList(
+        station.name(),
+        station.type().toString(),
+        String.format("%.2f", distanceSoFar)));
   }
 
   private void viewComposition(int trainId) {
@@ -233,22 +224,25 @@ public class CommandSystem {
       Logs.footer(true);
       return;
     }
-    int maxDescLength = data.stream().mapToInt(c -> c.getWagon().description().length()).max().getAsInt();
-    Logs.o("Oznaka\t| Uloga\t| Opis" + " ".repeat(maxDescLength - "Opis".length())
-        + " | Godina\t| Namjena\t| Vrsta pogona\t| Maks. brzina", false);
-    Logs.o("------\t| -----\t| ----" + " ".repeat(maxDescLength - "----".length())
-        + " | ------\t| -------\t| ------------\t| ------------", false);
+
+    List<String> header = Arrays.asList(
+        "Oznaka", "Uloga", "Opis", "Godina", "Namjena", "Vrsta pogona", "Maks. brzina");
+    Logs.tableHeader(header);
+
     for (var composition : data) {
       String purpose = composition.getWagon().purpose().toString();
-      String purposePadding = purpose.length() > 6 ? "\t" : "\t\t";
-      Logs.o(
-          " " + composition.getWagon().id() + "\t| " + composition.role() + "\t| "
-              + composition.getWagon().description()
-              + " ".repeat(maxDescLength - composition.getWagon().description().length()) + " | "
-              + composition.getWagon().yearOfProduction() + "\t| " + purpose + purposePadding + "| "
-              + composition.getWagon().driveType() + "\t\t| " + composition.getWagon().maxSpeed(),
-          false);
+      List<String> row = Arrays.asList(
+          composition.getWagon().id(),
+          composition.role().toString(),
+          composition.getWagon().description(),
+          String.valueOf(composition.getWagon().yearOfProduction()),
+          purpose,
+          composition.getWagon().driveType().toString(),
+          String.valueOf(composition.getWagon().maxSpeed()));
+      Logs.tableRow(row);
     }
+
+    Logs.printTable();
     Logs.footer(true);
   }
 

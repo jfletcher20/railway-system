@@ -332,6 +332,7 @@ public class RailwaySingleton {
   }
 
   public void verifyCompositions() {
+    Logs.o("Podaci su spremeljeni. Sada se naknadno provjeravaju kompozicije...");
     removeEmptyCompositions();
     for (TrainComposition composition : this.compositions) {
       if (this.trains.get(composition.trainId()).size() < 2) {
@@ -354,6 +355,20 @@ public class RailwaySingleton {
         continue;
       }
     }
+    Logs.o("Provjera kompozicija završena.");
+  }
+
+  public void verifyTrainTracks() {
+    Logs.o("Podaci su spremeljeni. Sada se naknadno provjeravaju pruge...");
+    for (var track : this.tracks) {
+      if (this.railroad.get(track.id()).size() < 2) {
+        Logs.e("Pružni segment " + track.id() + " nema dovoljno stanica.");
+        this.tracks.remove(track);
+        this.railroad.remove(track.id());
+        continue;
+      }
+    }
+    Logs.o("Provjera pruga završena.");
   }
 
   public void addTrack(TrainTrack track) {
@@ -414,11 +429,11 @@ public class RailwaySingleton {
 
   public void printStats() {
     Logs.header("JLF Željeznica: Statistika", true);
-    // Logs.o("Stanice: " + this.getStations().size());
-    // Logs.o("Vozila: " + this.wagons.size());
-    // Logs.o("Kompozicije: " + this.trains.size() + " (" +
-    // this.getCompositions().size() + ")");
-    // Logs.o("Pruge: " + this.tracks.size());
+    Logs.o("Stanice: " + this.getStations().size());
+    Logs.o("Vozila: " + this.wagons.size());
+    Logs.o("Kompozicije: " + this.trains.size() + " (" +
+    this.getCompositions().size() + ")");
+    Logs.o("Pruge: " + this.tracks.size());
     Logs.footer(true);
   }
 

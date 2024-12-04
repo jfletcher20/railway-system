@@ -152,6 +152,7 @@ public abstract class Logs {
     }
 
     public void logError(int row, String message) {
+      ++row;
       int instanceIndex = rowErrorCounts.getOrDefault(row, 0) + 1;
       rowErrorCounts.put(row, instanceIndex);
 
