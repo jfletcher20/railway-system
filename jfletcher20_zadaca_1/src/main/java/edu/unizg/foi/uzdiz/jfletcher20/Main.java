@@ -14,6 +14,7 @@ public class Main {
     RailwaySingleton.getInstance().setInitArgs(args);
     var initDirector = new SystemInitializationDirector(new RailwaySingletonBuilder());
     initDirector.construct();
+
     // za testiranje s testnim komandnim sustavom
     Class<?> type = RailwaySingleton.PREFERRED_COMMAND_SYSTEM;
     try {
