@@ -5,18 +5,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Oznaka dana kod vlaka je kod prema kojeg se utvrđuje koje dane u tjednu taj
- * vlak vozi. U
- * datoteci s oznakama dana za svaku oznaku dana nalazi se popis dana u kojima
- * vlak vozi (Po –
- * ponedjeljak, U – utorak, Sr – srijeda, Č – četvrtak, Pe – petak, Su – subota,
- * N - nedjelja. Ako vlak
- * ima praznu oznaka tada on vozi sve dane u tjednu što odgovara (PoUSrČPeSuN).
- * Jedan vlak može voziti sve dane u tjednu (PoUSrČPeSuN). Drugi vlak može
- * voziti radnim
- * danima (PoUSrČPe). Treći vlak može voziti samo vikendom (SuN). Četvrti vlak
- * može voziti samo
- * jednim danom (npr. N).
+ * Enum for handling operations with the days of the week
  */
 public enum WeekdayType {
     MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY, ALL;
@@ -29,7 +18,7 @@ public enum WeekdayType {
     private static Pattern saturdayIsAnywhere = Pattern.compile(".*Su.*");
     private static Pattern sundayIsAnywhere = Pattern.compile(".*N.*");
 
-    public static WeekdayType fromString(String value) {
+    public static WeekdayType dayFromString(String value) {
         switch (value) {
             case "Po":
                 return MONDAY;
@@ -52,7 +41,7 @@ public enum WeekdayType {
         }
     }
 
-    public static List<WeekdayType> daysFromCSV(String value) {
+    public static List<WeekdayType> daysFromString(String value) {
         List<WeekdayType> days = new ArrayList<>();
         if (mondayIsAnywhere.matcher(value).matches())
             days.add(MONDAY);
