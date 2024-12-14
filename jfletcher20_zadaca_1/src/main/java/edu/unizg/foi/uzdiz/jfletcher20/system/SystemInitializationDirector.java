@@ -7,9 +7,9 @@ public class SystemInitializationDirector {
     this.builder = builder;
   }
 
-  public Object construct() {
+  public RailwaySingleton construct() {
     try {
-      this.builder.loadFiles().verifyTrainTracks().verifyCompositions().initCommandSystem().runCommandSystem();
+      this.builder.loadFiles().verifyTrainTracks().verifyCompositions();
     } catch (Exception e) {
     }
     return this.builder.getResult();

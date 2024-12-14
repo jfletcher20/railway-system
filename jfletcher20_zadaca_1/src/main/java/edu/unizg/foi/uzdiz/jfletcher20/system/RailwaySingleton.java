@@ -16,7 +16,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.Wagon;
 public class RailwaySingleton {
 
   static private volatile RailwaySingleton instance = new RailwaySingleton();
-  private CommandSystem commandSystem = null;
+  static public final Class<?> PREFERRED_COMMAND_SYSTEM = CommandSystem.class;
 
   private List<TrainTrack> tracks = new ArrayList<>();
   private List<Wagon> wagons = new ArrayList<>();
@@ -40,15 +40,6 @@ public class RailwaySingleton {
 
   public String[] getInitArgs() {
     return this.initArgs;
-  }
-
-  public void setCommandSystem(CommandSystem commandSystem) {
-    this.commandSystem = commandSystem;
-    Logs.i("RailwaySingleton CommandSystem initialized");
-  }
-
-  public CommandSystem getCommandSystem() {
-    return this.commandSystem;
   }
 
   private double calculateDistance(Station a, Station b) {

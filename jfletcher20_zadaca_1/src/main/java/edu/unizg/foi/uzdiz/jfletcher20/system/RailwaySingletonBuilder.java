@@ -5,7 +5,8 @@ import edu.unizg.foi.uzdiz.jfletcher20.utils.FilesUtil;
 
 public class RailwaySingletonBuilder implements IBuilder {
 
-  public RailwaySingletonBuilder() {}
+  public RailwaySingletonBuilder() {
+  }
 
   public RailwaySingletonBuilder loadFiles() {
     if (RailwaySingleton.getInstance().getInitArgs() != null) {
@@ -31,19 +32,8 @@ public class RailwaySingletonBuilder implements IBuilder {
     return this;
   }
 
-  public RailwaySingletonBuilder initCommandSystem() {
-    CommandSystem commandSystem = CommandSystem.getInstance();
-    RailwaySingleton.getInstance().setCommandSystem(commandSystem);
-    return this;
-  }
-
-  public RailwaySingletonBuilder runCommandSystem() {
-    RailwaySingleton.getInstance().getCommandSystem().startCommandSystem();
-    return this;
-  }
-
   @Override
-  public Object getResult() {
+  public RailwaySingleton getResult() {
     RailwaySingleton.getInstance().printStats();
     return RailwaySingleton.getInstance();
   }

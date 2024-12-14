@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import edu.unizg.foi.uzdiz.jfletcher20.Main;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
@@ -56,9 +58,56 @@ public class CommandSystem {
         Logs.c("Prekidanje programa...");
         break;
       }
-      identifyCommand(command);
+      if (Main.debugMode)
+        runDebugTests(command);
+      else identifyCommand(command);
     }
     Logs.footer(true);
+  }
+
+  public void runCommand(String command) {
+    identifyCommand(command);
+  }
+
+  private void runDebugTests(String command) {
+    if (command.trim().equalsIgnoreCase("All")) {
+      String[] commands = new String[] {
+          "IP", "ISP M501 N", "ISP M501 O",
+          "ISI2S Kotoriba - Ludbreg",
+          "ISI2S Ludbreg - Kotoriba",
+          "ISI2S Kotoriba - Macinec",
+          "ISI2S Macinec - Kotoriba",
+          "IK 8001",
+          "IK 1"
+      };
+      for (String c : commands) {
+        Logs.c("Izvršavanje komande: " + c);
+        identifyCommand(c);
+      }
+    } else if(command.trim().equalsIgnoreCase("All1")) {
+      String[] commands = new String[] {
+          "IP", "ISP M501 N",
+          "ISI2S Kotoriba - Ludbreg",
+          "IK 8001",
+      };
+      for (String c : commands) {
+        Logs.c("Izvršavanje komande: " + c);
+        identifyCommand(c);
+      }
+    } else {
+      switch (command.trim().toLowerCase()) {
+        case "a" -> command = "IP";
+        case "b" -> command = "ISP M501 N";
+        case "b2" -> command = "ISP M501 O";
+        case "c" -> command = "ISI2S Kotoriba - Ludbreg";
+        case "c2" -> command = "ISI2S Ludbreg - Kotoriba";
+        case "c3" -> command = "ISI2S Kotoriba - Macinec";
+        case "c4" -> command = "ISI2S Macinec - Kotoriba";
+        case "e" -> command = "IK 8001";
+        case "e2" -> command = "IK 1";
+      }
+      identifyCommand(command);
+    }
   }
 
   private boolean identifyCommand(String command) {
@@ -106,7 +155,24 @@ public class CommandSystem {
       Logs.o("IK [oznakaKompozicije]\t\t\t- Pregled kompozicija", false);
     }, false, true);
     Logs.withPadding(() -> Logs.o("Q - Izlaz iz programa", false), false, true);
+    outputDebugMenu();
     Logs.o("Uzorci dizajna, 2024. - Joshua Lee Fletcher");
+  }
+
+  private void outputDebugMenu() {
+    if (Main.debugMode) {
+      Logs.o("\t\t[DEBUG] All\t\t\t- Za potpuno testiranje cijelog sustava", false);
+      Logs.o("\t\t[DEBUG] All1\t\t\t- Za testiranje svake naredbe samo jednom", false);
+      Logs.o("\t\t[DEBUG] a\t\t\t\t- Pregled pruga", false);
+      Logs.o("\t\t[DEBUG] b\t\t\t\t- Pregled stanica uz prugu (normalni redoslijed)", false);
+      Logs.o("\t\t[DEBUG] b2\t\t\t\t- Pregled stanica uz prugu (obrnuti redoslijed)", false);
+      Logs.o("\t\t[DEBUG] c\t\t\t\t- Pregled stanica između Kotoriba - Ludbreg", false);
+      Logs.o("\t\t[DEBUG] c2\t\t\t\t- Pregled stanica između Ludbreg - Kotoriba", false);
+      Logs.o("\t\t[DEBUG] c3\t\t\t\t- Pregled stanica između Kotoriba - Macinec", false);
+      Logs.o("\t\t[DEBUG] c4\t\t\t\t- Pregled stanica između Macinec - Kotoriba", false);
+      Logs.o("\t\t[DEBUG] e\t\t\t\t- Pregled kompozicija (oznaka 8001)", false);
+      Logs.o("\t\t[DEBUG] e2\t\t\t\t- Pregled kompozicija (oznaka 1)", false);
+    }
   }
 
   private void viewTracks() {
@@ -130,6 +196,8 @@ public class CommandSystem {
       Logs.tableRow(row);
     }
     Logs.printTable();
+
+    Logs.footer(true);
   }
 
   private void viewStations(String trackID, String order) {
@@ -182,25 +250,25 @@ public class CommandSystem {
     return signature.toString();
   }
 
-    private void traverseStationsBetween(Station startStation, Station endStation) {
-      var routes = RailwaySingleton.getInstance().getRoutesBetweenStations(startStation, endStation);
-      for (int i = 0; i < routes.size(); i++)
-          for (int j = i + 1; j < routes.size(); j++)
-              if (routeSignature(routes.get(i)).equals(routeSignature(routes.get(j))) && routes.size() > 1) {
-                  routes.remove(j);
-                  j--;
-              }
-      for (List<RailwaySingleton.Edge> route : routes) {
-          Logs.tableHeader(Arrays.asList("Naziv", "Vrsta", "Kumulativna udaljenost (km)"));
-          double cumulativeDistance = 0.0;
-          outputStation(startStation, cumulativeDistance);
-          for (RailwaySingleton.Edge edge : route) {
-              cumulativeDistance += edge.weight;
-              Station currentStation = edge.to;
-              outputStation(currentStation, cumulativeDistance);
-          }
-          Logs.printTable();
+  private void traverseStationsBetween(Station startStation, Station endStation) {
+    var routes = RailwaySingleton.getInstance().getRoutesBetweenStations(startStation, endStation);
+    for (int i = 0; i < routes.size(); i++)
+      for (int j = i + 1; j < routes.size(); j++)
+        if (routeSignature(routes.get(i)).equals(routeSignature(routes.get(j))) && routes.size() > 1) {
+          routes.remove(j);
+          j--;
+        }
+    for (List<RailwaySingleton.Edge> route : routes) {
+      Logs.tableHeader(Arrays.asList("Naziv", "Vrsta", "Udaljenost od početne stanice (km)"));
+      double cumulativeDistance = 0.0;
+      outputStation(startStation, cumulativeDistance);
+      for (RailwaySingleton.Edge edge : route) {
+        cumulativeDistance += edge.weight;
+        Station currentStation = edge.to;
+        outputStation(currentStation, cumulativeDistance);
       }
+      Logs.printTable();
+    }
   }
 
   private void outputStation(Station station, double distanceSoFar) {
