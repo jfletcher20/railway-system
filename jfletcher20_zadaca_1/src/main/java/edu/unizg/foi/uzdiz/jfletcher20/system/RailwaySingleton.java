@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposition;
@@ -24,9 +23,7 @@ public class RailwaySingleton {
   private List<TrainComposition> compositions = new ArrayList<>();
   private Map<Integer, List<Wagon>> trains = new HashMap<>();
   private Map<String, List<Station>> railroad = new HashMap<>();
-
   private String[] initArgs = null;
-  private RailwaySingletonAdapter adapter = new RailwaySingletonAdapter();
 
   private RailwaySingleton() {
     Logs.i("RailwaySingleton instance created. Values are not initialized.");
@@ -54,79 +51,8 @@ public class RailwaySingleton {
     return this.commandSystem;
   }
 
-  public RailwaySingletonAdapter getAdapter() {
-    return this.adapter;
-  }
-
-  public class RailwaySingletonAdapter {
-
-    private Map<String, StationNode> graph;
-
-    public RailwaySingletonAdapter() {
-      buildGraph();
-    }
-
-    private void buildGraph() {
-      graph = new HashMap<>();
-
-      // Iterate over all tracks
-      for (List<Station> trackStations : getRailroad().values()) {
-        for (int i = 0; i < trackStations.size() - 1; i++) {
-          Station stationA = trackStations.get(i);
-          Station stationB = trackStations.get(i + 1);
-
-          String nameA = stationA.name();
-          String nameB = stationB.name();
-
-          // Get or create nodes for stations with the same name
-          StationNode nodeA = graph.computeIfAbsent(nameA, k -> new StationNode(stationA));
-          StationNode nodeB = graph.computeIfAbsent(nameB, k -> new StationNode(stationB));
-
-          // Calculate distance between stationA and stationB
-          double distance = calculateDistance(stationA, stationB);
-
-          // Add edge between nodeA and nodeB, with appropriate weight
-          nodeA.addNeighbor(nodeB, distance);
-          nodeB.addNeighbor(nodeA, distance); // Assuming bidirectional edges
-        }
-      }
-    }
-
-    private double calculateDistance(Station a, Station b) {
-      return Math.abs(a.getDistanceFromStart() - b.getDistanceFromStart());
-    }
-
-    // Getter for the graph
-    public Map<String, StationNode> getGraph() {
-      return graph;
-    }
-
-    // Inner class representing a node in the graph
-    public class StationNode {
-      private Station station;
-      private Map<StationNode, Double> neighbors;
-
-      public StationNode(Station name) {
-        this.station = name;
-        this.neighbors = new HashMap<>();
-      }
-
-      public void addNeighbor(StationNode neighbor, double weight) {
-        neighbors.put(neighbor, weight);
-      }
-
-      public Station getStation() {
-        return station;
-      }
-
-      public String getName() {
-        return station.name();
-      }
-
-      public Map<StationNode, Double> getNeighbors() {
-        return neighbors;
-      }
-    }
+  private double calculateDistance(Station a, Station b) {
+    return Math.abs(a.getDistanceFromStart() - b.getDistanceFromStart());
   }
 
   public IProduct addProduct(IProduct product) {
@@ -432,7 +358,7 @@ public class RailwaySingleton {
     Logs.o("Stanice: " + this.getStations().size());
     Logs.o("Vozila: " + this.wagons.size());
     Logs.o("Kompozicije: " + this.trains.size() + " (" +
-    this.getCompositions().size() + ")");
+        this.getCompositions().size() + ")");
     Logs.o("Pruge: " + this.tracks.size());
     Logs.footer(true);
   }
@@ -441,67 +367,82 @@ public class RailwaySingleton {
     return getStations().stream().filter(s -> s.name().equals(station)).toList();
   }
 
-  // Method to find all stations on which the track changes en route to the end
-  // station
-  public List<List<Station>> getRoutesBetweenStations(Station startStation, Station endStation) {
+  public class Graph {
+    private Map<Station, List<Edge>> adjacencyList;
+
+    public Graph() {
+      adjacencyList = new HashMap<>();
+    }
+
+    public void addEdge(Station from, Station to, double distance) {
+      adjacencyList.computeIfAbsent(from, k -> new ArrayList<>()).add(new Edge(from, to, distance));
+    }
+
+    public List<Edge> getEdges(Station station) {
+      return adjacencyList.getOrDefault(station, new ArrayList<>());
+    }
+  }
+
+  public class Edge {
+    Station from;
+    Station to;
+    double weight;
+
+    public Edge(Station from, Station to, double weight) {
+      this.from = from;
+      this.to = to;
+      this.weight = weight;
+    }
+  }
+
+  public List<List<Edge>> getRoutesBetweenStations(Station startStation, Station endStation) {
     if (startStation == null || endStation == null) {
-      Logs.e("Ne može se pronaći ruta između stanica koje ne postoje:"
-          + (startStation == null ? " [početna stanica]" : "")
-          + (endStation == null ? " [posljednja stanica]" : ""));
+      Logs.e("Cannot find route between non-existent stations."
+          + (startStation == null ? " [start station]" : "")
+          + (endStation == null ? " [end station]" : ""));
       return null;
     }
-    List<List<Station>> allRoutes = new ArrayList<>();
-    List<Station> currentRoute = new ArrayList<>();
-    Set<Station> visitedStations = new HashSet<>();
-    Set<String> uniqueRoutes = new HashSet<>();
 
-    dfs(startStation, endStation, visitedStations, currentRoute, allRoutes, uniqueRoutes);
+    Graph graph = new Graph();
+    for (List<Station> trackStations : getRailroad().values()) {
+      for (int i = 0; i < trackStations.size() - 1; i++) {
+        Station stationA = trackStations.get(i);
+        Station stationB = trackStations.get(i + 1);
+        double distance = calculateDistance(stationA, stationB);
+        graph.addEdge(stationA, stationB, distance);
+        graph.addEdge(stationB, stationA, distance);
+      }
+    }
+
+    List<List<Edge>> allRoutes = new ArrayList<>();
+    List<Edge> currentRoute = new ArrayList<>();
+    Set<Station> visited = new HashSet<>();
+
+    dfs(graph, startStation, endStation, visited, currentRoute, allRoutes);
 
     return allRoutes;
   }
 
-  private void dfs(Station currentStation, Station endStation, Set<Station> visitedStations,
-      List<Station> currentRoute, List<List<Station>> allRoutes, Set<String> uniqueRoutes) {
-    visitedStations.add(currentStation);
-    currentRoute.add(currentStation);
-
+  private void dfs(Graph graph, Station currentStation, Station endStation,
+      Set<Station> visited, List<Edge> currentRoute,
+      List<List<Edge>> allRoutes) {
     if (currentStation.equals(endStation)) {
-      String routeSignature = getRouteSignature(currentRoute);
-      if (uniqueRoutes.add(routeSignature)) {
-        allRoutes.add(new ArrayList<>(currentRoute));
-      }
-    } else {
-      List<Station> neighbors = getNeighboringStations(currentStation);
-      for (Station neighbor : neighbors) {
-        if (!visitedStations.contains(neighbor)) {
-          dfs(neighbor, endStation, visitedStations, currentRoute, allRoutes, uniqueRoutes);
-        }
+      allRoutes.add(new ArrayList<>(currentRoute));
+      return;
+    }
+
+    visited.add(currentStation);
+
+    for (Edge edge : graph.getEdges(currentStation)) {
+      Station neighbor = edge.to;
+      if (!visited.contains(neighbor)) {
+        currentRoute.add(edge);
+        dfs(graph, neighbor, endStation, visited, currentRoute, allRoutes);
+        currentRoute.remove(currentRoute.size() - 1);
       }
     }
 
-    visitedStations.remove(currentStation);
-    currentRoute.remove(currentRoute.size() - 1);
-  }
-
-  private List<Station> getNeighboringStations(Station station) {
-    List<Station> neighbors = new ArrayList<>();
-    for (List<Station> trackStations : getRailroad().values()) {
-      for (int i = 0; i < trackStations.size(); i++) {
-        if (trackStations.get(i).equals(station)) {
-          if (i > 0) {
-            neighbors.add(trackStations.get(i - 1));
-          }
-          if (i < trackStations.size() - 1) {
-            neighbors.add(trackStations.get(i + 1));
-          }
-        }
-      }
-    }
-    return neighbors;
-  }
-
-  private String getRouteSignature(List<Station> route) {
-    return route.stream().map(Station::name).collect(Collectors.joining("->"));
+    visited.remove(currentStation);
   }
 
 }

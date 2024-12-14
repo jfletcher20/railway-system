@@ -170,43 +170,37 @@ public class CommandSystem {
     Logs.footer(true);
   }
 
-  private void traverseStationsBetween(Station startStation, Station endStation) {
-    var routes = RailwaySingleton.getInstance().getRoutesBetweenStations(startStation, endStation);
-    for (List<Station> stations : routes) {
-      Logs.tableHeader(Arrays.asList("Naziv", "Vrsta", "Udaljenost od početne stanice (km)"));
-      double cumulativeDistance = 0.0;
-      for (int i = 0; i < stations.size(); i++) {
-        Station currentStation = stations.get(i), intermediateStation = null;
-        if (i > 0) {
-          Station previousStation = stations.get(i - 1);
-          TrainTrack track = previousStation.getTrack();
-          List<Station> trackStations = RailwaySingleton.getInstance().getRailroad().get(track.id());
-          int startIndex = trackStations.indexOf(previousStation);
-          int endIndex = trackStations.indexOf(currentStation);
-          if (startIndex != -1 && endIndex != -1) {
-            if (startIndex < endIndex) {
-              for (int j = startIndex + 1; j < endIndex; j++) {
-                intermediateStation = trackStations.get(j);
-                cumulativeDistance += intermediateStation.getTrack().trackLength();
-                outputStation(intermediateStation, cumulativeDistance);
-              }
-            } else
-              for (int j = startIndex - 1; j > endIndex; j--) {
-                intermediateStation = trackStations.get(j);
-                cumulativeDistance += intermediateStation.getTrack().trackLength();
-                outputStation(intermediateStation, cumulativeDistance);
-              }
-          }
-        }
-        if (i > 0)
-          cumulativeDistance += currentStation.getTrack().trackLength();
-        if (i == stations.size() - 1 && stations.size() > 1 && intermediateStation != null)
-          cumulativeDistance += stations.getFirst().getTrack().trackLength();
-        outputStation(currentStation, cumulativeDistance);
-      }
-      Logs.printTable();
+  private String routeSignature(List<RailwaySingleton.Edge> route) {
+    StringBuilder signature = new StringBuilder();
+    for (RailwaySingleton.Edge edge : route) {
+      signature.append(edge.to.name());
+      signature.append(" ");
+      signature.append(edge.weight);
+      signature.append(" ");
+      signature.append(edge.to.name());
     }
-    Logs.toggleInfo();
+    return signature.toString();
+  }
+
+    private void traverseStationsBetween(Station startStation, Station endStation) {
+      var routes = RailwaySingleton.getInstance().getRoutesBetweenStations(startStation, endStation);
+      for (int i = 0; i < routes.size(); i++)
+          for (int j = i + 1; j < routes.size(); j++)
+              if (routeSignature(routes.get(i)).equals(routeSignature(routes.get(j))) && routes.size() > 1) {
+                  routes.remove(j);
+                  j--;
+              }
+      for (List<RailwaySingleton.Edge> route : routes) {
+          Logs.tableHeader(Arrays.asList("Naziv", "Vrsta", "Kumulativna udaljenost (km)"));
+          double cumulativeDistance = 0.0;
+          outputStation(startStation, cumulativeDistance);
+          for (RailwaySingleton.Edge edge : route) {
+              cumulativeDistance += edge.weight;
+              Station currentStation = edge.to;
+              outputStation(currentStation, cumulativeDistance);
+          }
+          Logs.printTable();
+      }
   }
 
   private void outputStation(Station station, double distanceSoFar) {
