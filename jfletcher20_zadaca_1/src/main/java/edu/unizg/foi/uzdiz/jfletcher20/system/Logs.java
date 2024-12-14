@@ -12,6 +12,10 @@ public abstract class Logs {
     LogsSingleton.getInstance().logError(message);
   }
 
+  public static void e(String message, boolean increaseErrorCount) {
+    LogsSingleton.getInstance().logError(message, increaseErrorCount);
+  }
+
   public static void e(int row, String message) {
     LogsSingleton.getInstance().logError(row, message);
   }
@@ -145,10 +149,16 @@ public abstract class Logs {
     }
 
     public void logError(String message) {
-      String key = "e" + errorCount;
+      String key = "e" + ++errorCount;
       errorList.add(new AbstractMap.SimpleEntry<>(key, message));
       System.out.println("   [!] " + key + " Error: " + message);
-      errorCount++;
+    }
+
+    public void logError(String message, boolean increaseErrorCount) {
+      if (increaseErrorCount)
+        logError(message);
+      else
+        System.out.println("   [!] Error: " + message);
     }
 
     public void logError(int row, String message) {

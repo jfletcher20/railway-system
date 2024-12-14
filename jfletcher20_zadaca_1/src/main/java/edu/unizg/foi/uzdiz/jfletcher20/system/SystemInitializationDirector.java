@@ -8,10 +8,9 @@ public class SystemInitializationDirector {
   }
 
   public RailwaySingleton construct() {
-    try {
-      this.builder.loadFiles().verifyTrainTracks().verifyCompositions();
-    } catch (Exception e) {
-    }
+      this.builder.loadFiles();
+      this.builder.verifyTrainTracks();
+      this.builder.verifyCompositions();
     return this.builder.getResult();
   }
 

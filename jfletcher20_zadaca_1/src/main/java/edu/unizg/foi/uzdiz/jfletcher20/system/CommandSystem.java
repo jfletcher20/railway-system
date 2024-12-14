@@ -286,11 +286,9 @@ public class CommandSystem {
       Logs.footer(true);
       return;
     }
-
     List<String> header = Arrays.asList(
         "Oznaka", "Uloga", "Opis", "Godina", "Namjena", "Vrsta pogona", "Maks. brzina");
     Logs.tableHeader(header);
-
     for (var composition : data) {
       String purpose = composition.getWagon().purpose().toString();
       List<String> row = Arrays.asList(
@@ -303,7 +301,6 @@ public class CommandSystem {
           String.valueOf(composition.getWagon().maxSpeed()));
       Logs.tableRow(row);
     }
-
     Logs.printTable();
     Logs.footer(true);
   }

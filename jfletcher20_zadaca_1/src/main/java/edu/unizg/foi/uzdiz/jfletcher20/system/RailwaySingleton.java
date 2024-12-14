@@ -249,41 +249,61 @@ public class RailwaySingleton {
   }
 
   public void verifyCompositions() {
-    Logs.o("Podaci su spremeljeni. Sada se naknadno provjeravaju kompozicije...");
+    Logs.o("Naknadna verifikacija kompozicija...");
     removeEmptyCompositions();
+    List<TrainComposition> compositionsToRemove = new ArrayList<>();
     for (TrainComposition composition : this.compositions) {
       if (this.trains.get(composition.trainId()).size() < 2) {
         Logs.e("Kompozicija " + composition.trainId() + " nema dovoljno prijevoznih sredstava.");
-        this.compositions.remove(composition);
+        compositionsToRemove.add(composition);
         continue;
       }
       if (composition.getTrainWagonsWithDriveRole() == null)
         continue;
       boolean hasLocomotive = false;
-      for (var wagon : this.trains.get(composition.trainId())) {
+      boolean hasUnpoweredWagons = false;
+      for (var wagon : this.trains.get(composition.trainId()))
         if (wagon.getIsPowered()) {
           hasLocomotive = true;
-          break;
-        }
-      }
-      if (!hasLocomotive) {
-        Logs.e("Kompozicija " + composition.trainId() + " nema lokomotivu te se uklanja.");
-        this.compositions.remove(composition);
+        } else
+          hasUnpoweredWagons = true;
+      if (!hasLocomotive || !hasUnpoweredWagons) {
+        var increaseErrorCount = compositionsToRemove.stream().noneMatch(c -> c.trainId() == composition.trainId());
+        String errorInfo = !hasLocomotive ? "lokomotivu, " : "";
+        errorInfo += !hasUnpoweredWagons ? "vagona bez pogona, " : "";
+        if (increaseErrorCount)
+          Logs.e("Kompozicija " + composition.trainId() + " nema " + errorInfo + "zbog čega se uklanja.", increaseErrorCount);
+        compositionsToRemove.add(composition);
         continue;
       }
     }
+    _removeCompositions(compositionsToRemove);
     Logs.o("Provjera kompozicija završena.");
   }
 
+  private void _removeCompositions(List<TrainComposition> compositionsToRemove) {
+    for (var composition : compositionsToRemove) {
+      if (this.compositions.contains(composition) || this.trains.containsKey(composition.trainId())) {
+        Logs.w("Uklanjanje kompozicije " + composition.trainId() + "...");
+        this.compositions.remove(composition);
+        this.trains.remove(composition.trainId());
+      }
+    }
+  }
+
   public void verifyTrainTracks() {
-    Logs.o("Podaci su spremeljeni. Sada se naknadno provjeravaju pruge...");
+    Logs.o("Naknadna verifikacija pruga...");
+    List<TrainTrack> tracksToRemove = new ArrayList<>();
     for (var track : this.tracks) {
       if (this.railroad.get(track.id()).size() < 2) {
         Logs.e("Pružni segment " + track.id() + " nema dovoljno stanica.");
-        this.tracks.remove(track);
-        this.railroad.remove(track.id());
-        continue;
+        tracksToRemove.add(track);
       }
+    }
+    for (var track : tracksToRemove) {
+      Logs.w("Uklanjanje pruge " + track.id() + "...");
+      this.tracks.remove(track);
+      this.railroad.remove(track.id());
     }
     Logs.o("Provjera pruga završena.");
   }
@@ -388,7 +408,7 @@ public class RailwaySingleton {
 
   public List<List<Edge>> getRoutesBetweenStations(Station startStation, Station endStation) {
     if (startStation == null || endStation == null) {
-      Logs.e("Cannot find route between non-existent stations."
+      Logs.e("Ne postoji ruta između stanica"
           + (startStation == null ? " [start station]" : "")
           + (endStation == null ? " [end station]" : ""));
       return null;
