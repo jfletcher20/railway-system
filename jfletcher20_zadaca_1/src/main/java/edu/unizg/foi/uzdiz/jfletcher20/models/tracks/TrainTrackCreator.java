@@ -8,7 +8,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 
 public class TrainTrackCreator implements ICreator {
 
-  private static int columnCount = 14;
+  private static int columnCount = 17;
 
   public TrainTrackCreator() {}
 

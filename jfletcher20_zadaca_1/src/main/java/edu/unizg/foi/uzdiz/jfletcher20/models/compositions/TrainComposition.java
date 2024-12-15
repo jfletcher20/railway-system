@@ -6,7 +6,8 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.Wagon;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 
-public record TrainComposition(int trainId, // Oznaka
+public record TrainComposition( //
+    int trainId, // Oznaka
     String wagonId, // Oznaka prijevoznog sredstva
     String role // Uloga
 ) implements IProduct {
@@ -74,6 +75,7 @@ public record TrainComposition(int trainId, // Oznaka
 /*
  * Example data from CSV file:
  * 
- * Oznaka;Oznaka prijevoznog sredstva;Uloga 8001;D2044-1;P 8001;VP-1;V 8001;VP-2;V 8001;VP-3;V ;;
+ * Oznaka;Oznaka prijevoznog sredstva;Uloga 8001;D2044-1;P 8001;VP-1;V
+ * 8001;VP-2;V 8001;VP-3;V ;;
  * 8002;D2044-2;P 8002;VP-4;V 8002;VP-5;V
  */

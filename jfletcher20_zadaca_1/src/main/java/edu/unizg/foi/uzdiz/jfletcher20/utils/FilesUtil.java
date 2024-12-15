@@ -22,22 +22,29 @@ import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 public abstract class FilesUtil {
 
   private static Pattern pattern = Pattern.compile(
-      "^(--zs|--zps|--zk)\\s\\w+.csv (--zs|--zps|--zk)\\s\\w+.csv (--zs|--zps|--zk)\\s\\w+.csv$");
-  private static Pattern zsHeaderPattern =
-      Pattern.compile("^Stanica;Oznaka pruge;Vrsta stanice;Status stanice;"
-          + "Putnici ul/iz;Roba ut/ist;Kategorija pruge;Broj perona;Vrsta pruge;"
-          + "Broj kolosjeka;DO po osovini;DO po duznom m;Status pruge;Dužina$");
-  private static Pattern zpsHeaderPattern =
-      Pattern.compile("^Oznaka;Opis;Proizvođač;Godina;Namjena;Vrsta prijevoza;"
+      "^(--zs|--zps|--zk|--zvr|--zod)\\s\\w+.csv (--zs|--zps|--zk|--zvr|--zod)\\s\\w+.csv (--zs|--zps|--zk|--zvr|--zod)\\s\\w+.csv " // DZ-1
+          + "(--zs|--zps|--zk|--zvr|--zod)\\s\\w+.csv (--zs|--zps|--zk|--zvr|--zod)\\s\\w+.csv$"); // DZ-2
+  private static Pattern zsHeaderPattern = Pattern.compile( //
+      "^Stanica;Oznaka pruge;Vrsta stanice;Status stanice;Putnici ul/iz;"
+          + "Roba ut/ist;Kategorija pruge;Broj perona;Vrsta pruge;Broj kolosjeka;"
+          + "DO po osovini;DO po duznom m;Status pruge;Dužina;"
+          + "Vrijeme normalni vlak;Vrijeme ubrzani vlak;Vrijeme brzi vlak$");
+  private static Pattern zpsHeaderPattern = Pattern.compile( //
+      "^Oznaka;Opis;Proizvođač;Godina;Namjena;Vrsta prijevoza;"
           + "Vrsta pogona;Maks brzina;Maks snaga;Broj sjedećih mjesta;"
-          + "Broj stajaćih mjesta;Broj bicikala;Broj kreveta;Broj automobila;Nosivost;Površina;Zapremina;Status$");
-  private static Pattern zkHeaderPattern =
-      Pattern.compile("^Oznaka;Oznaka prijevoznog sredstva;Uloga$");
+          + "Broj stajaćih mjesta;Broj bicikala;Broj kreveta;Broj automobila;"
+          + "Nosivost;Površina;Zapremina;Status$");
+  private static Pattern zkHeaderPattern = Pattern.compile("^Oznaka;Oznaka prijevoznog sredstva;Uloga$");
+  private static Pattern zvrHeaderPattern = Pattern.compile( //
+      "^Oznaka pruge;Smjer;Polazna stanica;Odredišna stanica;Oznaka vlaka;"
+          + "Vrsta vlaka;Vrijeme polaska;Trajanje vožnje;Oznaka dana$");
+  private static Pattern zodHeaderPattern = Pattern.compile( //
+      "^Oznaka dana;Dani vožnje$");
 
   public static boolean checkArgs(String[] args) {
-    if (args.length != 6) {
-      Logs.w("Argumenti nisu ispravno postavljeni. "
-          + "Program očekuje 6 argumenata, a primljeno je: " + args.length);
+    if (args.length != 10) {
+      Logs.e("Argumenti nisu ispravno postavljeni. "
+          + "Program očekuje 10 argumenata, a primljeno je: " + args.length);
       return false;
     }
     for (int i = 0; i < args.length; i += 2)
@@ -50,9 +57,10 @@ public abstract class FilesUtil {
         }
     String argsString = String.join(" ", args);
     if (!pattern.matcher(argsString).matches()) {
-      Logs.w("Argumenti nisu ispravno postavljeni. " + "Argumenti trebaju biti u obliku: "
-          + "--tipDat1 <nazivCsvDat1> --tipDat2 <nazivCsvDat2> --tipDat3 <nazivCsvDat3>, "
-          + "gdje su tipovi datoteke --zs, --zps ili --zk.");
+      Logs.e("Argumenti nisu ispravno postavljeni. " + "Argumenti trebaju biti u obliku: "
+          + "--tipDat1 <nazivCsvDat1> --tipDat2 <nazivCsvDat2> --tipDat3 <nazivCsvDat3> "
+          + "--tipDat4 <nazivCsvDat4> --tipDat5 <nazivCsvDat5>"
+          + "gdje su tipovi datoteke --zs, --zps, --zk, --zvr, --zod");
       return false;
     }
     return true;
@@ -81,6 +89,7 @@ public abstract class FilesUtil {
   public static void loadFile(Path path, FileType fileType) {
     try {
       var lines = Files.readAllLines(path);
+      Logs.toggleInfo();
       // skip the first line
       for (int i = 1; i < lines.size(); i++) {
         String line = lines.get(i);
@@ -90,16 +99,15 @@ public abstract class FilesUtil {
         } else if (line.trim().isBlank()) {
           Logs.i(i, "Preskačem prazan redak.");
           continue;
-        } else if (line.contains(";;")) {
-          // Logs.e(i, "Redak sadrži praznu vrijednost na poziciji: " + line.indexOf(";;")
-          //     + ", preskačem redak: " + line);
-          Logs.i(i, "Redak je prazan. Preskačem redak: " + line);
+        } else if (line.split(";").toString().isBlank()) {
+          Logs.i(i, "Sadržaj stupaca retka je prazan. Preskačem redak: " + line);
           continue;
         } else {
           createProduct(line, i, fileType);
           continue;
         }
       }
+      Logs.toggleInfo();
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -164,6 +172,10 @@ public abstract class FilesUtil {
         return FileType.ZPS;
       else if (zkHeaderPattern.matcher(header).find())
         return FileType.ZK;
+      else if (zvrHeaderPattern.matcher(header).find())
+        return FileType.ZVR;
+      else if (zodHeaderPattern.matcher(header).find())
+        return FileType.ZOD;
     } catch (Exception e) {
       Logs.e("Datoteka " + filePath + " nema validan format zaglavlja (provg retka).");
     }

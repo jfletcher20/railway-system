@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Enum for handling operations with the days of the week
+ * Enum for handling operations with the days of the week determined from dayCode in the schedule.
  */
-public enum WeekdayType {
+public enum Weekday {
     MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY, ALL;
 
     private static Pattern mondayIsAnywhere = Pattern.compile(".*Po.*");
@@ -18,7 +18,7 @@ public enum WeekdayType {
     private static Pattern saturdayIsAnywhere = Pattern.compile(".*Su.*");
     private static Pattern sundayIsAnywhere = Pattern.compile(".*N.*");
 
-    public static WeekdayType dayFromString(String value) {
+    public static Weekday dayFromString(String value) {
         switch (value) {
             case "Po":
                 return MONDAY;
@@ -41,8 +41,8 @@ public enum WeekdayType {
         }
     }
 
-    public static List<WeekdayType> daysFromString(String value) {
-        List<WeekdayType> days = new ArrayList<>();
+    public static List<Weekday> daysFromString(String value) {
+        List<Weekday> days = new ArrayList<>();
         if (mondayIsAnywhere.matcher(value).matches())
             days.add(MONDAY);
         if (tuesdayIsAnywhere.matcher(value).matches())
@@ -62,9 +62,9 @@ public enum WeekdayType {
         return days;
     }
 
-    public List<WeekdayType> days() {
+    public List<Weekday> days() {
         if (this == ALL) {
-            List<WeekdayType> days = new ArrayList<>();
+            List<Weekday> days = new ArrayList<>();
             days.add(MONDAY);
             days.add(TUESDAY);
             days.add(WEDNESDAY);
@@ -74,7 +74,7 @@ public enum WeekdayType {
             days.add(SUNDAY);
             return days;
         } else {
-            List<WeekdayType> days = new ArrayList<>();
+            List<Weekday> days = new ArrayList<>();
             days.add(this);
             return days;
         }

@@ -1,5 +1,5 @@
 package edu.unizg.foi.uzdiz.jfletcher20.enums;
 
 public enum FileType {
-  ZS, ZPS, ZK
+  ZS, ZPS, ZK, ZVR, ZOD
 }

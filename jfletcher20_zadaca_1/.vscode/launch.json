@@ -12,7 +12,7 @@
         },
         {
             "type": "java",
-            "name": "Main",
+            "name": "DZ-1",
             "request": "launch",
             "mainClass": "edu.unizg.foi.uzdiz.jfletcher20.Main",
             "projectName": "jfletcher20_zadaca_1",
@@ -25,6 +25,27 @@
                 "DZ_1_vozila.csv",
                 "--zk",
                 "DZ_1_kompozicije.csv"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "DZ-2",
+            "request": "launch",
+            "mainClass": "edu.unizg.foi.uzdiz.jfletcher20.Main",
+            "projectName": "jfletcher20_zadaca_1",
+            // need to add arguments to the run command: --zs DZ_1_stanice.csv --zps DZ_1_vozila.csv --zk DZ_1_kompozicije.csv
+            "vmArgs": "-Dfile.encoding=UTF-8",
+            "args": [
+                "--zs",
+                "DZ_1_stanice.csv",
+                "--zps",
+                "DZ_1_vozila.csv",
+                "--zk",
+                "DZ_1_kompozicije.csv",
+                "--zvr",
+                "DZ_2_vozni_red.csv",
+                "--zod",
+                "DZ_2_oznake_dana.csv"
             ]
         }
     ]

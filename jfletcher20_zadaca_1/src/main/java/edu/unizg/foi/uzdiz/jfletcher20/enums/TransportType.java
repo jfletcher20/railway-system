@@ -12,7 +12,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.enums;
 Croatian acronyms in the CSV file (not in order):
 N - NONE
 P - PASSENGER
-TA - 
+TA - ???
 TK - PACKED
 TRS - RESTAURANT
 TTS - CAR
