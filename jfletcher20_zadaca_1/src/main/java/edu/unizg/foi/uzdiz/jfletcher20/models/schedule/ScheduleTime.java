@@ -2,8 +2,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.models.schedule;
 
 public record ScheduleTime(
         int hours,
-        int minutes
-) {
+        int minutes) {
     public ScheduleTime(int hours, int minutes) {
         if (hours < 0 || hours > 23) {
             throw new IllegalArgumentException("Sati moraju biti između 0 & 23.");
@@ -14,13 +13,13 @@ public record ScheduleTime(
         this.minutes = minutes;
     }
 
-    public ScheduleTime(String time) {
+    public ScheduleTime(String time, boolean throwsException) {
         this(
-            Integer.parseInt(time.split(":")[0]),
-            Integer.parseInt(time.split(":")[1])
-        );
-        if (time.split(":").length != 2) {
-            throw new IllegalArgumentException("vrijeme mora biti u formatu HH:mm.");
+                Integer.parseInt(time.split(":")[0]),
+                Integer.parseInt(time.split(":")[1]));
+        if (throwsException) {
+            if (time == null || time.isEmpty() || time.split(":").length != 2)
+                throw new IllegalArgumentException("vrijeme mora biti u formatu HH:mm.");
         }
     }
 
@@ -90,5 +89,5 @@ public record ScheduleTime(
     public String toString() {
         return String.format("%02d:%02d", hours, minutes);
     }
-    
+
 }

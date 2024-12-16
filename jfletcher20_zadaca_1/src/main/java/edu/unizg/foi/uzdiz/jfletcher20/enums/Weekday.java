@@ -41,7 +41,10 @@ public enum Weekday {
         }
     }
 
+    // causes an error if the value is "12;" because of second column being empty/null
     public static List<Weekday> daysFromString(String value) {
+        if (value == null || value.trim().isEmpty())
+            return List.of(ALL);
         List<Weekday> days = new ArrayList<>();
         if (mondayIsAnywhere.matcher(value).matches())
             days.add(MONDAY);

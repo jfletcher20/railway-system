@@ -31,8 +31,8 @@ public class ScheduleCreator implements ICreator {
                 parts[3], // destination
                 parts[4], // scheduledTrainID
                 TrainType.fromString(parts[5]), // trainType
-                parts[6], // departureTime
-                parts[7], // travelTime
+                new ScheduleTime(parts[6], true), // departureTime
+                new ScheduleTime(parts[7], false), // travelTime
                 RailwaySingleton.getInstance().getScheduleDays(parts[8]).days() // days
         );
     }

@@ -101,7 +101,7 @@ public abstract class FilesUtil {
         } else if (line.trim().isBlank()) {
           Logs.i(i, "Preskačem prazan redak.");
           continue;
-        } else if (line.split(";").toString().isBlank()) {
+        } else if (line.trim().replaceAll(";", "").isEmpty()) {
           Logs.i(i, "Sadržaj stupaca retka je prazan. Preskačem redak: " + line);
           continue;
         } else {

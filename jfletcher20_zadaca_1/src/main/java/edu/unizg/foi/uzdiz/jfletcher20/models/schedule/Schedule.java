@@ -30,8 +30,8 @@ public record Schedule(
         String destination, // Odredišna stanica
         String scheduledTrainID, // Oznaka vlaka
         TrainType trainType, // Vrsta vlaka
-        String departureTime, // Vrijeme polaska
-        String travelTime, // Trajanje vožnje
+        ScheduleTime departureTime, // Vrijeme polaska
+        ScheduleTime travelTime, // Trajanje vožnje
         List<Weekday> days // Dani vožnje odabrani na osnovi oznake dana
 ) implements IProduct {
 
@@ -42,8 +42,8 @@ public record Schedule(
             String destination, // Odredišna stanica
             String scheduledTrainID, // Oznaka vlaka: obavezna
             TrainType trainType, // Vrsta vlaka
-            String departureTime, // Vrijeme polaska: obavezna // Format: HH:mm
-            String travelTime, // Trajanje vožnje
+            ScheduleTime departureTime, // Vrijeme polaska: obavezna // Format: HH:mm
+            ScheduleTime travelTime, // Trajanje vožnje
             List<Weekday> days // Dani vožnje odabrani na osnovi oznake dana
     ) {
         if (trackID == null || trackID.isEmpty()) {
@@ -52,7 +52,7 @@ public record Schedule(
             throw new IllegalArgumentException("Smjer je obavezan.");
         } else if (scheduledTrainID == null || scheduledTrainID.isEmpty()) {
             throw new IllegalArgumentException("Oznaka vlaka je obavezna.");
-        } else if (departureTime == null || departureTime.isEmpty()) {
+        } else if (departureTime == null) {
             throw new IllegalArgumentException("Vrijeme polaska je obavezno.");
         }
         this.trackID = trackID;

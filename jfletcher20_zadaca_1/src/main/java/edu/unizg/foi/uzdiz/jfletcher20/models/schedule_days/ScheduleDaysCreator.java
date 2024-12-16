@@ -11,21 +11,29 @@ public class ScheduleDaysCreator implements ICreator {
     public ScheduleDaysCreator() {
     }
 
+    // causes an error if hte data is "12;" because of second column being empty/null
     @Override
     public ScheduleDays factoryMethod(String data, int row) {
         if (data == null || data.isEmpty()) {
             Logs.w(row, "ScheduleDaysCreator Prazan redak.");
             return null;
-        } else if (data.split(";").length != columnCount) {
+        } else if (data.split(";").length != columnCount && data.split(";").length != 1) {
+            Logs.i("ScheduleDaysCreator encountered error: " + columnCountError(data.split(";").length));
             Logs.w(row, columnCountError(data.split(";").length));
             return null;
         }
 
         String[] parts = data.split(";");
-        return new ScheduleDays(
-                parts[0], // dayID
-                Weekday.daysFromString(parts[1]) // day
-        );
+        if (parts.length == 1)
+            return new ScheduleDays(
+                    parts[0], // dayID
+                    Weekday.daysFromString("") // day
+            );
+        else
+            return new ScheduleDays(
+                    parts[0], // dayID
+                    Weekday.daysFromString(parts[1]) // day
+            );
     }
 
     private String columnCountError(int counts) {
@@ -33,39 +41,3 @@ public class ScheduleDaysCreator implements ICreator {
     }
 
 }
-
-/*
- * 
- * 
- * 
- * package edu.unizg.foi.uzdiz.jfletcher20.models.schedule_days;
- * 
- * import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
- * import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
- * 
- * // implements IProduct
- * // is a record
- * // has two variables - dayID and Weekday
- * 
- * /**
- * Record for handling the days of the week determined from dayCode in the
- * schedule.
- * public record ScheduleDays(
- * String dayID, // Oznaka dana
- * Weekday day // Dan
- * ) implements IProduct {
- * 
- * public ScheduleDays(
- * String dayID, // Oznaka dana
- * Weekday day // Dan
- * ) {
- * if (dayID == null || dayID.isEmpty())
- * throw new IllegalArgumentException("Oznaka dana je obavezna.");
- * this.dayID = dayID;
- * this.day = day;
- * }
- * }
- * 
- * 
- * 
- */
