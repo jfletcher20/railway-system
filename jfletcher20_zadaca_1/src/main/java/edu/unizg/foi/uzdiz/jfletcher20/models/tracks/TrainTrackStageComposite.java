@@ -72,7 +72,8 @@ public class TrainTrackStageComposite implements IComposite {
     }
 
     public ScheduleTime toTime() {
-        return new ScheduleTime(schedule.departureTime().getTotalTimeInMinutes() + schedule.travelTime().getTotalTimeInMinutes());
+        return new ScheduleTime(
+                schedule.departureTime().getTotalTimeInMinutes() + schedule.travelTime().getTotalTimeInMinutes());
     }
 
     @Override

@@ -37,7 +37,6 @@ public class CommandSystemSingleton {
   Pattern viewCompositionPattern = Pattern.compile( //
       "^IK (?<compositionCode>[0-9]+)$" //
   );
-  Pattern viewSchedulePattern = Pattern.compile("^schedule$");
   Pattern addUserPattern = Pattern.compile("^DK (?<name>.+) (?<lastName>.+)$");
   Pattern viewUsersPattern = Pattern.compile("^PK$");
 
@@ -132,7 +131,6 @@ public class CommandSystemSingleton {
     Matcher vsMatcher = viewStationsPattern.matcher(command);
     Matcher vsbMatcher = viewStationsBetweenPattern.matcher(command);
     Matcher vcMatcher = viewCompositionPattern.matcher(command);
-    Matcher vschMatcher = viewSchedulePattern.matcher(command);
     Matcher addUserMatcher = addUserPattern.matcher(command);
     Matcher viewUsersMatcher = viewUsersPattern.matcher(command);
     Matcher viewTrainsMatcher = viewTrainsPattern.matcher(command);
@@ -142,8 +140,6 @@ public class CommandSystemSingleton {
       viewStations(vsMatcher.group("trackCode"), vsMatcher.group("order"));
     } else if (vsbMatcher.matches()) {
       viewStationsBetween(vsbMatcher.group("startStation"), vsbMatcher.group("endStation"));
-    } else if (vschMatcher.matches()) {
-      viewSchedule();
     } else if (addUserMatcher.matches()) {
       addUser(addUserMatcher.group("name"), addUserMatcher.group("lastName"));
     } else if (viewUsersMatcher.matches()) {
@@ -340,9 +336,21 @@ public class CommandSystemSingleton {
     Logs.footer(true);
   }
 
-  private void viewSchedule() {
+  private void displayTrains() {
     Logs.header("Pregled voznog reda", true);
-    RailwaySingleton.getInstance().getSchedule().Operation();
+    var data = RailwaySingleton.getInstance().getSchedule().commandIV();
+    if (data == null || data.isEmpty()) {
+      Logs.e("Nema voznih redova.");
+      Logs.footer(true);
+      return;
+    }
+    List<String> header = Arrays.asList("Oznaka", "Polazna stanica", "Odredišna stanica", "Vrijeme polaska",
+        "Vrijeme dolaska", "Udaljenost (km)");
+    Logs.tableHeader(header);
+    for (var train : data) {
+      Logs.tableRow(train);
+    }
+    Logs.printTable();
     Logs.footer(true);
   }
 
@@ -372,34 +380,6 @@ public class CommandSystemSingleton {
     Logs.printTable();
     Logs.footer(true);
   }
-
-  private void displayTrains() {
-    Logs.header("Pregled vlakova", true);
-    var data = RailwaySingleton.getInstance().getSchedules();
-    if (data == null || data.isEmpty()) {
-      Logs.e("Nema vlakova u voznim redovima.");
-      Logs.footer(true);
-      return;
-    }
-    List<String> header = Arrays.asList("Oznaka", "Polazna stanica", "Odredišna stanica", "Vrijeme polaska",
-        "Vrijeme dolaska", "Udaljenost (km)");
-    Logs.tableHeader(header);
-    Logs.i("Udaljenost između stanica nije implementirana.");
-    Logs.i(data.size() + " vlakova u voznim redovima.");
-    for (var schedule : data) {
-      List<String> row = Arrays.asList(
-          schedule.scheduledTrainID(),
-          schedule.departure().name(),
-          schedule.destination().name(),
-          schedule.departureTime().toString(),
-          schedule.departureTime().addTime(schedule.travelTime()).toString(),
-          String.format("%.2f", RailwaySingleton.getInstance().getDistanceBetweenStations(schedule)));
-      Logs.tableRow(row);
-    }
-    Logs.printTable();
-    Logs.footer(true);
-  }
-
 }
 
 /*

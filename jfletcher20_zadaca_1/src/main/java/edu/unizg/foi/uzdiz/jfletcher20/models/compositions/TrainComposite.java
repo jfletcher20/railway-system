@@ -6,6 +6,7 @@ import java.util.List;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComponent;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.Schedule;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleComposite;
+import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackStageComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 
@@ -27,7 +28,7 @@ public class TrainComposite implements IComponent {
     public void Operation() {
         // traverse all children and output the operation on each child
         Logs.i("\t" + this.trainID);
-        
+
         for (TrainTrackStageComposite child : this.children) {
             if (this.trainID.equals("2212")) {
                 child.Operation();
@@ -35,6 +36,19 @@ public class TrainComposite implements IComponent {
                 System.out.print(".");
             }
         }
+    }
+
+    public List<String> commandIV() {
+        String firstStationName = this.children.getFirst().schedule.departure().name();
+        String finalStationName = this.children.getLast().schedule.destination().name();
+        ScheduleTime firstStationTime = this.children.getFirst().fromTime();
+        ScheduleTime arrivalTime = this.children.getLast().toTime();
+        double distance = this.compileDistance();
+        return List.of(
+                trainID,
+                firstStationName, finalStationName,
+                firstStationTime.toString(), arrivalTime.toString(),
+                String.valueOf(distance));
     }
 
     public double compileDistance() {

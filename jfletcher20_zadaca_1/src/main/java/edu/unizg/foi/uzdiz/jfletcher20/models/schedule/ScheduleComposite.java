@@ -30,12 +30,21 @@ import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 public class ScheduleComposite implements IComposite {
     public List<TrainComposite> children = new ArrayList<TrainComposite>();
 
+    @Override
     public void Operation() {
         // traverse all children and output the operation on each child
         Logs.i("Operation() called on ScheduleComposite");
         for (TrainComposite child : this.children) {
             child.Operation();
         }
+    }
+
+    public List<List<String>> commandIV() {
+        List<List<String>> commandIV = new ArrayList<List<String>>();
+        for (TrainComposite child : this.children) {
+            commandIV.add(child.commandIV());
+        }
+        return commandIV;
     }
 
     @Override

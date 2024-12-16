@@ -274,7 +274,7 @@ public class RailwaySingleton {
     return tracks.stream().mapToDouble(TrainTrack::trackLength).sum();
   }
 
-  public double getDistanceBetweenStations(Station station1, Station station2, TrainType trainType) {
+  public double getDistanceBetweenStations(Station station1, Station station2, TrainType trainType, boolean ignoreTrainType) {
     List<List<Edge>> edges = getRoutesBetweenStations(station1, station2);
     List<Edge> shortestRoute = edges.stream().min((a, b) -> {
       double aDistance = a.stream().mapToDouble(e -> e.weight).sum();
@@ -283,7 +283,7 @@ public class RailwaySingleton {
     }).orElse(null);
     if (shortestRoute == null)
       return 0;
-    List<Edge> shortestRouteFiltered = shortestRoute.stream().filter(e -> e.from.supportsTrainType(trainType))
+    List<Edge> shortestRouteFiltered = shortestRoute.stream().filter(e -> ignoreTrainType || e.from.supportsTrainType(trainType))
         .toList();
         
     return shortestRouteFiltered.stream().mapToDouble(e -> e.weight).sum();
@@ -292,9 +292,9 @@ public class RailwaySingleton {
   public double getDistanceBetweenStations(String trackID, Station a, Station b, TraversalDirection direction,
       TrainType trainType) {
     if (direction == TraversalDirection.FORTH) {
-      return getDistanceBetweenStations(a, b, trainType);
+      return getDistanceBetweenStations(a, b, trainType, true);
     } else {
-      return getDistanceBetweenStations(b, a, trainType);
+      return getDistanceBetweenStations(b, a, trainType, true);
     }
   }
 
