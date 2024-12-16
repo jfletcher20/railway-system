@@ -6,20 +6,20 @@ import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 /**
  * Class representing a wagon
  *
- * @param id wagon unique identifier
- * @param description wagon description
- * @param purpose Purpose of the wagon
- * @param transportType Type of transport
- * @param driveType Type of drive
- * @param maxPower Maximum power
- * @param maxSpeed Maximum speed
+ * @param id               wagon unique identifier
+ * @param description      wagon description
+ * @param purpose          Purpose of the wagon
+ * @param transportType    Type of transport
+ * @param driveType        Type of drive
+ * @param maxPower         Maximum power
+ * @param maxSpeed         Maximum speed
  * @param yearOfProduction Year of production
- * @param manufacturer Manufacturer
- * @param numberOfSeats Number of seats
- * @param capacity Capacity
- * @param area Area
- * @param volume Volume
- * @param status Status
+ * @param manufacturer     Manufacturer
+ * @param numberOfSeats    Number of seats
+ * @param capacity         Capacity
+ * @param area             Area
+ * @param volume           Volume
+ * @param status           Status
  */
 public record Wagon(String id, // oznaka
     String description, // opis
@@ -59,13 +59,11 @@ public record Wagon(String id, // oznaka
    * @param status
    */
   public Wagon {
-    if (maxPower < -1 || maxPower > 10) {
+    if (maxPower < -1 || maxPower > 10)
       throw new IllegalArgumentException(
           "Ako je maksimalna snaga nepoznata, postavi na -1; u protivnom, mora biti u domeni [0-10] MW");
-    }
-    if (maxSpeed < 1 || maxSpeed > 200) {
+    if (maxSpeed < 1 || maxSpeed > 200)
       throw new IllegalArgumentException("Maksimalna brzina treba biti u domeni od <1-200> km/h");
-    }
   }
 
   /**

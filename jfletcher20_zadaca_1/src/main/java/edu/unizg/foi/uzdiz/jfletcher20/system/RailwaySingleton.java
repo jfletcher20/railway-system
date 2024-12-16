@@ -9,8 +9,10 @@ import java.util.Set;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
+import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposition;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.Schedule;
+import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule_days.ScheduleDays;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
@@ -28,6 +30,8 @@ public class RailwaySingleton {
   private Map<String, List<Station>> railroad = new HashMap<>();
   private Map<String, ScheduleDays> scheduleDays = new HashMap<>();
   private List<Schedule> schedules = new ArrayList<>();
+
+  private ScheduleComposite scheduleComposite = new ScheduleComposite();
 
   private String[] initArgs = null;
 
@@ -106,7 +110,12 @@ public class RailwaySingleton {
 
   public boolean addSchedule(Schedule schedule) {
     this.schedules.add(schedule);
+    addToComposite(schedule);
     return true;
+  }
+
+  public void addToComposite(Schedule schedule) {
+    scheduleComposite.Add(new TrainComposite(schedule));
   }
 
   public List<Schedule> getSchedules() {
@@ -429,6 +438,7 @@ public class RailwaySingleton {
     Logs.o("Kompozicije: " + this.trains.size() + " (" +
         this.getCompositions().size() + ")");
     Logs.o("Pruge: " + this.tracks.size());
+    Logs.o("Vozni redovi: " + this.schedules.size());
     Logs.footer(true);
   }
 
