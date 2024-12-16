@@ -105,19 +105,30 @@ public class TrainComposite implements IComponent {
         return commandIEV;
     }
 
+    public List<List<String>> commandIEVD() {
+        List<List<String>> commandIEVD = new ArrayList<List<String>>();
+        for (TrainTrackStageComposite child : this.children) {
+            List<String> output = new ArrayList<String>();
+            output.add(0, this.trainID);
+            output.addAll(child.commandIEVD());
+            commandIEVD.add(output);
+        }
+        return commandIEVD;
+        
+    }
+
 }
 
-
 /*
- * ● Pregled etapa vlaka
+ * ● Pregled vlakova koji voze sve etape na određene dane u tjednu
  * ○ Sintaksa:
- * ■ IEV oznaka
+ * ■ IEVD dani
  * ○ Primjer:
- * ■ IEV 3609
+ * ■ IEVD PoSrPeN
  * ○ Opis primjera:
- * ■ Ispis tablice sa etapama vlaka (oznaka vlaka, oznaka pruge, polazna
- * željeznička stanica etape, odredišna željeznička stanica etape, vrijeme
- * polaska s polazne željezničke stanice etape, vrijeme dolaska u odredišnu
- * stanicu etape, ukupan broj km od polazne željezničke stanice etape do
- * odredišne željezničke stanice vlaka etape, daniUTjednu za etapu).
+ * ■ Ispis tablice sa vlakovima i njihovim etapama koje voze na određene dane
+ * u tjednu (oznaka vlaka, oznaka pruge, polazna željeznička stanica etape,
+ * odredišna željeznička stanica etape, vrijeme polaska s polazne željezničke
+ * stanice etape, vrijeme dolaska u odredišnu željezničke stanicu etape
+ * daniUTjednu za etapu).
  */

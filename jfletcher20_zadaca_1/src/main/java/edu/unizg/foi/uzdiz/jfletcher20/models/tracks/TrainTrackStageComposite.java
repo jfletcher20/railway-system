@@ -1,7 +1,6 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.tracks;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
@@ -122,4 +121,29 @@ public class TrainTrackStageComposite implements IComposite {
                 Weekday.listToString(this.schedule.days()));
     }
 
+    public List<String> commandIEVD() {
+        return List.of(
+                this.trackID,
+                this.schedule.departure().name(),
+                this.schedule.destination().name(),
+                this.schedule.departureTime().toString(),
+                this.toTime().toString(),
+                // String.valueOf(this.compileDistance()),
+                Weekday.listToString(this.schedule.days()));
+    }
+
 }
+
+/*
+ * ● Pregled vlakova koji voze sve etape na određene dane u tjednu
+ * ○ Sintaksa:
+ * ■ IEVD dani
+ * ○ Primjer:
+ * ■ IEVD PoSrPeN
+ * ○ Opis primjera:
+ * ■ Ispis tablice sa vlakovima i njihovim etapama koje voze na određene dane
+ * u tjednu (oznaka vlaka, oznaka pruge, polazna željeznička stanica etape,
+ * odredišna željeznička stanica etape, vrijeme polaska s polazne željezničke
+ * stanice etape, vrijeme dolaska u odredišnu željezničke stanicu etape
+ * daniUTjednu za etapu).
+ */

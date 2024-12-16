@@ -7,11 +7,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import edu.unizg.foi.uzdiz.jfletcher20.Main;
-import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
-import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleComposite;
+import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
-import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackStageComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 
 /**
@@ -45,6 +43,7 @@ public class CommandSystemSingleton {
 
   Pattern viewTrainsPattern = Pattern.compile("^IV$");
   Pattern viewTrainStagesPattern = Pattern.compile("^IEV (?<trainCode>\\d+)$");
+  Pattern viewTrainsWithStagesOnPattern = Pattern.compile("^IEVD (?<days>[A-Za-z]+)$");
 
   public static CommandSystemSingleton instance = new CommandSystemSingleton();
 
@@ -90,6 +89,10 @@ public class CommandSystemSingleton {
           "IK 1",
           "IV",
           "IEV 3609",
+          "IEV 0",
+          "IEVD PoSrPeN",
+          "IEVD Po",
+          "IEVD PoUSrČPeSuN",
           "DK Pero Kos",
           "DK Joshua Lee Fletcher",
           "PK",
@@ -105,6 +108,7 @@ public class CommandSystemSingleton {
           "IK 8001",
           "IV",
           "IEV 3609",
+          "IEVD PoSrPeN",
           "DK Pero Kos",
           "PK",
       };
@@ -125,7 +129,10 @@ public class CommandSystemSingleton {
         case "d2" -> command = "IK 1";
         case "e" -> command = "IV";
         case "f" -> command = "IEV 3609";
-        case "g" -> command = "DK Pero Kos";
+        case "f2" -> command = "IEV 0";
+        case "g" -> command = "IEVD PoSrPeN";
+        case "g2" -> command = "IEVD Po";
+        case "g3" -> command = "IEVD PoUSrPeSuN";
         case "h" -> command = "DK Pero Kos";
         case "h2" -> command = "DK Joshua Lee Fletcher";
         case "i" -> command = "PK";
@@ -143,6 +150,7 @@ public class CommandSystemSingleton {
     Matcher viewUsersMatcher = viewUsersPattern.matcher(command);
     Matcher viewTrainsMatcher = viewTrainsPattern.matcher(command);
     Matcher viewTrainStagesMatcher = viewTrainStagesPattern.matcher(command);
+    Matcher viewTrainsWithStagesOnMatcher = viewTrainsWithStagesOnPattern.matcher(command);
     if (vtMatcher.matches()) {
       viewTracks();
     } else if (vsMatcher.matches()) {
@@ -157,6 +165,12 @@ public class CommandSystemSingleton {
       viewTrains();
     } else if (viewTrainStagesMatcher.matches()) {
       viewTrainStagesOfTrain(viewTrainStagesMatcher.group("trainCode"));
+    } else if (viewTrainsWithStagesOnMatcher.matches()) {
+      try {
+        viewTrainsWithStagesOnDays(Weekday.daysFromString(viewTrainsWithStagesOnMatcher.group("days")));
+      } catch (IllegalArgumentException e) {
+        Logs.e(e.getMessage() + " - Nepoznata oznaka dana: " + viewTrainsWithStagesOnMatcher.group("days"));
+      }
     } else if (vcMatcher.matches()) {
       try {
         viewComposition(ParsingUtil.i(vcMatcher.group("compositionCode")));
@@ -209,9 +223,12 @@ public class CommandSystemSingleton {
       Logs.o("\t\t[DEBUG] d2\t\t\t\t- Pregled kompozicija (oznaka 1)", false);
       Logs.o("\t\t[DEBUG] e\t\t\t\t- Pregled vlakova", false);
       Logs.o("\t\t[DEBUG] f\t\t\t\t- Pregled etapa vlaka (oznaka 3609)", false);
-      Logs.o("\t\t[DEBUG] g\t\t\t\t- Dodavanje korisnika (Pero Kos)", false);
-      Logs.o("\t\t[DEBUG] h\t\t\t\t- Dodavanje korisnika (Pero Kos)", false);
-      Logs.o("\t\t[DEBUG] h2\t\t\t\t- Dodavanje korisnika (Joshua Lee Fletcher)", false);
+      Logs.o("\t\t[DEBUG] f2\t\t\t\t- Pregled etapa vlaka (oznaka 0)", false);
+      Logs.o("\t\t[DEBUG] g\t\t\t\t- Pregled vlakova koji voze sve etape na PoSrPeN", false);
+      Logs.o("\t\t[DEBUG] g2\t\t\t\t- Pregled vlakova koji voze sve etape na Po", false);
+      Logs.o("\t\t[DEBUG] g3\t\t\t\t- Pregled vlakova koji voze sve etape na PoUSrČPeSuN", false);
+      Logs.o("\t\t[DEBUG] h\t\t\t\t- Dodavanje korisnika Pero Kos", false);
+      Logs.o("\t\t[DEBUG] h2\t\t\t\t- Dodavanje korisnika Joshua Lee Fletcher", false);
       Logs.o("\t\t[DEBUG] i\t\t\t\t- Pregled korisnika", false);
     }
   }
@@ -420,18 +437,42 @@ public class CommandSystemSingleton {
     Logs.printTable();
     Logs.footer(true);
   }
+
+  private void viewTrainsWithStagesOnDays(List<Weekday> days) {
+    Logs.header("Pregled vlakova koji voze sve etape na " + days, true);
+    var data = RailwaySingleton.getInstance().getSchedule().commandIEVD(days);
+    if (data == null || data.isEmpty()) {
+      Logs.e("Nema vlakova koji voze sve etape na " + days);
+      Logs.footer(true);
+      return;
+    }
+    List<String> header = Arrays.asList(
+        "Oznaka vlaka",
+        "Oznaka pruge",
+        "Polazna stanica etape",
+        "Odredišna stanica etape",
+        "Vrijeme polaska",
+        "Vrijeme dolaska",
+        "Dani u tjednu");
+    Logs.tableHeader(header);
+    for (var train : data) {
+      Logs.tableRow(train);
+    }
+    Logs.printTable();
+    Logs.footer(true);
+  }
 }
 
 /*
- * ● Pregled etapa vlaka
+ * ● Pregled vlakova koji voze sve etape na određene dane u tjednu
  * ○ Sintaksa:
- * ■ IEV oznaka
+ * ■ IEVD dani
  * ○ Primjer:
- * ■ IEV 3609
+ * ■ IEVD PoSrPeN
  * ○ Opis primjera:
- * ■ Ispis tablice sa etapama vlaka (oznaka vlaka, oznaka pruge, polazna
- * željeznička stanica etape, odredišna željeznička stanica etape, vrijeme
- * polaska s polazne željezničke stanice etape, vrijeme dolaska u odredišnu
- * stanicu etape, ukupan broj km od polazne željezničke stanice etape do
- * odredišne željezničke stanice vlaka etape, daniUTjednu za etapu).
+ * ■ Ispis tablice sa vlakovima i njihovim etapama koje voze na određene dane
+ * u tjednu (oznaka vlaka, oznaka pruge, polazna željeznička stanica etape,
+ * odredišna željeznička stanica etape, vrijeme polaska s polazne željezničke
+ * stanice etape, vrijeme dolaska u odredišnu željezničke stanicu etape
+ * daniUTjednu za etapu).
  */

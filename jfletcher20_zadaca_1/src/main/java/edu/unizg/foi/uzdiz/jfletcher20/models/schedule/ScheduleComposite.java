@@ -3,6 +3,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.models.schedule;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComponent;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
@@ -99,6 +100,31 @@ public class ScheduleComposite implements IComposite {
             return null;
         }
         return train.commandIEV();
+    }
+
+    public List<List<String>> commandIEVD(List<Weekday> days) {
+        List<List<String>> commandIEVD = new ArrayList<List<String>>();
+        for (TrainComposite child : this.children) {
+            // for (TrainTrackStageComposite stage : child.children) {
+            //     boolean daysAreInStage = stage.schedule.days().containsAll(days);
+            //     if (daysAreInStage) {
+            //         List<String> output = new ArrayList<String>();
+            //         output.add(0, child.trainID);
+            //         output.addAll(stage.commandIEV());
+            //         commandIEVD.add(output);
+            //     }
+            // }
+            // if all of a train composite's stage's schedules contain all of the days, add to the commandIEVD output
+            List<Schedule> schedules = new ArrayList<Schedule>();
+            for (TrainTrackStageComposite stage : child.children) {
+                schedules.add(stage.schedule);
+            }
+            boolean daysAreInSchedules = schedules.stream().allMatch(s -> s.days().containsAll(days));
+            if (daysAreInSchedules) {
+                commandIEVD.addAll(child.commandIEVD());
+            }
+        }
+        return commandIEVD;
     }
 
 }
