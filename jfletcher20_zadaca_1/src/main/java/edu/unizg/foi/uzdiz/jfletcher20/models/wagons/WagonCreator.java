@@ -27,7 +27,7 @@ public class WagonCreator implements ICreator {
     if (data == null || data.isEmpty()) {
       Logs.w(row, "WagonCreator Prazan redak.");
       return null;
-    } else if (data.split(";", -1).length != columnCount) {
+    } else if (data.split(";", -1).length != columnCount || data.split(";", -1)[17].isBlank()) {
       Logs.w(row, columnCountError(data.split(";", -1).length));
       return null;
     }
