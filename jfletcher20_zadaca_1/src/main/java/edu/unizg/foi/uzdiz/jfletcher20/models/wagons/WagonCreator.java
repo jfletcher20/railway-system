@@ -27,11 +27,11 @@ public class WagonCreator implements ICreator {
     if (data == null || data.isEmpty()) {
       Logs.w(row, "WagonCreator Prazan redak.");
       return null;
-    } else if (data.split(";").length != columnCount) {
-      Logs.w(row, columnCountError(data.split(";").length));
+    } else if (data.split(";", -1).length != columnCount) {
+      Logs.w(row, columnCountError(data.split(";", -1).length));
       return null;
     }
-    String[] parts = data.split(";");
+    String[] parts = data.split(";", -1);
     return new Wagon(parts[0], // oznaka
         parts[1], // opis
         WagonType.fromCSV(parts[4]), // namjena
@@ -49,7 +49,7 @@ public class WagonCreator implements ICreator {
         ParsingUtil.d(parts[14]), // nosivost
         ParsingUtil.d(parts[15]), // površina
         ParsingUtil.d(parts[16]), // zapremina
-        parts[17].equals("I") // status
+        parts[17].isBlank() ? false : parts[17].equals("I") // status
     );
   }
 

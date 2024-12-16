@@ -258,7 +258,12 @@ public class CommandSystem {
           routes.remove(j);
           j--;
         }
+    int i = 0;
     for (List<RailwaySingleton.Edge> route : routes) {
+      if(routes.size() > 1) {
+        Logs.o("\n", false);
+        Logs.o("" + ++i + ". ruta", false);
+      }
       Logs.tableHeader(Arrays.asList("Naziv", "Vrsta", "Udaljenost od početne stanice (km)"));
       double cumulativeDistance = 0.0;
       outputStation(startStation, cumulativeDistance);

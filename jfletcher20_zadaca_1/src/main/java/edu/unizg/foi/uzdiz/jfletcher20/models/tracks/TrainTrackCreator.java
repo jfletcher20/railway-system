@@ -10,20 +10,19 @@ public class TrainTrackCreator implements ICreator {
 
   private static int columnCount = 17;
 
-  public TrainTrackCreator() {}
+  public TrainTrackCreator() {
+  }
 
   @Override
   public TrainTrack factoryMethod(String data, int row) {
-
     if (data == null || data.isEmpty()) {
       Logs.w(row, "TrainTrackCreator Prazan redak.");
       return null;
-    } else if (data.split(";").length != 14) {
-      Logs.w(row, columnCountError(data.split(";").length));
+    } else if (data.split(";", -1).length != columnCount) {
+      Logs.w(row, columnCountError(data.split(";", -1).length));
       return null;
     }
-
-    String[] parts = data.split(";");
+    String[] parts = data.split(";", -1);
     return new TrainTrack(parts[1], // oznaka
         TrainTrackCategory.fromCSV(parts[6]), // kategorija
         parts[8], // vrsta prijevoza
@@ -33,7 +32,6 @@ public class TrainTrackCreator implements ICreator {
         ParsingUtil.d(parts[11]), // DO po duznom m
         TrainTrackStatus.fromCSV(parts[12]) // status
     );
-
   }
 
   private String columnCountError(int counts) {

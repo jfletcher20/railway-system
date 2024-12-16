@@ -11,7 +11,8 @@ public class ScheduleDaysCreator implements ICreator {
     public ScheduleDaysCreator() {
     }
 
-    // causes an error if hte data is "12;" because of second column being empty/null
+    // causes an error if hte data is "12;" because of second column being
+    // empty/null
     @Override
     public ScheduleDays factoryMethod(String data, int row) {
         if (data == null || data.isEmpty()) {
@@ -24,16 +25,10 @@ public class ScheduleDaysCreator implements ICreator {
         }
 
         String[] parts = data.split(";");
-        if (parts.length == 1)
-            return new ScheduleDays(
-                    parts[0], // dayID
-                    Weekday.daysFromString("") // day
-            );
-        else
-            return new ScheduleDays(
-                    parts[0], // dayID
-                    Weekday.daysFromString(parts[1]) // day
-            );
+        return new ScheduleDays(
+                parts[0], // dayID
+                Weekday.daysFromString(parts.length == 1 ? "" : parts[1]) // days
+        );
     }
 
     private String columnCountError(int counts) {

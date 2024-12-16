@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposition;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.Schedule;
@@ -118,6 +119,14 @@ public class RailwaySingleton {
   }
 
   public ScheduleDays getScheduleDays(String dayID) {
+    if (dayID.isBlank()) {
+      if (this.scheduleDays.containsKey("-"))
+        return this.scheduleDays.get("-");
+      else {
+        this.scheduleDays.put("-", new ScheduleDays("-", List.of(Weekday.ALL)));
+        return this.scheduleDays.get("-");
+      }
+    }
     return this.scheduleDays.get(dayID);
   }
 
@@ -244,9 +253,9 @@ public class RailwaySingleton {
     }
     List<TrainTrack> tracks = this.tracks.stream().filter(t -> t.id().equals(trackID)).toList();
     tracks = tracks.subList(stationIndex1, stationIndex2 + 1);
-    Logs.i("RailwaySingleton getDistanceBetweenStations: " + tracks.size() + " tracks between ["
-        + stationIndex1 + "]::" + station1.name() + " and [" + stationIndex2 + "]::"
-        + station2.name());
+    // Logs.i("RailwaySingleton getDistanceBetweenStations: " + tracks.size() + " tracks between ["
+    //     + stationIndex1 + "]::" + station1.name() + " and [" + stationIndex2 + "]::"
+    //     + station2.name());
     return tracks.stream().mapToDouble(TrainTrack::trackLength).sum();
   }
 

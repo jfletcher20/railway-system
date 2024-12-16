@@ -18,12 +18,12 @@ public class ScheduleCreator implements ICreator {
         if (data == null || data.isEmpty()) {
             Logs.w(row, "ScheduleCreator Prazan redak.");
             return null;
-        } else if (data.split(";").length != columnCount) {
-            Logs.w(row, columnCountError(data.split(";").length));
+        } else if (data.split(";", -1).length != columnCount) {
+            Logs.w(row, columnCountError(data.split(";", -1).length));
             return null;
         }
 
-        String[] parts = data.split(";");
+        String[] parts = data.split(";", -1);
         return new Schedule(
                 parts[0], // trackID
                 TraversalDirection.fromString(parts[1]), // direction
