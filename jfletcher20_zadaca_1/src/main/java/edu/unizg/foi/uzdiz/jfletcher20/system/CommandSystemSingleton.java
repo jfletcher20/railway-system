@@ -44,6 +44,7 @@ public class CommandSystemSingleton {
   Pattern viewTrainsPattern = Pattern.compile("^IV$");
   Pattern viewTrainStagesPattern = Pattern.compile("^IEV (?<trainCode>\\d+)$");
   Pattern viewTrainsWithStagesOnPattern = Pattern.compile("^IEVD (?<days>[A-Za-z]+)$");
+  Pattern viewTrainTimetablePattern = Pattern.compile("^IVRV (?<trainCode>.+)$");
 
   public static CommandSystemSingleton instance = new CommandSystemSingleton();
 
@@ -93,6 +94,8 @@ public class CommandSystemSingleton {
           "IEVD PoSrPeN",
           "IEVD Po",
           "IEVD PoUSrČPeSuN",
+          "IVRV 3609",
+          "IVRV 0",
           "DK Pero Kos",
           "DK Joshua Lee Fletcher",
           "PK",
@@ -109,6 +112,7 @@ public class CommandSystemSingleton {
           "IV",
           "IEV 3609",
           "IEVD PoSrPeN",
+          "IVRV 3609",
           "DK Pero Kos",
           "PK",
       };
@@ -133,9 +137,11 @@ public class CommandSystemSingleton {
         case "g" -> command = "IEVD PoSrPeN";
         case "g2" -> command = "IEVD Po";
         case "g3" -> command = "IEVD PoUSrPeSuN";
-        case "h" -> command = "DK Pero Kos";
-        case "h2" -> command = "DK Joshua Lee Fletcher";
-        case "i" -> command = "PK";
+        case "h" -> command = "IVRV 3609";
+        case "h2" -> command = "IVRV 0";
+        case "i" -> command = "DK Pero Kos";
+        case "i2" -> command = "DK Joshua Lee Fletcher";
+        case "j" -> command = "PK";
       }
       identifyCommand(command);
     }
@@ -151,6 +157,7 @@ public class CommandSystemSingleton {
     Matcher viewTrainsMatcher = viewTrainsPattern.matcher(command);
     Matcher viewTrainStagesMatcher = viewTrainStagesPattern.matcher(command);
     Matcher viewTrainsWithStagesOnMatcher = viewTrainsWithStagesOnPattern.matcher(command);
+    Matcher ivrvMatcher = viewTrainTimetablePattern.matcher(command);
     if (vtMatcher.matches()) {
       viewTracks();
     } else if (vsMatcher.matches()) {
@@ -165,6 +172,8 @@ public class CommandSystemSingleton {
       viewTrains();
     } else if (viewTrainStagesMatcher.matches()) {
       viewTrainStagesOfTrain(viewTrainStagesMatcher.group("trainCode"));
+    } else if (ivrvMatcher.matches()) {
+      viewTrainTimetable(ivrvMatcher.group("trainCode"));
     } else if (viewTrainsWithStagesOnMatcher.matches()) {
       try {
         viewTrainsWithStagesOnDays(Weekday.daysFromString(viewTrainsWithStagesOnMatcher.group("days")));
@@ -200,6 +209,9 @@ public class CommandSystemSingleton {
 
     Logs.o("IV\t\t\t\t\t- Pregled vlakova", false);
     Logs.o("IEV [oznakaVlaka]\t\t\t- Pregled etapa vlaka", false);
+    Logs.o("IEVD [dani]\t\t\t\t- Pregled vlakova koji voze sve etape na određene dane u tjednu",
+        false);
+    Logs.o("IVRV [oznakaVlaka]\t\t\t- Pregled vlakova i njihovih etapa", false);
     Logs.o("DK [ime] [prezime]\t\t\t- Dodavanje korisnika", false);
     Logs.o("PK\t\t\t\t\t- Pregled korisnika", false);
 
@@ -226,10 +238,12 @@ public class CommandSystemSingleton {
       Logs.o("\t\t[DEBUG] f2\t\t\t\t- Pregled etapa vlaka (oznaka 0)", false);
       Logs.o("\t\t[DEBUG] g\t\t\t\t- Pregled vlakova koji voze sve etape na PoSrPeN", false);
       Logs.o("\t\t[DEBUG] g2\t\t\t\t- Pregled vlakova koji voze sve etape na Po", false);
-      Logs.o("\t\t[DEBUG] g3\t\t\t\t- Pregled vlakova koji voze sve etape na PoUSrČPeSuN", false);
-      Logs.o("\t\t[DEBUG] h\t\t\t\t- Dodavanje korisnika Pero Kos", false);
-      Logs.o("\t\t[DEBUG] h2\t\t\t\t- Dodavanje korisnika Joshua Lee Fletcher", false);
-      Logs.o("\t\t[DEBUG] i\t\t\t\t- Pregled korisnika", false);
+      Logs.o("\t\t[DEBUG] g3\t\t\t\t- Pregled vlakova koji voze sve etape na PoUSrPeSuN", false);
+      Logs.o("\t\t[DEBUG] h\t\t\t\t- Pregled vlakova i njihovih etapa (oznaka 3609)", false);
+      Logs.o("\t\t[DEBUG] h2\t\t\t\t- Pregled vlakova i njihovih etapa (oznaka 0)", false);
+      Logs.o("\t\t[DEBUG] i\t\t\t\t- Dodavanje korisnika Pero Kos", false);
+      Logs.o("\t\t[DEBUG] i2\t\t\t\t- Dodavanje korisnika Joshua Lee Fletcher", false);
+      Logs.o("\t\t[DEBUG] j\t\t\t\t- Pregled korisnika", false);
     }
   }
 
@@ -458,6 +472,31 @@ public class CommandSystemSingleton {
     for (var train : data) {
       Logs.tableRow(train);
     }
+    Logs.printTable();
+    Logs.footer(true);
+  }
+
+  private void viewTrainTimetable(String trainID) {
+    Logs.header("Pregled voznog reda vlaka " + trainID, true);
+    List<List<String>> data = RailwaySingleton.getInstance().getSchedule().commandIVRV(trainID);
+    if (data == null || data.isEmpty()) {
+      Logs.e("Nema rasporeda za vlak s oznakom: " + trainID);
+      Logs.footer(true);
+      return;
+    }
+
+    List<String> header = Arrays.asList(
+        "Oznaka vlaka",
+        "Oznaka pruge",
+        "Željeznička stanica",
+        "Vrijeme polaska",
+        "Broj km od polazne stanice");
+    Logs.tableHeader(header);
+
+    for (var row : data) {
+      Logs.tableRow(row);
+    }
+
     Logs.printTable();
     Logs.footer(true);
   }

@@ -1,6 +1,7 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.schedule;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
@@ -106,15 +107,16 @@ public class ScheduleComposite implements IComposite {
         List<List<String>> commandIEVD = new ArrayList<List<String>>();
         for (TrainComposite child : this.children) {
             // for (TrainTrackStageComposite stage : child.children) {
-            //     boolean daysAreInStage = stage.schedule.days().containsAll(days);
-            //     if (daysAreInStage) {
-            //         List<String> output = new ArrayList<String>();
-            //         output.add(0, child.trainID);
-            //         output.addAll(stage.commandIEV());
-            //         commandIEVD.add(output);
-            //     }
+            // boolean daysAreInStage = stage.schedule.days().containsAll(days);
+            // if (daysAreInStage) {
+            // List<String> output = new ArrayList<String>();
+            // output.add(0, child.trainID);
+            // output.addAll(stage.commandIEV());
+            // commandIEVD.add(output);
             // }
-            // if all of a train composite's stage's schedules contain all of the days, add to the commandIEVD output
+            // }
+            // if all of a train composite's stage's schedules contain all of the days, add
+            // to the commandIEVD output
             List<Schedule> schedules = new ArrayList<Schedule>();
             for (TrainTrackStageComposite stage : child.children) {
                 schedules.add(stage.schedule);
@@ -125,6 +127,15 @@ public class ScheduleComposite implements IComposite {
             }
         }
         return commandIEVD;
+    }
+
+    public List<List<String>> commandIVRV(String trainID) {
+        TrainComposite train = getCompositeByTrainID(trainID);
+        if (train == null) {
+            Logs.e("Vlak s oznakom " + trainID + " nije pronađen");
+            return Collections.emptyList();
+        }
+        return train.commandIVRV();
     }
 
 }
