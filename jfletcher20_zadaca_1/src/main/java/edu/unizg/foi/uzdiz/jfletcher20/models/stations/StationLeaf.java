@@ -11,7 +11,7 @@ public class StationLeaf extends Leaf {
 
     @Override
     public void Operation() {
-        System.out.println("Operation() called on StationLeaf::" + station.name());
+        System.out.println("\t\t\t\t" + this.station.name());
     }
 	
 }

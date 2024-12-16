@@ -16,12 +16,13 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule_days.ScheduleDays;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
+import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.Wagon;
 
 public class RailwaySingleton {
 
   static private volatile RailwaySingleton instance = new RailwaySingleton();
-  static public final Class<?> PREFERRED_COMMAND_SYSTEM = CommandSystem.class;
+  static public final Class<?> PREFERRED_COMMAND_SYSTEM = CommandSystemSingleton.class;
 
   private List<TrainTrack> tracks = new ArrayList<>();
   private List<Wagon> wagons = new ArrayList<>();
@@ -30,6 +31,8 @@ public class RailwaySingleton {
   private Map<String, List<Station>> railroad = new HashMap<>();
   private Map<String, ScheduleDays> scheduleDays = new HashMap<>();
   private List<Schedule> schedules = new ArrayList<>();
+
+  private List<User> users = new ArrayList<>();
 
   private ScheduleComposite scheduleComposite = new ScheduleComposite();
 
@@ -115,7 +118,11 @@ public class RailwaySingleton {
   }
 
   public void addToComposite(Schedule schedule) {
-    scheduleComposite.Add(new TrainComposite(schedule));
+    scheduleComposite.Add(new TrainComposite(schedule, scheduleComposite));
+  }
+
+  public ScheduleComposite getSchedule() {
+    return scheduleComposite;
   }
 
   public List<Schedule> getSchedules() {
@@ -262,9 +269,10 @@ public class RailwaySingleton {
     }
     List<TrainTrack> tracks = this.tracks.stream().filter(t -> t.id().equals(trackID)).toList();
     tracks = tracks.subList(stationIndex1, stationIndex2 + 1);
-    // Logs.i("RailwaySingleton getDistanceBetweenStations: " + tracks.size() + " tracks between ["
-    //     + stationIndex1 + "]::" + station1.name() + " and [" + stationIndex2 + "]::"
-    //     + station2.name());
+    // Logs.i("RailwaySingleton getDistanceBetweenStations: " + tracks.size() + "
+    // tracks between ["
+    // + stationIndex1 + "]::" + station1.name() + " and [" + stationIndex2 + "]::"
+    // + station2.name());
     return tracks.stream().mapToDouble(TrainTrack::trackLength).sum();
   }
 
@@ -522,6 +530,14 @@ public class RailwaySingleton {
     }
 
     visited.remove(currentStation);
+  }
+
+  public void addUser(String name, String lastName) {
+    users.add(new User(name, lastName));
+  }
+
+  public List<User> getUsers() {
+    return this.users;
   }
 
 }

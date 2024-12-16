@@ -24,7 +24,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
  * </p>
  * 
  */
-public class CommandSystem {
+public class CommandSystemSingleton {
 
   Pattern quitPattern = Pattern.compile("^Q$");
   Pattern viewTracksPattern = Pattern.compile("^IP$");
@@ -37,13 +37,16 @@ public class CommandSystem {
   Pattern viewCompositionPattern = Pattern.compile( //
       "^IK (?<compositionCode>[0-9]+)$" //
   );
+  Pattern viewSchedulePattern = Pattern.compile("^schedule$");
+  Pattern addUserPattern = Pattern.compile("^DK (?<name>.+) (?<lastName>.+)$");
+  Pattern viewUsersPattern = Pattern.compile("^PK$");
 
-  public static CommandSystem instance = new CommandSystem();
+  public static CommandSystemSingleton instance = new CommandSystemSingleton();
 
-  private CommandSystem() {
+  private CommandSystemSingleton() {
   }
 
-  public static CommandSystem getInstance() {
+  public static CommandSystemSingleton getInstance() {
     return instance;
   }
 
@@ -78,7 +81,9 @@ public class CommandSystem {
           "ISI2S Kotoriba - Macinec",
           "ISI2S Macinec - Kotoriba",
           "IK 8001",
-          "IK 1"
+          "IK 1",
+          "DK Pero Kos",
+          "PK",
       };
       for (String c : commands) {
         Logs.c("Izvršavanje komande: " + c);
@@ -89,6 +94,8 @@ public class CommandSystem {
           "IP", "ISP M501 N",
           "ISI2S Kotoriba - Ludbreg",
           "IK 8001",
+          "DK Pero Kos",
+          "PK",
       };
       for (String c : commands) {
         Logs.c("Izvršavanje komande: " + c);
@@ -103,8 +110,10 @@ public class CommandSystem {
         case "c2" -> command = "ISI2S Ludbreg - Kotoriba";
         case "c3" -> command = "ISI2S Kotoriba - Macinec";
         case "c4" -> command = "ISI2S Macinec - Kotoriba";
-        case "e" -> command = "IK 8001";
-        case "e2" -> command = "IK 1";
+        case "d" -> command = "IK 8001";
+        case "d2" -> command = "IK 1";
+        case "e" -> command = "DK Pero Kos";
+        case "f" -> command = "PK";
       }
       identifyCommand(command);
     }
@@ -115,6 +124,9 @@ public class CommandSystem {
     Matcher vsMatcher = viewStationsPattern.matcher(command);
     Matcher vsbMatcher = viewStationsBetweenPattern.matcher(command);
     Matcher vcMatcher = viewCompositionPattern.matcher(command);
+    Matcher vschMatcher = viewSchedulePattern.matcher(command);
+    Matcher addUserMatcher = addUserPattern.matcher(command);
+    Matcher viewUsersMatcher = viewUsersPattern.matcher(command);
     if (vtMatcher.matches()) {
       // Logs.c("Detektirana komanda za pregled pruga.");
       viewTracks();
@@ -126,6 +138,18 @@ public class CommandSystem {
     } else if (vsbMatcher.matches()) {
       // Logs.c("Detektirana komanda za pregled stanica između dvije stanice.");
       viewStationsBetween(vsbMatcher.group("startStation"), vsbMatcher.group("endStation"));
+      return true;
+    } else if (vschMatcher.matches()) {
+      // Logs.c("Detektirana komanda za pregled voznog reda.");
+      viewSchedule();
+      return true;
+    } else if (addUserMatcher.matches()) {
+      // Logs.c("Detektirana komanda za dodavanje korisnika.");
+      addUser(addUserMatcher.group("name"), addUserMatcher.group("lastName"));
+      return true;
+    } else if (viewUsersMatcher.matches()) {
+      // Logs.c("Detektirana komanda za pregled korisnika.");
+      displayUsers();
       return true;
     } else if (vcMatcher.matches()) {
       // Logs.c("Detektirana komanda za pregled kompozicija.");
@@ -170,8 +194,10 @@ public class CommandSystem {
       Logs.o("\t\t[DEBUG] c2\t\t\t\t- Pregled stanica između Ludbreg - Kotoriba", false);
       Logs.o("\t\t[DEBUG] c3\t\t\t\t- Pregled stanica između Kotoriba - Macinec", false);
       Logs.o("\t\t[DEBUG] c4\t\t\t\t- Pregled stanica između Macinec - Kotoriba", false);
-      Logs.o("\t\t[DEBUG] e\t\t\t\t- Pregled kompozicija (oznaka 8001)", false);
-      Logs.o("\t\t[DEBUG] e2\t\t\t\t- Pregled kompozicija (oznaka 1)", false);
+      Logs.o("\t\t[DEBUG] d\t\t\t\t- Pregled kompozicija (oznaka 8001)", false);
+      Logs.o("\t\t[DEBUG] d2\t\t\t\t- Pregled kompozicija (oznaka 1)", false);
+      Logs.o("\t\t[DEBUG] e\t\t\t\t- Dodavanje korisnika: Pero Kos", false);
+      Logs.o("\t\t[DEBUG] f\t\t\t\t- Pregled korisnika", false);
     }
   }
 
@@ -310,4 +336,56 @@ public class CommandSystem {
     Logs.footer(true);
   }
 
+  private void viewSchedule() {
+    Logs.header("Pregled voznog reda", true);
+    RailwaySingleton.getInstance().getSchedule().Operation();
+    Logs.footer(true);
+  }
+
+  private void addUser(String name, String lastName) {
+    Logs.header("Dodavanje korisnika", true);
+    RailwaySingleton.getInstance().addUser(name, lastName);
+    Logs.o("Dodan korisnik: " + name + " " + lastName);
+    Logs.footer(true);
+  }
+
+  private void displayUsers() {
+    Logs.header("Pregled korisnika", true);
+    var data = RailwaySingleton.getInstance().getUsers();
+    if (data == null || data.isEmpty()) {
+      Logs.e("Nema korisnika u registru.");
+      Logs.footer(true);
+      return;
+    }
+    List<String> header = Arrays.asList("Ime", "Prezime");
+    Logs.tableHeader(header);
+    for (var user : data) {
+      List<String> row = Arrays.asList(
+          user.name(),
+          user.lastName());
+      Logs.tableRow(row);
+    }
+    Logs.printTable();
+    Logs.footer(true);
+  }
+
 }
+
+
+/*
+ * 
+ *  Dodavanje korisnika u registar korisnika 
+○ Sintaksa:  
+■ DK ime prezime 
+○ Primjer:  
+■ DK Pero Kos 
+○ Opis primjera:  
+■ Dodaje se korisnik 
+● Pregled korisnika iz registra korisnika 
+○ Sintaksa:  
+■ PK  
+○ Primjer:  
+■ PK  
+○ Opis primjera:  
+■ Ispis korisnika
+ */

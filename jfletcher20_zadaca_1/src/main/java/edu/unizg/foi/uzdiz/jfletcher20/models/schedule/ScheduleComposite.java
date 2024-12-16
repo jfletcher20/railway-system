@@ -27,10 +27,14 @@ import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
  *               |_ StationLeaf
  */
 public class ScheduleComposite implements IComposite {
-    List<TrainComposite> children = new ArrayList<TrainComposite>();
+    public List<TrainComposite> children = new ArrayList<TrainComposite>();
 
     public void Operation() {
-        System.out.println("Operation() called on ScheduleComposite");
+        // traverse all children and output the operation on each child
+        Logs.i("Operation() called on ScheduleComposite");
+        for (TrainComposite child : this.children) {
+            child.Operation();
+        }
     }
 
     @Override

@@ -6,6 +6,7 @@ import java.util.List;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComponent;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.Schedule;
+import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackStageComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 
@@ -14,18 +15,22 @@ public class TrainComposite implements IComposite {
     String trainID;
     List<TrainTrackStageComposite> children = new ArrayList<TrainTrackStageComposite>();
 
-    public TrainComposite(String trainID) {
-        this.trainID = trainID;
-    }
-
     public TrainComposite(Schedule schedule) {
         this.trainID = schedule.scheduledTrainID();
-        this.Add(new TrainTrackStageComposite(schedule.departure(), schedule.destination(), schedule.direction()));
+        this.Add(new TrainTrackStageComposite(schedule));
+    }
+
+    public TrainComposite(Schedule schedule, ScheduleComposite scheduleComposite) {
+        this(schedule);
     }
 
     @Override
     public void Operation() {
-        Logs.i( "Operation() called on TrainComposite");
+        // traverse all children and output the operation on each child
+        Logs.i("\t" + this.trainID);
+        for (TrainTrackStageComposite child : this.children) {
+            child.Operation();
+        }
     }
 
     @Override

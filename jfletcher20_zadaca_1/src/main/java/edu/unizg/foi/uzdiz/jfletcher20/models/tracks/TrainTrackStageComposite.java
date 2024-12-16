@@ -6,6 +6,7 @@ import java.util.List;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComponent;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComposite;
+import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.Schedule;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.StationLeaf;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
@@ -14,35 +15,40 @@ import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 public class TrainTrackStageComposite implements IComposite {
 
     public List<StationLeaf> children = new ArrayList<StationLeaf>();
+    public String trackID;
 
-    public TrainTrackStageComposite(Station start, Station end, TraversalDirection direction) {
-        TrainTrack track = start.getTrack();
-        List<Station> stations = RailwaySingleton.getInstance().getStationsOnTrack(track.id());
+    public TrainTrackStageComposite(Station start, Station end, TraversalDirection direction, String trackID) {
+        this.trackID = trackID;
+        List<Station> stations = RailwaySingleton.getInstance().getStationsOnTrack(trackID);
         if (direction == TraversalDirection.FORTH) {
-            for (Station station : stations) {
-                if (station.equals(start)) {
-                    this.Add(new StationLeaf(station));
-                } else if (station.equals(end)) {
-                    this.Add(new StationLeaf(station));
+            for (int i = stations.indexOf(start) + 1; i < stations.size(); i++) {
+                Station station = stations.get(i);
+                this.Add(new StationLeaf(station));
+                if (station.equals(end)) {
                     break;
                 }
             }
         } else {
-            for (int i = stations.size() - 1; i >= 0; i--) {
+            for (int i = stations.indexOf(start) - 1; i >= 0; i--) {
                 Station station = stations.get(i);
-                if (station.equals(start)) {
-                    this.Add(new StationLeaf(station));
-                } else if (station.equals(end)) {
-                    this.Add(new StationLeaf(station));
+                this.Add(new StationLeaf(station));
+                if (station.equals(end)) {
                     break;
                 }
             }
         }
     }
 
+    public TrainTrackStageComposite(Schedule schedule) {
+        this(schedule.departure(), schedule.destination(), schedule.direction(), schedule.trackID());
+    }
+
     @Override
     public void Operation() {
-        Logs.i("Operation() called on TrainTrackStageComposite");
+        Logs.i("\t\tstage");
+        for (StationLeaf child : this.children) {
+            child.Operation();
+        }
     }
 
     @Override
