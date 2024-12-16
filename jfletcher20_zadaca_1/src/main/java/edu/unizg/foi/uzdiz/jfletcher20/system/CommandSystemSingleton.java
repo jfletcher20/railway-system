@@ -41,6 +41,8 @@ public class CommandSystemSingleton {
   Pattern addUserPattern = Pattern.compile("^DK (?<name>.+) (?<lastName>.+)$");
   Pattern viewUsersPattern = Pattern.compile("^PK$");
 
+  Pattern viewTrainsPattern = Pattern.compile("^IV$");
+
   public static CommandSystemSingleton instance = new CommandSystemSingleton();
 
   private CommandSystemSingleton() {
@@ -63,7 +65,8 @@ public class CommandSystemSingleton {
       }
       if (Main.debugMode)
         runDebugTests(command);
-      else identifyCommand(command);
+      else
+        identifyCommand(command);
     }
     Logs.footer(true);
   }
@@ -82,18 +85,21 @@ public class CommandSystemSingleton {
           "ISI2S Macinec - Kotoriba",
           "IK 8001",
           "IK 1",
+          "IV",
           "DK Pero Kos",
+          "DK Joshua Lee Fletcher",
           "PK",
       };
       for (String c : commands) {
         Logs.c("Izvršavanje komande: " + c);
         identifyCommand(c);
       }
-    } else if(command.trim().equalsIgnoreCase("All1")) {
+    } else if (command.trim().equalsIgnoreCase("All1")) {
       String[] commands = new String[] {
           "IP", "ISP M501 N",
           "ISI2S Kotoriba - Ludbreg",
           "IK 8001",
+          "IV",
           "DK Pero Kos",
           "PK",
       };
@@ -112,8 +118,10 @@ public class CommandSystemSingleton {
         case "c4" -> command = "ISI2S Macinec - Kotoriba";
         case "d" -> command = "IK 8001";
         case "d2" -> command = "IK 1";
-        case "e" -> command = "DK Pero Kos";
-        case "f" -> command = "PK";
+        case "e" -> command = "IV";
+        case "f" -> command = "DK Pero Kos";
+        case "f2" -> command = "DK Joshua Lee Fletcher";
+        case "g" -> command = "PK";
       }
       identifyCommand(command);
     }
@@ -127,58 +135,53 @@ public class CommandSystemSingleton {
     Matcher vschMatcher = viewSchedulePattern.matcher(command);
     Matcher addUserMatcher = addUserPattern.matcher(command);
     Matcher viewUsersMatcher = viewUsersPattern.matcher(command);
+    Matcher viewTrainsMatcher = viewTrainsPattern.matcher(command);
     if (vtMatcher.matches()) {
-      // Logs.c("Detektirana komanda za pregled pruga.");
       viewTracks();
-      return true;
     } else if (vsMatcher.matches()) {
-      // Logs.c("Detektirana komanda za pregled stanica uz prugu.");
       viewStations(vsMatcher.group("trackCode"), vsMatcher.group("order"));
-      return true;
     } else if (vsbMatcher.matches()) {
-      // Logs.c("Detektirana komanda za pregled stanica između dvije stanice.");
       viewStationsBetween(vsbMatcher.group("startStation"), vsbMatcher.group("endStation"));
-      return true;
     } else if (vschMatcher.matches()) {
-      // Logs.c("Detektirana komanda za pregled voznog reda.");
       viewSchedule();
-      return true;
     } else if (addUserMatcher.matches()) {
-      // Logs.c("Detektirana komanda za dodavanje korisnika.");
       addUser(addUserMatcher.group("name"), addUserMatcher.group("lastName"));
-      return true;
     } else if (viewUsersMatcher.matches()) {
-      // Logs.c("Detektirana komanda za pregled korisnika.");
       displayUsers();
-      return true;
+    } else if (viewTrainsMatcher.matches()) {
+      displayTrains();
     } else if (vcMatcher.matches()) {
-      // Logs.c("Detektirana komanda za pregled kompozicija.");
       try {
         viewComposition(ParsingUtil.i(vcMatcher.group("compositionCode")));
       } catch (NumberFormatException e) {
         Logs.e("Neispravna oznaka kompozicije: " + vcMatcher.group("compositionCode"));
       }
-      return true;
     } else {
       Logs.c("Nepoznata komanda.");
       outputMenu();
       return false;
     }
+    return true;
   }
 
   private void outputMenu() {
     Logs.header("JLF Željeznica: Interaktivni način rada", true);
+
     Logs.withPadding(() -> Logs.o("Validne komande:"), false, true);
+
     Logs.o("IP\t\t\t\t\t- Pregled pruga", false);
     Logs.o(
         "ISP [oznakaPruge] [N|O]\t\t\t- Pregled stanica uz prugu u normalnom ili obrnutom redoslijedu",
         false);
     Logs.o("ISI2S [nazivStanice1] - [nazivStanice2]\t- Pregled stanica između dvije stanice",
         false);
-    Logs.withPadding(() -> {
-      Logs.o("IK [oznakaKompozicije]\t\t\t- Pregled kompozicija", false);
-    }, false, true);
-    Logs.withPadding(() -> Logs.o("Q - Izlaz iz programa", false), false, true);
+    Logs.o("IK [oznakaKompozicije]\t\t\t- Pregled kompozicija", false);
+
+    Logs.o("IV\t\t\t\t\t- Pregled vlakova", false);
+    Logs.o("DK [ime] [prezime]\t\t\t- Dodavanje korisnika", false);
+    Logs.o("PK\t\t\t\t\t- Pregled korisnika", false);
+
+    Logs.withPadding(() -> Logs.o("Q - Izlaz iz programa", false), true, true);
     outputDebugMenu();
     Logs.o("Uzorci dizajna, 2024. - Joshua Lee Fletcher");
   }
@@ -196,8 +199,9 @@ public class CommandSystemSingleton {
       Logs.o("\t\t[DEBUG] c4\t\t\t\t- Pregled stanica između Macinec - Kotoriba", false);
       Logs.o("\t\t[DEBUG] d\t\t\t\t- Pregled kompozicija (oznaka 8001)", false);
       Logs.o("\t\t[DEBUG] d2\t\t\t\t- Pregled kompozicija (oznaka 1)", false);
-      Logs.o("\t\t[DEBUG] e\t\t\t\t- Dodavanje korisnika: Pero Kos", false);
-      Logs.o("\t\t[DEBUG] f\t\t\t\t- Pregled korisnika", false);
+      Logs.o("\t\t[DEBUG] e\t\t\t\t- Pregled vlakova", false);
+      Logs.o("\t\t[DEBUG] f\t\t\t\t- Dodavanje korisnika: Pero Kos", false);
+      Logs.o("\t\t[DEBUG] g\t\t\t\t- Pregled korisnika", false);
     }
   }
 
@@ -286,7 +290,7 @@ public class CommandSystemSingleton {
         }
     int i = 0;
     for (List<RailwaySingleton.Edge> route : routes) {
-      if(routes.size() > 1) {
+      if (routes.size() > 1) {
         Logs.o("\n", false);
         Logs.o("" + ++i + ". ruta", false);
       }
@@ -369,23 +373,44 @@ public class CommandSystemSingleton {
     Logs.footer(true);
   }
 
+  private void displayTrains() {
+    Logs.header("Pregled vlakova", true);
+    var data = RailwaySingleton.getInstance().getSchedules();
+    if (data == null || data.isEmpty()) {
+      Logs.e("Nema vlakova u voznim redovima.");
+      Logs.footer(true);
+      return;
+    }
+    List<String> header = Arrays.asList("Oznaka", "Polazna stanica", "Odredišna stanica", "Vrijeme polaska",
+        "Vrijeme dolaska", "Udaljenost (km)");
+    Logs.tableHeader(header);
+    Logs.i("Udaljenost između stanica nije implementirana.");
+    Logs.i(data.size() + " vlakova u voznim redovima.");
+    for (var schedule : data) {
+      List<String> row = Arrays.asList(
+          schedule.scheduledTrainID(),
+          schedule.departure().name(),
+          schedule.destination().name(),
+          schedule.departureTime().toString(),
+          schedule.departureTime().addTime(schedule.travelTime()).toString(),
+          String.format("%.2f", RailwaySingleton.getInstance().getDistanceBetweenStations(schedule)));
+      Logs.tableRow(row);
+    }
+    Logs.printTable();
+    Logs.footer(true);
+  }
+
 }
 
-
 /*
- * 
- *  Dodavanje korisnika u registar korisnika 
-○ Sintaksa:  
-■ DK ime prezime 
-○ Primjer:  
-■ DK Pero Kos 
-○ Opis primjera:  
-■ Dodaje se korisnik 
-● Pregled korisnika iz registra korisnika 
-○ Sintaksa:  
-■ PK  
-○ Primjer:  
-■ PK  
-○ Opis primjera:  
-■ Ispis korisnika
+ * ● Pregled vlakova
+ * ○ Sintaksa:
+ * ■ IV
+ * ○ Primjer:
+ * ■ IV
+ * ○ Opis primjera:
+ * ■ Ispis tablice sa vlakovima (oznaka vlaka, polazna željeznička stanica,
+ * odredišna željeznička stanica, vrijeme polaska, vrijeme dolaska u
+ * odredišnu stanicu, ukupan broj km od polazne željezničke stanice do
+ * odredišne željezničke stanice vlaka).
  */

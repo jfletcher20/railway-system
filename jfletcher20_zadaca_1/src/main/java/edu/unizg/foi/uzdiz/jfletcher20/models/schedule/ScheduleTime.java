@@ -4,10 +4,14 @@ public record ScheduleTime(
         int hours,
         int minutes) {
     public ScheduleTime(int hours, int minutes) {
-        if (hours < 0 || hours > 23) {
-            throw new IllegalArgumentException("Sati moraju biti između 0 & 23.");
-        } else if (minutes < 0 || minutes > 59) {
-            throw new IllegalArgumentException("Minute moraju biti između 0 & 59.");
+        // if minutes go over 60, add to the next hour
+        if (minutes >= 60) {
+            hours += minutes / 60;
+            minutes %= 60;
+        }
+        // if hours go over 24, add to the next day
+        if (hours >= 24) {
+            hours %= 24;
         }
         this.hours = hours;
         this.minutes = minutes;

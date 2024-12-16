@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
@@ -27,7 +29,7 @@ public class RailwaySingleton {
   private List<TrainTrack> tracks = new ArrayList<>();
   private List<Wagon> wagons = new ArrayList<>();
   private List<TrainComposition> compositions = new ArrayList<>();
-  private Map<Integer, List<Wagon>> trains = new HashMap<>();
+  private Map<Integer, List<Wagon>> trainCompositions = new HashMap<>();
   private Map<String, List<Station>> railroad = new HashMap<>();
   private Map<String, ScheduleDays> scheduleDays = new HashMap<>();
   private List<Schedule> schedules = new ArrayList<>();
@@ -173,8 +175,8 @@ public class RailwaySingleton {
     return this.wagons.stream().filter(w -> w.id().equals(wagonId)).findFirst().orElse(null);
   }
 
-  public Map<Integer, List<Wagon>> getTrains() {
-    return this.trains;
+  public Map<Integer, List<Wagon>> getTrainCompositions() {
+    return this.trainCompositions;
   }
 
   public List<TrainComposition> getCompositions() {
@@ -182,7 +184,7 @@ public class RailwaySingleton {
   }
 
   public List<Wagon> getWagonsInTrain(int compositionID) {
-    return this.trains.get(compositionID);
+    return this.trainCompositions.get(compositionID);
   }
 
   public List<TrainComposition> getCompositionsInTrain(int compositionId) {
@@ -269,11 +271,35 @@ public class RailwaySingleton {
     }
     List<TrainTrack> tracks = this.tracks.stream().filter(t -> t.id().equals(trackID)).toList();
     tracks = tracks.subList(stationIndex1, stationIndex2 + 1);
-    // Logs.i("RailwaySingleton getDistanceBetweenStations: " + tracks.size() + "
-    // tracks between ["
-    // + stationIndex1 + "]::" + station1.name() + " and [" + stationIndex2 + "]::"
-    // + station2.name());
     return tracks.stream().mapToDouble(TrainTrack::trackLength).sum();
+  }
+
+  public double getDistanceBetweenStations(String trackID, Station station1, Station station2, TrainType trainType) {
+    var stations = this.railroad.get(trackID);
+    int stationIndex1 = -1, stationIndex2 = -1;
+    for (int i = 0; i < stations.size(); i++) {
+      if (stations.get(i) == station1)
+        stationIndex1 = i;
+      if (stations.get(i) == station2)
+        stationIndex2 = i;
+    }
+    List<TrainTrack> tracks = this.tracks.stream().filter(t -> t.id().equals(trackID)).toList();
+    tracks = tracks.subList(stationIndex1, stationIndex2 + 1);
+    return tracks.stream().mapToDouble(TrainTrack::trackLength).sum();
+  }
+
+  public double getDistanceBetweenStations(String trackID, Station a, Station b, TraversalDirection direction,
+      TrainType trainType) {
+    if (direction == TraversalDirection.FORTH) {
+      return getDistanceBetweenStations(trackID, a, b, trainType);
+    } else {
+      return getDistanceBetweenStations(trackID, b, a, trainType);
+    }
+  }
+
+  public double getDistanceBetweenStations(Schedule schedule) {
+    return getDistanceBetweenStations(schedule.trackID(), schedule.departure(), schedule.destination(),
+        schedule.direction(), schedule.trainType());
   }
 
   public double getTotalTrackLength(String trackID) {
@@ -288,11 +314,11 @@ public class RailwaySingleton {
     this.wagons.add(wagon);
     for (var composition : this.compositions) {
       if (composition.wagonId().equals(wagon.id())) {
-        if (this.trains.containsKey(composition.trainId())) {
-          this.trains.get(composition.trainId()).add(wagon);
+        if (this.trainCompositions.containsKey(composition.trainId())) {
+          this.trainCompositions.get(composition.trainId()).add(wagon);
         } else {
-          this.trains.put(composition.trainId(), new ArrayList<>());
-          this.trains.get(composition.trainId()).add(wagon);
+          this.trainCompositions.put(composition.trainId(), new ArrayList<>());
+          this.trainCompositions.get(composition.trainId()).add(wagon);
         }
       }
     }
@@ -300,21 +326,21 @@ public class RailwaySingleton {
 
   public void addComposition(TrainComposition composition) {
     this.compositions.add(composition);
-    if (this.trains.containsKey(composition.trainId())) {
+    if (this.trainCompositions.containsKey(composition.trainId())) {
       Wagon wagon = composition.getWagon();
       if (wagon != null)
-        this.trains.get(composition.trainId()).add(wagon);
+        this.trainCompositions.get(composition.trainId()).add(wagon);
     } else {
-      this.trains.put(composition.trainId(), new ArrayList<>());
+      this.trainCompositions.put(composition.trainId(), new ArrayList<>());
       Wagon wagon = composition.getWagon();
       if (wagon != null)
-        this.trains.get(composition.trainId()).add(wagon);
+        this.trainCompositions.get(composition.trainId()).add(wagon);
     }
   }
 
   public void removeEmptyCompositions() {
     for (var composition : this.compositions) {
-      if (!this.trains.containsKey(composition.trainId())) {
+      if (!this.trainCompositions.containsKey(composition.trainId())) {
         Logs.e("Kompozicija " + composition.trainId() + " nema prijevozna sredstva.");
         this.compositions.remove(composition);
         continue;
@@ -327,7 +353,7 @@ public class RailwaySingleton {
     removeEmptyCompositions();
     List<TrainComposition> compositionsToRemove = new ArrayList<>();
     for (TrainComposition composition : this.compositions) {
-      if (this.trains.get(composition.trainId()).size() < 2) {
+      if (this.trainCompositions.get(composition.trainId()).size() < 2) {
         Logs.e("Kompozicija " + composition.trainId() + " nema dovoljno prijevoznih sredstava.");
         compositionsToRemove.add(composition);
         continue;
@@ -336,7 +362,7 @@ public class RailwaySingleton {
         continue;
       boolean hasLocomotive = false;
       boolean hasUnpoweredWagons = false;
-      for (var wagon : this.trains.get(composition.trainId()))
+      for (var wagon : this.trainCompositions.get(composition.trainId()))
         if (wagon.getIsPowered()) {
           hasLocomotive = true;
         } else
@@ -358,10 +384,10 @@ public class RailwaySingleton {
 
   private void _removeCompositions(List<TrainComposition> compositionsToRemove) {
     for (var composition : compositionsToRemove) {
-      if (this.compositions.contains(composition) || this.trains.containsKey(composition.trainId())) {
+      if (this.compositions.contains(composition) || this.trainCompositions.containsKey(composition.trainId())) {
         Logs.w("Uklanjanje kompozicije " + composition.trainId() + "...");
         this.compositions.remove(composition);
-        this.trains.remove(composition.trainId());
+        this.trainCompositions.remove(composition.trainId());
       }
     }
   }
@@ -402,7 +428,7 @@ public class RailwaySingleton {
 
   public void removeComposition(TrainComposition composition) {
     this.compositions.remove(composition);
-    this.trains.remove(composition.trainId());
+    this.trainCompositions.remove(composition.trainId());
   }
 
   public void removeTrack(TrainTrack track) {
@@ -443,7 +469,7 @@ public class RailwaySingleton {
     Logs.header("JLF Željeznica: Statistika", true);
     Logs.o("Stanice: " + this.getStations().size());
     Logs.o("Vozila: " + this.wagons.size());
-    Logs.o("Kompozicije: " + this.trains.size() + " (" +
+    Logs.o("Kompozicije: " + this.trainCompositions.size() + " (" +
         this.getCompositions().size() + ")");
     Logs.o("Pruge: " + this.tracks.size());
     Logs.o("Vozni redovi: " + this.schedules.size());
@@ -538,6 +564,11 @@ public class RailwaySingleton {
 
   public List<User> getUsers() {
     return this.users;
+  }
+
+  public double getDistanceBetweenStations(Station station1, Station station2) {
+    TrainTrack track = getTrackOfStation(station1);
+    return getDistanceBetweenStations(track.id(), station1, station2);
   }
 
 }
