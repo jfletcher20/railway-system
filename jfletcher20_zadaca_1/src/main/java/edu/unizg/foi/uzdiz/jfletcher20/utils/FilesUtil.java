@@ -10,6 +10,8 @@ import edu.unizg.foi.uzdiz.jfletcher20.enums.FileType;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ICreator;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainCompositionCreator;
+import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleCreator;
+import edu.unizg.foi.uzdiz.jfletcher20.models.schedule_days.ScheduleDaysCreator;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackCreator;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.StationCreator;
 import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.WagonCreator;
@@ -76,6 +78,7 @@ public abstract class FilesUtil {
       String fileName = args[i + 1];
       Path path = Path.of(fileName);
       FileType fileType = getFileType(path);
+      Logs.i("Datoteka: " + fileName + " tipa: " + fileType);
       boolean correctFileType = correctFileType(fileType, args[i]);
       if (!correctFileType) {
         Logs.e("Datoteka " + fileName + " nije ispravnog tipa: " + fileType);
@@ -90,7 +93,6 @@ public abstract class FilesUtil {
     try {
       var lines = Files.readAllLines(path);
       Logs.toggleInfo();
-      // skip the first line
       for (int i = 1; i < lines.size(); i++) {
         String line = lines.get(i);
         if (line.trim().startsWith("#")) {
@@ -123,6 +125,10 @@ public abstract class FilesUtil {
       creator = new WagonCreator();
     } else if (fileType == FileType.ZK) {
       creator = new TrainCompositionCreator();
+    } else if (fileType == FileType.ZVR) {
+      creator = new ScheduleCreator();
+    } else if (fileType == FileType.ZOD) {
+      creator = new ScheduleDaysCreator();
     } else {
       Logs.e(index, "Nepoznati tip datoteke: " + fileType);
       return;

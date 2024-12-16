@@ -82,28 +82,16 @@ public enum Weekday {
 
     @Override
     public String toString() {
-        switch (this) {
-            case MONDAY:
-                return "Ponedjeljak";
-            case TUESDAY:
-                return "Utorak";
-            case WEDNESDAY:
-                return "Srijeda";
-            case THURSDAY:
-                return "Četvrtak";
-            case FRIDAY:
-                return "Petak";
-            case SATURDAY:
-                return "Subota";
-            case SUNDAY:
-                return "Nedjelja";
-            case ALL:
-                return "Svi dani";
-            default:
-                System.out.println("Error: Nepoznata oznaka dana: " + this);
-                break;
-        }
-        return null;
+        return switch (this) {
+            case MONDAY -> "Ponedjeljak";
+            case TUESDAY -> "Utorak";
+            case WEDNESDAY -> "Srijeda";
+            case THURSDAY -> "Četvrtak";
+            case FRIDAY -> "Petak";
+            case SATURDAY -> "Subota";
+            case SUNDAY -> "Nedjelja";
+            case ALL -> "Svi dani";
+        };
     }
 
 }

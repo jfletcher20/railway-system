@@ -10,14 +10,12 @@ public class RailwaySingletonBuilder implements IBuilder {
 
   public RailwaySingletonBuilder loadFiles() {
     if (RailwaySingleton.getInstance().getInitArgs() != null) {
-      var initArgs = RailwaySingleton.getInstance().getInitArgs();
-      if (!FilesUtil.loadFiles(initArgs)) {
+      if (!FilesUtil.loadFiles(RailwaySingleton.getInstance().getInitArgs()))
         return null;
-      }
       RailwaySingleton.getInstance().printStats();
     } else {
-      Logs.e(
-          "RailwaySingletonBuilder buildPart: RailwaySingleton instance does not have initArgs set!");
+      Logs.e("RailwaySingletonBuilder buildPart: "
+          + "RailwaySingleton instance does not have initArgs set!");
     }
     return this;
   }

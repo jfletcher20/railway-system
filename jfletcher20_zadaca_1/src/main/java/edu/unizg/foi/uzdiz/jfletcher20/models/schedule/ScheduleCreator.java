@@ -1,9 +1,9 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.schedule;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
+import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ICreator;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
-import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 
 public class ScheduleCreator implements ICreator {
@@ -33,7 +33,7 @@ public class ScheduleCreator implements ICreator {
                 TrainType.fromString(parts[5]), // trainType
                 parts[6], // departureTime
                 parts[7], // travelTime
-                Weekday.dayFromString(parts[8]) // days
+                RailwaySingleton.getInstance().getScheduleDays(parts[8]).days() // days
         );
     }
 

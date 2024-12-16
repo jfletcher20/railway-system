@@ -133,8 +133,9 @@ public abstract class Logs {
   private static class LogsSingleton {
 
     static private volatile LogsSingleton instance = new Logs.LogsSingleton();
+
     private int errorCount = 0;
-    public boolean logWarnings = false, logInfo = false;
+    public boolean logWarnings = false, logInfo = false, logErrors = true;
     private Map<Integer, Integer> rowErrorCounts = new HashMap<>();
     public List<AbstractMap.SimpleEntry<String, String>> errorList = new ArrayList<>();
 
@@ -149,12 +150,16 @@ public abstract class Logs {
     }
 
     public void logError(String message) {
+      if (!logErrors)
+        return;
       String key = "e" + ++errorCount;
       errorList.add(new AbstractMap.SimpleEntry<>(key, message));
       System.out.println("   [!] " + key + " Error: " + message);
     }
 
     public void logError(String message, boolean increaseErrorCount) {
+      if (!logErrors)
+        return;
       if (increaseErrorCount)
         logError(message);
       else
@@ -162,13 +167,13 @@ public abstract class Logs {
     }
 
     public void logError(int row, String message) {
+      if (!logErrors)
+        return;
       ++row;
       int instanceIndex = rowErrorCounts.getOrDefault(row, 0) + 1;
       rowErrorCounts.put(row, instanceIndex);
-
       if (instanceIndex == 1)
         errorCount++;
-
       String errKey = "e" + errorCount;
       if (instanceIndex > 1)
         errKey = "/\\" + " ".repeat(errKey.length() - 2);

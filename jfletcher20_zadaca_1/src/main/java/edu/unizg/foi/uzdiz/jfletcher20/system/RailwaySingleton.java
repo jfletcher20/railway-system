@@ -9,6 +9,8 @@ import java.util.Set;
 
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposition;
+import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.Schedule;
+import edu.unizg.foi.uzdiz.jfletcher20.models.schedule_days.ScheduleDays;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
 import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.Wagon;
@@ -23,6 +25,9 @@ public class RailwaySingleton {
   private List<TrainComposition> compositions = new ArrayList<>();
   private Map<Integer, List<Wagon>> trains = new HashMap<>();
   private Map<String, List<Station>> railroad = new HashMap<>();
+  private Map<String, ScheduleDays> scheduleDays = new HashMap<>();
+  private List<Schedule> schedules = new ArrayList<>();
+
   private String[] initArgs = null;
 
   private RailwaySingleton() {
@@ -34,8 +39,29 @@ public class RailwaySingleton {
   }
 
   public void setInitArgs(String[] args) {
-    this.initArgs = args;
-    Logs.i("RailwaySingleton initArgs set.");
+    List<String> newArgs = new ArrayList<>();
+    int zodIndex = -1, zvrIndex = -1;
+    for (int i = 0; i < args.length; i++) {
+      if (args[i].equals("--zod"))
+        zodIndex = i++;
+      else if (args[i].equals("--zvr"))
+        zvrIndex = i++;
+      else
+        newArgs.add(args[i]);
+    }
+
+    if (zodIndex != -1 && zvrIndex != -1) {
+      String zodArg = args[zodIndex], zodValue = args[zodIndex + 1];
+      String zvrArg = args[zvrIndex], zvrValue = args[zvrIndex + 1];
+      newArgs.add(zodArg);
+      newArgs.add(zodValue);
+      newArgs.add(zvrArg);
+      newArgs.add(zvrValue);
+    }
+
+    this.initArgs = newArgs.toArray(new String[0]);
+    Logs.toggleInfo();
+    Logs.i("RailwaySingleton initArgs set to: " + String.join(" ", this.initArgs));
   }
 
   public String[] getInitArgs() {
@@ -55,6 +81,10 @@ public class RailwaySingleton {
       this.addComposition((TrainComposition) product);
     } else if (product instanceof TrainTrack) {
       this.addTrack((TrainTrack) product);
+    } else if (product instanceof ScheduleDays) {
+      this.addScheduleDays((ScheduleDays) product);
+    } else if (product instanceof Schedule) {
+      this.addSchedule((Schedule) product);
     }
     return product;
   }
@@ -71,6 +101,24 @@ public class RailwaySingleton {
       }
     }
     return null;
+  }
+
+  public boolean addSchedule(Schedule schedule) {
+    this.schedules.add(schedule);
+    return true;
+  }
+
+  public List<Schedule> getSchedules() {
+    return this.schedules;
+  }
+
+  public boolean addScheduleDays(ScheduleDays scheduleDays) {
+    this.scheduleDays.put(scheduleDays.dayID(), scheduleDays);
+    return true;
+  }
+
+  public ScheduleDays getScheduleDays(String dayID) {
+    return this.scheduleDays.get(dayID);
   }
 
   public boolean addRailroad(TrainTrack track, Station station) {
@@ -272,7 +320,8 @@ public class RailwaySingleton {
         String errorInfo = !hasLocomotive ? "lokomotivu, " : "";
         errorInfo += !hasUnpoweredWagons ? "vagona bez pogona, " : "";
         if (increaseErrorCount)
-          Logs.e("Kompozicija " + composition.trainId() + " nema " + errorInfo + "zbog čega se uklanja.", increaseErrorCount);
+          Logs.e("Kompozicija " + composition.trainId() + " nema " + errorInfo + "zbog čega se uklanja.",
+              increaseErrorCount);
         compositionsToRemove.add(composition);
         continue;
       }
