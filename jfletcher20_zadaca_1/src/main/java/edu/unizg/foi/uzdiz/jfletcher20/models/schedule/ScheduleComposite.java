@@ -15,17 +15,17 @@ import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
  * Schedule base structure is:
  * ScheduleComposite
  * |_ TrainComposite
- * | |_ TrainTrackStageComposite
- * | | |_ StationLeaf
- * | | |_ StationLeaf
- * | |_ TrainTrackStageComposite
- * | |_ StationLeaf
- * | |_ StationLeaf
- * | |_ StationLeaf
+ * |-|_ TrainTrackStageComposite
+ * |-|-|_ StationLeaf
+ * |-|-|_ StationLeaf
+ * |-|_ TrainTrackStageComposite
+ * |---|_ StationLeaf
+ * |---|_ StationLeaf
+ * |---|_ StationLeaf
  * |_ TrainComposite
- * |_ TrainTrackStageComposite
- * |_ StationLeaf
- * |_ StationLeaf
+ * --|_ TrainTrackStageComposite
+ * ----|_ StationLeaf
+ * ----|_ StationLeaf
  */
 public class ScheduleComposite implements IComposite {
     public List<TrainComposite> children = new ArrayList<TrainComposite>();
@@ -81,6 +81,24 @@ public class ScheduleComposite implements IComposite {
             return null;
         }
         return this.children.get(index);
+    }
+
+    public TrainComposite getCompositeByTrainID(String trainCode) {
+        for (TrainComposite child : this.children) {
+            if (child.trainID.equals(trainCode)) {
+                return child;
+            }
+        }
+        return null;
+    }
+
+    public List<List<String>> commandIEV(String trainID) {
+        TrainComposite train = getCompositeByTrainID(trainID);
+        if (train == null) {
+            Logs.e("Vlak s oznakom " + trainID + " nije pronađen");
+            return null;
+        }
+        return train.commandIEV();
     }
 
 }

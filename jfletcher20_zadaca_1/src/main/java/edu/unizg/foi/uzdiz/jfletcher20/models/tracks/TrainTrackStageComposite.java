@@ -1,9 +1,11 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.tracks;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
+import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComponent;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.Schedule;
@@ -107,6 +109,17 @@ public class TrainTrackStageComposite implements IComposite {
             return null;
         }
         return this.children.get(index);
+    }
+
+    public List<String> commandIEV() {
+        return List.of(
+                this.trackID,
+                this.schedule.departure().name(),
+                this.schedule.destination().name(),
+                this.schedule.departureTime().toString(),
+                this.toTime().toString(),
+                String.valueOf(this.compileDistance()),
+                Weekday.listToString(this.schedule.days()));
     }
 
 }

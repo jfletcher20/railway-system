@@ -94,4 +94,30 @@ public class TrainComposite implements IComponent {
         return this.children.get(index);
     }
 
+    public List<List<String>> commandIEV() {
+        List<List<String>> commandIEV = new ArrayList<List<String>>();
+        for (TrainTrackStageComposite child : this.children) {
+            List<String> output = new ArrayList<String>();
+            output.add(0, this.trainID);
+            output.addAll(child.commandIEV());
+            commandIEV.add(output);
+        }
+        return commandIEV;
+    }
+
 }
+
+
+/*
+ * ● Pregled etapa vlaka
+ * ○ Sintaksa:
+ * ■ IEV oznaka
+ * ○ Primjer:
+ * ■ IEV 3609
+ * ○ Opis primjera:
+ * ■ Ispis tablice sa etapama vlaka (oznaka vlaka, oznaka pruge, polazna
+ * željeznička stanica etape, odredišna željeznička stanica etape, vrijeme
+ * polaska s polazne željezničke stanice etape, vrijeme dolaska u odredišnu
+ * stanicu etape, ukupan broj km od polazne željezničke stanice etape do
+ * odredišne željezničke stanice vlaka etape, daniUTjednu za etapu).
+ */

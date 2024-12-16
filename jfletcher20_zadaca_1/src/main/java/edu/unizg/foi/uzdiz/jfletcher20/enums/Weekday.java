@@ -83,6 +83,26 @@ public enum Weekday {
         }
     }
 
+    public static String listToString(List<Weekday> days) {
+        StringBuilder dayString = new StringBuilder();
+        for (Weekday day : days) 
+            dayString.append(day.toShorthand());
+        return dayString.toString().trim();
+    }
+
+    public String toShorthand() {
+        return switch (this) {
+            case MONDAY -> "Po";
+            case TUESDAY -> "U";
+            case WEDNESDAY -> "Sr";
+            case THURSDAY -> "Č";
+            case FRIDAY -> "Pe";
+            case SATURDAY -> "Su";
+            case SUNDAY -> "N";
+            case ALL -> "";
+        };
+    }
+
     @Override
     public String toString() {
         return switch (this) {

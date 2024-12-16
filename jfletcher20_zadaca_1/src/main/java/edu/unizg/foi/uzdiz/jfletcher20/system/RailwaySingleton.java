@@ -78,7 +78,7 @@ public class RailwaySingleton {
     return this.initArgs;
   }
 
-  private double calculateDistance(Station a, Station b) {
+  public double calculateDistance(Station a, Station b) {
     return Math.abs(a.getDistanceFromStart() - b.getDistanceFromStart());
   }
 

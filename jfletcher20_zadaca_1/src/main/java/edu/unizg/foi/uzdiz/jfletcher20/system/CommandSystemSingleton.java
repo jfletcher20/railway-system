@@ -7,8 +7,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import edu.unizg.foi.uzdiz.jfletcher20.Main;
+import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
+import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackStageComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 
 /**
@@ -41,6 +44,7 @@ public class CommandSystemSingleton {
   Pattern viewUsersPattern = Pattern.compile("^PK$");
 
   Pattern viewTrainsPattern = Pattern.compile("^IV$");
+  Pattern viewTrainStagesPattern = Pattern.compile("^IEV (?<trainCode>\\d+)$");
 
   public static CommandSystemSingleton instance = new CommandSystemSingleton();
 
@@ -85,6 +89,7 @@ public class CommandSystemSingleton {
           "IK 8001",
           "IK 1",
           "IV",
+          "IEV 3609",
           "DK Pero Kos",
           "DK Joshua Lee Fletcher",
           "PK",
@@ -99,6 +104,7 @@ public class CommandSystemSingleton {
           "ISI2S Kotoriba - Ludbreg",
           "IK 8001",
           "IV",
+          "IEV 3609",
           "DK Pero Kos",
           "PK",
       };
@@ -118,9 +124,11 @@ public class CommandSystemSingleton {
         case "d" -> command = "IK 8001";
         case "d2" -> command = "IK 1";
         case "e" -> command = "IV";
-        case "f" -> command = "DK Pero Kos";
-        case "f2" -> command = "DK Joshua Lee Fletcher";
-        case "g" -> command = "PK";
+        case "f" -> command = "IEV 3609";
+        case "g" -> command = "DK Pero Kos";
+        case "h" -> command = "DK Pero Kos";
+        case "h2" -> command = "DK Joshua Lee Fletcher";
+        case "i" -> command = "PK";
       }
       identifyCommand(command);
     }
@@ -134,6 +142,7 @@ public class CommandSystemSingleton {
     Matcher addUserMatcher = addUserPattern.matcher(command);
     Matcher viewUsersMatcher = viewUsersPattern.matcher(command);
     Matcher viewTrainsMatcher = viewTrainsPattern.matcher(command);
+    Matcher viewTrainStagesMatcher = viewTrainStagesPattern.matcher(command);
     if (vtMatcher.matches()) {
       viewTracks();
     } else if (vsMatcher.matches()) {
@@ -143,9 +152,11 @@ public class CommandSystemSingleton {
     } else if (addUserMatcher.matches()) {
       addUser(addUserMatcher.group("name"), addUserMatcher.group("lastName"));
     } else if (viewUsersMatcher.matches()) {
-      displayUsers();
+      viewUsers();
     } else if (viewTrainsMatcher.matches()) {
-      displayTrains();
+      viewTrains();
+    } else if (viewTrainStagesMatcher.matches()) {
+      viewTrainStagesOfTrain(viewTrainStagesMatcher.group("trainCode"));
     } else if (vcMatcher.matches()) {
       try {
         viewComposition(ParsingUtil.i(vcMatcher.group("compositionCode")));
@@ -174,6 +185,7 @@ public class CommandSystemSingleton {
     Logs.o("IK [oznakaKompozicije]\t\t\t- Pregled kompozicija", false);
 
     Logs.o("IV\t\t\t\t\t- Pregled vlakova", false);
+    Logs.o("IEV [oznakaVlaka]\t\t\t- Pregled etapa vlaka", false);
     Logs.o("DK [ime] [prezime]\t\t\t- Dodavanje korisnika", false);
     Logs.o("PK\t\t\t\t\t- Pregled korisnika", false);
 
@@ -196,8 +208,11 @@ public class CommandSystemSingleton {
       Logs.o("\t\t[DEBUG] d\t\t\t\t- Pregled kompozicija (oznaka 8001)", false);
       Logs.o("\t\t[DEBUG] d2\t\t\t\t- Pregled kompozicija (oznaka 1)", false);
       Logs.o("\t\t[DEBUG] e\t\t\t\t- Pregled vlakova", false);
-      Logs.o("\t\t[DEBUG] f\t\t\t\t- Dodavanje korisnika: Pero Kos", false);
-      Logs.o("\t\t[DEBUG] g\t\t\t\t- Pregled korisnika", false);
+      Logs.o("\t\t[DEBUG] f\t\t\t\t- Pregled etapa vlaka (oznaka 3609)", false);
+      Logs.o("\t\t[DEBUG] g\t\t\t\t- Dodavanje korisnika (Pero Kos)", false);
+      Logs.o("\t\t[DEBUG] h\t\t\t\t- Dodavanje korisnika (Pero Kos)", false);
+      Logs.o("\t\t[DEBUG] h2\t\t\t\t- Dodavanje korisnika (Joshua Lee Fletcher)", false);
+      Logs.o("\t\t[DEBUG] i\t\t\t\t- Pregled korisnika", false);
     }
   }
 
@@ -336,7 +351,7 @@ public class CommandSystemSingleton {
     Logs.footer(true);
   }
 
-  private void displayTrains() {
+  private void viewTrains() {
     Logs.header("Pregled voznog reda", true);
     var data = RailwaySingleton.getInstance().getSchedule().commandIV();
     if (data == null || data.isEmpty()) {
@@ -361,7 +376,7 @@ public class CommandSystemSingleton {
     Logs.footer(true);
   }
 
-  private void displayUsers() {
+  private void viewUsers() {
     Logs.header("Pregled korisnika", true);
     var data = RailwaySingleton.getInstance().getUsers();
     if (data == null || data.isEmpty()) {
@@ -380,17 +395,43 @@ public class CommandSystemSingleton {
     Logs.printTable();
     Logs.footer(true);
   }
+
+  private void viewTrainStagesOfTrain(String trainID) {
+    Logs.header("Pregled etapa vlaka " + trainID, true);
+    var data = RailwaySingleton.getInstance().getSchedule().commandIEV(trainID);
+    if (data == null || data.isEmpty()) {
+      Logs.e("Nema etapa za vlak s oznakom: " + trainID);
+      Logs.footer(true);
+      return;
+    }
+    List<String> header = Arrays.asList(
+        "Oznaka vlaka",
+        "Oznaka pruge",
+        "Polazna stanica etape",
+        "Odredišna stanica etape",
+        "Vrijeme polaska",
+        "Vrijeme dolaska",
+        "Ukupan broj km",
+        "Dani u tjednu");
+    Logs.tableHeader(header);
+    for (var stage : data) {
+      Logs.tableRow(stage);
+    }
+    Logs.printTable();
+    Logs.footer(true);
+  }
 }
 
 /*
- * ● Pregled vlakova
+ * ● Pregled etapa vlaka
  * ○ Sintaksa:
- * ■ IV
+ * ■ IEV oznaka
  * ○ Primjer:
- * ■ IV
+ * ■ IEV 3609
  * ○ Opis primjera:
- * ■ Ispis tablice sa vlakovima (oznaka vlaka, polazna željeznička stanica,
- * odredišna željeznička stanica, vrijeme polaska, vrijeme dolaska u
- * odredišnu stanicu, ukupan broj km od polazne željezničke stanice do
- * odredišne željezničke stanice vlaka).
+ * ■ Ispis tablice sa etapama vlaka (oznaka vlaka, oznaka pruge, polazna
+ * željeznička stanica etape, odredišna željeznička stanica etape, vrijeme
+ * polaska s polazne željezničke stanice etape, vrijeme dolaska u odredišnu
+ * stanicu etape, ukupan broj km od polazne željezničke stanice etape do
+ * odredišne željezničke stanice vlaka etape, daniUTjednu za etapu).
  */

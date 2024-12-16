@@ -50,6 +50,10 @@ public record Station(
     return RailwaySingleton.getInstance().getTrackOfStation(this);
   }
 
+  public double getDistanceTo(Station other) {
+    return RailwaySingleton.getInstance().calculateDistance(this, other);
+  }
+
   public double getDistanceFromStart() {
     return RailwaySingleton.getInstance().getDistanceFromStart(this);
   }
@@ -80,7 +84,7 @@ public record Station(
   public int hashCode() {
     return name().hashCode();
   }
-  
+
   public Boolean supportsTrainType(TrainType type) {
     return switch (type) {
       case NORMAL -> true;
@@ -98,21 +102,3 @@ public record Station(
   }
 
 }
-
-/*
- * 
- * Stanica;Oznaka pruge;Vrsta stanice;Status stanice;Putnici ul/iz;Roba
- * ut/ist;Kategorija pruge;Broj perona;Vrsta pruge;Broj kolosjeka;DO po
- * osovini;DO po duznom m;Status pruge;Dužina;Vrijeme normalni vlak;Vrijeme
- * ubrzani vlak;Vrijeme brzi vlak
- * # 12;;;;;;;;;;;;;;;;
- * Kotoriba;M501;kol.;O;DA;DA;M;1;K;1;22,5;8;I;0;0;0;
- * Donji Mihaljevec;M501;staj.;O;DA;NE;M;1;K;1;22,5;8;I;7;8;8;
- * Donji Kraljevec;M501;kol.;O;DA;DA;M;1;K;1;22,5;8;I;6;7;7;
- * Čehovec;M501;staj.;O;DA;NE;M;1;K;1;22,5;8;I;2;4;4;
- * Mala Subotica;M501;kol.;O;DA;DA;M;1;K;1;22,5;8;I;6;6;5;
- * Čakovec-Buzovec;M501;staj.;O;DA;NE;M;2;K;1;22,5;8;I;7;7;7;
- * Čakovec;M501;kol.;O;DA;DA;M;2;K;1;22,5;8;I;2;3;4;
- * Dunjkovec;M501;staj.;O;DA;NE;M;1;K;1;22,5;8;I;4;6;;
- * Macinec;M501;staj.;O;DA;NE;M;1;K;1;22,5;8;I;3;6;;
- */
