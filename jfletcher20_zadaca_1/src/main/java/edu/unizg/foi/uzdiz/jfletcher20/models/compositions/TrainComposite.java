@@ -4,16 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComponent;
-import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.Schedule;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackStageComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 
-public class TrainComposite implements IComposite {
+public class TrainComposite implements IComponent {
 
-    String trainID;
-    List<TrainTrackStageComposite> children = new ArrayList<TrainTrackStageComposite>();
+    public String trainID;
+    public List<TrainTrackStageComposite> children = new ArrayList<TrainTrackStageComposite>();
 
     public TrainComposite(Schedule schedule) {
         this.trainID = schedule.scheduledTrainID();
@@ -28,9 +27,22 @@ public class TrainComposite implements IComposite {
     public void Operation() {
         // traverse all children and output the operation on each child
         Logs.i("\t" + this.trainID);
+        
         for (TrainTrackStageComposite child : this.children) {
-            child.Operation();
+            if (this.trainID.equals("2212")) {
+                child.Operation();
+            } else {
+                System.out.print(".");
+            }
         }
+    }
+
+    public double compileDistance() {
+        double distance = 0;
+        for (TrainTrackStageComposite child : this.children) {
+            distance += child.compileDistance();
+        }
+        return distance;
     }
 
     @Override
@@ -67,5 +79,5 @@ public class TrainComposite implements IComposite {
         }
         return this.children.get(index);
     }
-    
+
 }

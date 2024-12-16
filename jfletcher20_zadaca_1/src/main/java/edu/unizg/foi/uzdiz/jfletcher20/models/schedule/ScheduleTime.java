@@ -27,6 +27,10 @@ public record ScheduleTime(
         }
     }
 
+    public ScheduleTime(int minutes) {
+        this(minutes / 60, minutes % 60);
+    }
+
     public int compareTo(ScheduleTime time) {
         if (this.hours == time.hours)
             return Integer.compare(this.minutes, time.minutes);
@@ -87,6 +91,10 @@ public record ScheduleTime(
 
     public boolean equals(ScheduleTime time) {
         return this.hours == time.hours && this.minutes == time.minutes;
+    }
+
+    public int totalTimeBetweenTimesInMinutes(ScheduleTime a, ScheduleTime b) {
+        return Math.abs(a.getTotalTimeInMinutes() - b.getTotalTimeInMinutes());
     }
 
     @Override

@@ -2,6 +2,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.models.stations;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.StationActivity;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.StationType;
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
 import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
@@ -30,7 +31,6 @@ public record Station(
     int timeFast, // Vrijeme ubrzani vlak
     int timeExpress // Vrijeme brzi vlak
 ) implements IProduct {
-
   public Station {
     if (platformCount < 1 || platformCount > 99)
       throw new IllegalArgumentException("Broj perona mora biti između 1 i 99");
@@ -43,7 +43,7 @@ public record Station(
     if (activity == null)
       throw new IllegalArgumentException("Nepoznata aktivnost stanice");
     if (timeNormal < 0)
-      throw new IllegalArgumentException("Vrijeme normalnog vlaka ne može biti negativno");
+      throw new IllegalArgumentException("Vrijeme normalnog vlaka mora biti definirano i ne može biti negativno");
   }
 
   public TrainTrack getTrack() {
@@ -79,6 +79,22 @@ public record Station(
   @Override
   public int hashCode() {
     return name().hashCode();
+  }
+  
+  public Boolean supportsTrainType(TrainType type) {
+    return switch (type) {
+      case NORMAL -> true;
+      case FAST -> timeFast() >= 0;
+      case EXPRESS -> timeExpress() >= 0;
+    };
+  }
+
+  public int timeForTrainType(TrainType trainType) {
+    return switch (trainType) {
+      case NORMAL -> timeNormal();
+      case FAST -> timeFast();
+      case EXPRESS -> timeExpress();
+    };
   }
 
 }

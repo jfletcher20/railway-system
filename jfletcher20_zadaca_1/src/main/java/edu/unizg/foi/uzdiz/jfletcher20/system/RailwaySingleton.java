@@ -274,26 +274,27 @@ public class RailwaySingleton {
     return tracks.stream().mapToDouble(TrainTrack::trackLength).sum();
   }
 
-  public double getDistanceBetweenStations(String trackID, Station station1, Station station2, TrainType trainType) {
-    var stations = this.railroad.get(trackID);
-    int stationIndex1 = -1, stationIndex2 = -1;
-    for (int i = 0; i < stations.size(); i++) {
-      if (stations.get(i) == station1)
-        stationIndex1 = i;
-      if (stations.get(i) == station2)
-        stationIndex2 = i;
-    }
-    List<TrainTrack> tracks = this.tracks.stream().filter(t -> t.id().equals(trackID)).toList();
-    tracks = tracks.subList(stationIndex1, stationIndex2 + 1);
-    return tracks.stream().mapToDouble(TrainTrack::trackLength).sum();
+  public double getDistanceBetweenStations(Station station1, Station station2, TrainType trainType) {
+    List<List<Edge>> edges = getRoutesBetweenStations(station1, station2);
+    List<Edge> shortestRoute = edges.stream().min((a, b) -> {
+      double aDistance = a.stream().mapToDouble(e -> e.weight).sum();
+      double bDistance = b.stream().mapToDouble(e -> e.weight).sum();
+      return Double.compare(aDistance, bDistance);
+    }).orElse(null);
+    if (shortestRoute == null)
+      return 0;
+    List<Edge> shortestRouteFiltered = shortestRoute.stream().filter(e -> e.from.supportsTrainType(trainType))
+        .toList();
+        
+    return shortestRouteFiltered.stream().mapToDouble(e -> e.weight).sum();
   }
 
   public double getDistanceBetweenStations(String trackID, Station a, Station b, TraversalDirection direction,
       TrainType trainType) {
     if (direction == TraversalDirection.FORTH) {
-      return getDistanceBetweenStations(trackID, a, b, trainType);
+      return getDistanceBetweenStations(a, b, trainType);
     } else {
-      return getDistanceBetweenStations(trackID, b, a, trainType);
+      return getDistanceBetweenStations(b, a, trainType);
     }
   }
 

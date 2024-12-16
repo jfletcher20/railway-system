@@ -7,6 +7,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComponent;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.Schedule;
+import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.StationLeaf;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
@@ -16,39 +17,62 @@ public class TrainTrackStageComposite implements IComposite {
 
     public List<StationLeaf> children = new ArrayList<StationLeaf>();
     public String trackID;
+    public Schedule schedule;
 
-    public TrainTrackStageComposite(Station start, Station end, TraversalDirection direction, String trackID) {
-        this.trackID = trackID;
+    public TrainTrackStageComposite(Schedule schedule) {
+        this.schedule = schedule;
+        this.trackID = schedule.trackID();
         List<Station> stations = RailwaySingleton.getInstance().getStationsOnTrack(trackID);
-        if (direction == TraversalDirection.FORTH) {
-            for (int i = stations.indexOf(start) + 1; i < stations.size(); i++) {
+        if (schedule.direction() == TraversalDirection.FORTH) {
+            this.Add(new StationLeaf(stations.get(0)));
+            for (int i = stations.indexOf(schedule.departure()) + 1; i < stations.size(); i++) {
                 Station station = stations.get(i);
                 this.Add(new StationLeaf(station));
-                if (station.equals(end)) {
+                if (station.equals(schedule.destination())) {
                     break;
                 }
             }
         } else {
-            for (int i = stations.indexOf(start) - 1; i >= 0; i--) {
+            for (int i = stations.indexOf(schedule.departure()) - 1; i >= 0; i--) {
                 Station station = stations.get(i);
                 this.Add(new StationLeaf(station));
-                if (station.equals(end)) {
+                if (station.equals(schedule.destination())) {
                     break;
                 }
             }
         }
     }
 
-    public TrainTrackStageComposite(Schedule schedule) {
-        this(schedule.departure(), schedule.destination(), schedule.direction(), schedule.trackID());
-    }
-
     @Override
     public void Operation() {
-        Logs.i("\t\tstage");
+        Logs.i("\t\tSTAGE | " + this.trackID + " | " + this.schedule.scheduledTrainID() + " | "
+                + this.schedule.departure().name() + " -> " + this.schedule.destination().name() + " | " +
+                this.schedule.departureTime().toString() + " -> " + this.toTime().toString());
         for (StationLeaf child : this.children) {
             child.Operation();
         }
+    }
+
+    public List<StationLeaf> compileSchedule(Schedule schedule) {
+        List<StationLeaf> compatibleLeaves = new ArrayList<StationLeaf>();
+        for (StationLeaf child : this.children) {
+            if (child.getStation().supportsTrainType(schedule.trainType())) {
+                compatibleLeaves.add(child);
+            }
+        }
+        return compatibleLeaves;
+    }
+
+    public double compileDistance() {
+        return RailwaySingleton.getInstance().getDistanceBetweenStations(schedule);
+    }
+
+    public ScheduleTime fromTime() {
+        return schedule.departureTime();
+    }
+
+    public ScheduleTime toTime() {
+        return new ScheduleTime(schedule.departureTime().getTotalTimeInMinutes() + schedule.travelTime().getTotalTimeInMinutes());
     }
 
     @Override
