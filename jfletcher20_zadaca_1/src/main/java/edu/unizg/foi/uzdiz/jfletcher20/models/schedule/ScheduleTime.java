@@ -17,6 +17,10 @@ public record ScheduleTime(
         this.minutes = minutes;
     }
 
+    public ScheduleTime(String time) {
+        this(time, true);
+    }
+
     public ScheduleTime(String time, boolean throwsException) {
         this(
                 Integer.parseInt(time.split(":")[0]),

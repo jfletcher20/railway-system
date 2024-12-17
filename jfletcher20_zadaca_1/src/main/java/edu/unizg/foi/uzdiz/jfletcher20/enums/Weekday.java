@@ -86,7 +86,9 @@ public enum Weekday {
 
     public static String listToString(Set<Weekday> days) {
         StringBuilder dayString = new StringBuilder();
-        for (Weekday day : days) 
+        // sort days in order
+        var sort = days.stream().sorted((day1, day2) -> day1.ordinal() - day2.ordinal()).toList();
+        for (Weekday day : sort) 
             dayString.append(day.toShorthand());
         return dayString.toString().trim();
     }

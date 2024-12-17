@@ -105,34 +105,42 @@ public class ScheduleComposite implements IComposite {
     }
 
     public List<List<String>> commandIEVD(Set<Weekday> days) {
-        List<List<String>> commandIEVD = new ArrayList<List<String>>();
+        List<List<String>> commandIEVD = new ArrayList<>();
         if (days == null || days.isEmpty()) {
             Logs.e("Nisu pronađeni dani vožnje");
             return Collections.emptyList();
         }
         for (TrainComposite child : this.children) {
-            // for (TrainTrackStageComposite stage : child.children) {
-            // boolean daysAreInStage = stage.schedule.days().containsAll(days);
-            // if (daysAreInStage) {
-            // List<String> output = new ArrayList<String>();
-            // output.add(0, child.trainID);
-            // output.addAll(stage.commandIEV());
-            // commandIEVD.add(output);
-            // }
-            // }
-            // if all of a train composite's stage's schedules contain all of the days, add
-            // to the commandIEVD output
-            List<Schedule> schedules = new ArrayList<Schedule>();
+            List<Schedule> schedules = new ArrayList<>();
             for (TrainTrackStageComposite stage : child.getChildren()) {
                 schedules.add(stage.schedule);
             }
             boolean daysAreInSchedules = schedules.stream().anyMatch(s -> s.days().containsAll(days));
             if (daysAreInSchedules) {
-                commandIEVD.addAll(child.commandIEVD(days));
+                List<List<String>> newEntries = child.commandIEVD(days);
+                for (List<String> entry : newEntries)
+                    insertionSort(commandIEVD, entry);
             }
         }
         return commandIEVD;
     }
+    
+    /**
+     * Inserts a new entry into the sorted list using insertion sort logic.
+     * Sorting is based on the 'fromTime' column (index 4).
+     */
+    private void insertionSort(List<List<String>> list, List<String> newEntry) {
+        ScheduleTime newTime = new ScheduleTime(newEntry.get(4));
+        int i = 0;
+        while (i < list.size()) {
+            ScheduleTime currentTime = new ScheduleTime(list.get(i).get(4));
+            if (newTime.compareTo(currentTime) <= 0)
+                break;
+            i++;
+        }
+        list.add(i, newEntry);
+    }
+    
 
     public List<List<String>> commandIVRV(String trainID) {
         TrainComposite train = getCompositeByTrainID(trainID);

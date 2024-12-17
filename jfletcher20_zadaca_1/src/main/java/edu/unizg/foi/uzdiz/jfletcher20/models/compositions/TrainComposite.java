@@ -127,7 +127,12 @@ public class TrainComposite implements IComponent {
 
     public List<List<String>> commandIEVD(Set<Weekday> days) {
         List<List<String>> commandIEVD = new ArrayList<List<String>>();
-        for (TrainTrackStageComposite child : this.children.stream().filter(stage -> stage.schedule.days().containsAll(days)).toList()) {
+        var stages = this.children.stream().filter(stage -> stage.schedule.days().containsAll(days)).toList();
+        if (stages == null || stages.isEmpty()) {
+            Logs.e("Nisu pronađeni dani vožnje");
+            return commandIEVD;
+        }
+        for (TrainTrackStageComposite child : stages) {
             List<String> output = new ArrayList<String>();
             output.add(0, this.trainID);
             output.addAll(child.commandIEVD());
