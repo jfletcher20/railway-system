@@ -26,17 +26,19 @@ public class ChatMediator {
 
     public void linkUser(String groupId, User user) {
         groupUsers.computeIfAbsent(groupId, k -> new HashSet<>()).add(user);
-        Logs.o(user + " je postao član grupe " + groupId);
+        Logs.o(user + " sada participira u grupi " + groupId);
     }
 
     public void unlinkUser(String groupId, User user) {
         Set<User> users = groupUsers.get(groupId);
-        if (users != null) {
+        if (users != null && !users.isEmpty() && users.contains(user)) {
             users.remove(user);
             if (users.isEmpty())
                 groupUsers.remove(groupId);
+                Logs.o(user + " više nije u grupi " + groupId);
+        } else {
+            Logs.o(user + " nije u grupi " + groupId + " pa se ne mora izbaciti.");
         }
-        Logs.o(user + " više nije član grupe " + groupId);
     }
 
     public void broadcast(String groupId, User sender, String message) {
