@@ -23,7 +23,11 @@ public class TrainTrackStageComposite implements IComposite {
     public TrainTrackStageComposite(Schedule schedule) {
         this.schedule = schedule;
         this.trackID = schedule.trackID();
-        List<Station> stations = RailwaySingleton.getInstance().getStationsOnTrack(trackID);
+        List<Station> stations = RailwaySingleton.getInstance().getStationsOnTrack(trackID, schedule.trainType());
+        if (stations == null) {
+            Logs.e("Nepostojeće stanice na traci " + trackID + " za tip vlaka " + schedule.trainType().name());
+            return;
+        }
         if (schedule.direction() == TraversalDirection.FORTH) {
             this.Add(new StationLeaf(stations.get(0)));
             for (int i = stations.indexOf(schedule.departure()) + 1; i < stations.size(); i++) {

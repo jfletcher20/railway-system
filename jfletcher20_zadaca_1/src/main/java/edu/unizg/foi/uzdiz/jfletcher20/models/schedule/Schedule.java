@@ -51,15 +51,15 @@ public record Schedule(
                 trackID, direction,
                 departure.isBlank()
                         ? direction == TraversalDirection.FORTH
-                                ? RailwaySingleton.getInstance().getTrackById(trackID).getStartStation()
-                                : RailwaySingleton.getInstance().getTrackById(trackID).getEndStation()
-                        : RailwaySingleton.getInstance().getStationsOnTrack(trackID).stream()
+                                ? RailwaySingleton.getInstance().getTrackById(trackID).getStartStation(trainType)
+                                : RailwaySingleton.getInstance().getTrackById(trackID).getEndStation(trainType)
+                        : RailwaySingleton.getInstance().getStationsOnTrack(trackID, trainType).stream()
                                 .filter(station -> station.name().equals(departure)).findFirst().orElse(null),
                 destination.isBlank()
                         ? direction == TraversalDirection.FORTH
-                                ? RailwaySingleton.getInstance().getTrackById(trackID).getEndStation()
-                                : RailwaySingleton.getInstance().getTrackById(trackID).getStartStation()
-                        : RailwaySingleton.getInstance().getStationsOnTrack(trackID).stream()
+                                ? RailwaySingleton.getInstance().getTrackById(trackID).getEndStation(trainType)
+                                : RailwaySingleton.getInstance().getTrackById(trackID).getStartStation(trainType)
+                        : RailwaySingleton.getInstance().getStationsOnTrack(trackID, trainType).stream()
                                 .filter(station -> station.name().equals(destination)).findFirst().orElse(null),
                 scheduledTrainID, trainType, departureTime, travelTime, days);
     }

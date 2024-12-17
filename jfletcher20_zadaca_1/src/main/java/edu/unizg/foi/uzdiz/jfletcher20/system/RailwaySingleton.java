@@ -578,7 +578,7 @@ public class RailwaySingleton {
    * Get user by name and last name
    * Check if user exists, if not create a new user
    * 
-   * @param name User's name; can also include middle name
+   * @param name     User's name; can also include middle name
    * @param lastName User's last name
    * @return
    */
@@ -590,6 +590,25 @@ public class RailwaySingleton {
           this.users.add(newUser);
           return newUser;
         });
+  }
+
+  public List<Station> getStationsOnTrack(String trackID, TrainType trainType) {
+    List<Station> stationsOnTrack = this.getStationsOnTrack(trackID);
+    List<Station> stationsOnTrackFiltered = new ArrayList<>();
+    for (Station station : stationsOnTrack) {
+      if (station.supportsTrainType(trainType)) {
+        stationsOnTrackFiltered.add(station);
+      }
+    }
+    return stationsOnTrackFiltered;
+  }
+
+  public Station getStartStation(String id, TrainType trainType) {
+    return getStationsOnTrack(id, trainType).getFirst();
+  }
+
+  public Station getEndStation(String id, TrainType trainType) {
+    return getStationsOnTrack(id, trainType).getLast();
   }
 
 }

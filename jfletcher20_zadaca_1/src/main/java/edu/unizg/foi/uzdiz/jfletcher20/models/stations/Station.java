@@ -5,7 +5,6 @@ import edu.unizg.foi.uzdiz.jfletcher20.enums.StationType;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
-import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 
 /**
@@ -87,7 +86,6 @@ public record Station(
   }
 
   public Boolean supportsTrainType(TrainType type) {
-    Logs.i("station " + name() + " supports " + type.name() + " -> result: " + (timeForTrainType(type) >= 0));
     return switch (type) {
       case NORMAL -> true;
       case FAST -> timeFast() >= 0;

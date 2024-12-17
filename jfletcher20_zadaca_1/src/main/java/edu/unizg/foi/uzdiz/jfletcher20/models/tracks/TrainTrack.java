@@ -2,6 +2,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.models.tracks;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackCategory;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackStatus;
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
@@ -9,14 +10,14 @@ import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 /**
  * Train track object represents a train track.
  * 
- * @param id Track code
- * @param category Track category
+ * @param id            Track code
+ * @param category      Track category
  * @param transportType Type of transport
- * @param trackCount Number of tracks
- * @param trackLength Length of track
- * @param axleLoad Axle load
- * @param length Length of track
- * @param status Track status
+ * @param trackCount    Number of tracks
+ * @param trackLength   Length of track
+ * @param axleLoad      Axle load
+ * @param length        Length of track
+ * @param status        Track status
  */
 public record TrainTrack(String id, // oznaka pruge
     TrainTrackCategory category, // kategorija pruge
@@ -52,5 +53,13 @@ public record TrainTrack(String id, // oznaka pruge
 
   public Station getEndStation() {
     return RailwaySingleton.getInstance().getEndStation(this.id);
+  }
+
+  public Station getStartStation(TrainType trainType) {
+    return RailwaySingleton.getInstance().getStartStation(this.id, trainType);
+  }
+
+  public Station getEndStation(TrainType trainType) {
+    return RailwaySingleton.getInstance().getEndStation(this.id, trainType);
   }
 }
