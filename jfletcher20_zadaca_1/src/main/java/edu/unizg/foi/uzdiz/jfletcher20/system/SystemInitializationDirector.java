@@ -14,6 +14,7 @@ public class SystemInitializationDirector {
     }
     this.builder.verifyTrainTracks();
     this.builder.verifyCompositions();
+    this.builder.verifyTrains();
 
     // for (Station station : RailwaySingleton.getInstance().getStationsOnTrack("R201", TrainType.NORMAL)) {
     //   station.cryOut();

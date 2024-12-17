@@ -1,6 +1,6 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.schedule_days;
 
-import java.util.List;
+import java.util.Set;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
@@ -15,11 +15,11 @@ import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
  */
 public record ScheduleDays(
         String dayID, // Oznaka dana
-        List<Weekday> days // Dan
+        Set<Weekday> days // Dan
 ) implements IProduct {
     public ScheduleDays(
             String dayID, // Oznaka dana
-            List<Weekday> days // Dan
+            Set<Weekday> days // Dan
     ) {
         if (dayID == null || dayID.isEmpty())
             throw new IllegalArgumentException("Oznaka dana je obavezna.");

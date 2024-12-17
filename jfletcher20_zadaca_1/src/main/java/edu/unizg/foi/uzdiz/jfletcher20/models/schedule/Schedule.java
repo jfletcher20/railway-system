@@ -1,6 +1,6 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.schedule;
 
-import java.util.List;
+import java.util.Set;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
@@ -34,7 +34,7 @@ public record Schedule(
         TrainType trainType, // Vrsta vlaka
         ScheduleTime departureTime, // Vrijeme polaska
         ScheduleTime travelTime, // Trajanje vožnje
-        List<Weekday> days // Dani vožnje odabrani na osnovi oznake dana
+        Set<Weekday> days // Dani vožnje odabrani na osnovi oznake dana
 ) implements IProduct {
     public Schedule(
             String trackID, // Oznaka pruge: obavezna
@@ -45,7 +45,7 @@ public record Schedule(
             TrainType trainType, // Vrsta vlaka
             ScheduleTime departureTime, // Vrijeme polaska: obavezna // Format: HH:mm
             ScheduleTime travelTime, // Trajanje vožnje
-            List<Weekday> days // Dani vožnje odabrani na osnovi oznake dana
+            Set<Weekday> days // Dani vožnje odabrani na osnovi oznake dana
     ) {
         this(
                 trackID, direction,
@@ -73,7 +73,7 @@ public record Schedule(
             TrainType trainType, // Vrsta vlaka
             ScheduleTime departureTime, // Vrijeme polaska: obavezna // Format: HH:mm
             ScheduleTime travelTime, // Trajanje vožnje
-            List<Weekday> days // Dani vožnje odabrani na osnovi oznake dana
+            Set<Weekday> days // Dani vožnje odabrani na osnovi oznake dana
     ) {
         if (trackID == null || trackID.isEmpty()) {
             throw new IllegalArgumentException("Oznaka pruge je obavezna.");

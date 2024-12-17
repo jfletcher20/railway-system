@@ -3,7 +3,9 @@ package edu.unizg.foi.uzdiz.jfletcher20.models.compositions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
+import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComponent;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.Schedule;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleComposite;
@@ -124,9 +126,9 @@ public class TrainComposite implements IComponent {
         return commandIEV;
     }
 
-    public List<List<String>> commandIEVD() {
+    public List<List<String>> commandIEVD(Set<Weekday> days) {
         List<List<String>> commandIEVD = new ArrayList<List<String>>();
-        for (TrainTrackStageComposite child : this.children) {
+        for (TrainTrackStageComposite child : this.children.stream().filter(stage -> stage.schedule.days().containsAll(days)).toList()) {
             List<String> output = new ArrayList<String>();
             output.add(0, this.trainID);
             output.addAll(child.commandIEVD());

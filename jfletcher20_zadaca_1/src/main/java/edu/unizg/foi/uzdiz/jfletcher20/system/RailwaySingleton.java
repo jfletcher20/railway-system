@@ -141,7 +141,7 @@ public class RailwaySingleton {
       if (this.scheduleDays.containsKey("-"))
         return this.scheduleDays.get("-");
       else {
-        this.scheduleDays.put("-", new ScheduleDays("-", List.of(Weekday.ALL)));
+        this.scheduleDays.put("-", new ScheduleDays("-", Set.of(Weekday.values())));
         return this.scheduleDays.get("-");
       }
     }
@@ -602,6 +602,11 @@ public class RailwaySingleton {
 
   public Station getEndStation(String id, TrainType trainType) {
     return getStationsOnTrack(id, trainType).getLast();
+  }
+
+  public List<String> trainsWithInvalidStages = new ArrayList<>();
+  public void verifyTrains() {
+    this.scheduleComposite.Remove(scheduleComposite);
   }
 
 }

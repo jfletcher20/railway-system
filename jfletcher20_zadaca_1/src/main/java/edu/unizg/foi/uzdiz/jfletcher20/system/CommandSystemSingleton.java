@@ -3,6 +3,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.system;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -470,7 +471,7 @@ public class CommandSystemSingleton {
     Logs.footer(true);
   }
 
-  private void viewTrainsWithStagesOnDays(List<Weekday> days) {
+  private void viewTrainsWithStagesOnDays(Set<Weekday> days) {
     Logs.header("Pregled vlakova koji voze sve etape na " + days, true);
     var data = RailwaySingleton.getInstance().getSchedule().commandIEVD(days);
     if (data == null || data.isEmpty()) {

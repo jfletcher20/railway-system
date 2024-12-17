@@ -29,11 +29,17 @@ public class RailwaySingletonBuilder implements IBuilder {
     RailwaySingleton.getInstance().verifyTrainTracks();
     return this;
   }
+  
+  public RailwaySingletonBuilder verifyTrains() {
+    RailwaySingleton.getInstance().verifyTrains();
+    return this;
+  }
 
   @Override
   public RailwaySingleton getResult() {
     RailwaySingleton.getInstance().printStats();
     return RailwaySingleton.getInstance();
   }
+
 
 }

@@ -3,6 +3,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.models.schedule;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComponent;
@@ -103,7 +104,7 @@ public class ScheduleComposite implements IComposite {
         return train.commandIEV();
     }
 
-    public List<List<String>> commandIEVD(List<Weekday> days) {
+    public List<List<String>> commandIEVD(Set<Weekday> days) {
         List<List<String>> commandIEVD = new ArrayList<List<String>>();
         if (days == null || days.isEmpty()) {
             Logs.e("Nisu pronađeni dani vožnje");
@@ -125,9 +126,9 @@ public class ScheduleComposite implements IComposite {
             for (TrainTrackStageComposite stage : child.getChildren()) {
                 schedules.add(stage.schedule);
             }
-            boolean daysAreInSchedules = schedules.stream().allMatch(s -> s.days().containsAll(days));
+            boolean daysAreInSchedules = schedules.stream().anyMatch(s -> s.days().containsAll(days));
             if (daysAreInSchedules) {
-                commandIEVD.addAll(child.commandIEVD());
+                commandIEVD.addAll(child.commandIEVD(days));
             }
         }
         return commandIEVD;

@@ -2,6 +2,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.enums;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -42,10 +43,10 @@ public enum Weekday {
     }
 
     // causes an error if the value is "12;" because of second column being empty/null
-    public static List<Weekday> daysFromString(String value) {
+    public static Set<Weekday> daysFromString(String value) {
         if (value == null || value.trim().isEmpty())
-            return List.of(ALL);
-        List<Weekday> days = new ArrayList<>();
+            return Set.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY);
+        Set<Weekday> days = new java.util.HashSet<>();
         if (mondayIsAnywhere.matcher(value).matches())
             days.add(MONDAY);
         if (tuesdayIsAnywhere.matcher(value).matches())
@@ -61,7 +62,7 @@ public enum Weekday {
         if (sundayIsAnywhere.matcher(value).matches())
             days.add(SUNDAY);
         if (value.equals(""))
-            days.add(ALL);
+            days.addAll(Set.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY));
         return days;
     }
 
@@ -83,7 +84,7 @@ public enum Weekday {
         }
     }
 
-    public static String listToString(List<Weekday> days) {
+    public static String listToString(Set<Weekday> days) {
         StringBuilder dayString = new StringBuilder();
         for (Weekday day : days) 
             dayString.append(day.toShorthand());
@@ -99,7 +100,7 @@ public enum Weekday {
             case FRIDAY -> "Pe";
             case SATURDAY -> "Su";
             case SUNDAY -> "N";
-            case ALL -> "PoUSrČPeSuN";
+            case ALL -> "";
         };
     }
 
