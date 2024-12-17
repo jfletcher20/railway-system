@@ -101,4 +101,8 @@ public record Station(
     };
   }
 
+  public void cryOut() {
+    System.out.println("\t>>" + "\tname:" + name + " " + "\ttype:" + type + " " + "\tactivity:" + activity + " " + "\tplatformCount:" + platformCount + " " + "\tstatus:" + status + " " + "\ttimeNormal:" + timeNormal + " " + "\ttimeFast:" + timeFast + " " + "\ttimeExpress:" + timeExpress);
+  }
+
 }

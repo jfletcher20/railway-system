@@ -593,14 +593,7 @@ public class RailwaySingleton {
   }
 
   public List<Station> getStationsOnTrack(String trackID, TrainType trainType) {
-    List<Station> stationsOnTrack = this.getStationsOnTrack(trackID);
-    List<Station> stationsOnTrackFiltered = new ArrayList<>();
-    for (Station station : stationsOnTrack) {
-      if (station.supportsTrainType(trainType)) {
-        stationsOnTrackFiltered.add(station);
-      }
-    }
-    return stationsOnTrackFiltered;
+    return getStationsOnTrack(trackID).stream().filter(s -> s.supportsTrainType(trainType)).toList();
   }
 
   public Station getStartStation(String id, TrainType trainType) {

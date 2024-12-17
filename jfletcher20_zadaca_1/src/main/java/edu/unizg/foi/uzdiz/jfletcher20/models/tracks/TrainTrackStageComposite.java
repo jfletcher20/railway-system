@@ -29,7 +29,8 @@ public class TrainTrackStageComposite implements IComposite {
             return;
         }
         if (schedule.direction() == TraversalDirection.FORTH) {
-            this.Add(new StationLeaf(stations.get(0)));
+            this.Add(new StationLeaf(stations.stream().filter(station -> station.name().equals(schedule.departure().name()) && station.supportsTrainType(schedule.trainType()))
+                    .findFirst().orElse(stations.get(0))));
             for (int i = stations.indexOf(schedule.departure()) + 1; i < stations.size(); i++) {
                 Station station = stations.get(i);
                 this.Add(new StationLeaf(station));
@@ -38,6 +39,8 @@ public class TrainTrackStageComposite implements IComposite {
                 }
             }
         } else {
+            this.Add(new StationLeaf(stations.reversed().stream().filter(station -> station.name().equals(schedule.departure().name()) && station.supportsTrainType(schedule.trainType()))
+                    .findFirst().orElse(stations.get(stations.size() - 1))));
             for (int i = stations.indexOf(schedule.departure()) - 1; i >= 0; i--) {
                 Station station = stations.get(i);
                 this.Add(new StationLeaf(station));
