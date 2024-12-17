@@ -35,4 +35,9 @@ public record User(
         this(fullName.split(" ", -1)[0], fullName.split(" ", -1)[1]);
     }
 
+    @Override
+    public String toString() {
+        return name.substring(0, 1).toUpperCase() + ". " + lastName;
+    }
+
 }

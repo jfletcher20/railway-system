@@ -274,7 +274,8 @@ public class RailwaySingleton {
     return tracks.stream().mapToDouble(TrainTrack::trackLength).sum();
   }
 
-  public double getDistanceBetweenStations(Station station1, Station station2, TrainType trainType, boolean ignoreTrainType) {
+  public double getDistanceBetweenStations(Station station1, Station station2, TrainType trainType,
+      boolean ignoreTrainType) {
     List<List<Edge>> edges = getRoutesBetweenStations(station1, station2);
     List<Edge> shortestRoute = edges.stream().min((a, b) -> {
       double aDistance = a.stream().mapToDouble(e -> e.weight).sum();
@@ -283,9 +284,10 @@ public class RailwaySingleton {
     }).orElse(null);
     if (shortestRoute == null)
       return 0;
-    List<Edge> shortestRouteFiltered = shortestRoute.stream().filter(e -> ignoreTrainType || e.from.supportsTrainType(trainType))
+    List<Edge> shortestRouteFiltered = shortestRoute.stream()
+        .filter(e -> ignoreTrainType || e.from.supportsTrainType(trainType))
         .toList();
-        
+
     return shortestRouteFiltered.stream().mapToDouble(e -> e.weight).sum();
   }
 
@@ -570,6 +572,19 @@ public class RailwaySingleton {
   public double getDistanceBetweenStations(Station station1, Station station2) {
     TrainTrack track = getTrackOfStation(station1);
     return getDistanceBetweenStations(track.id(), station1, station2);
+  }
+
+  /**
+   * Get user by name and last name
+   * Check if user exists, if not create a new user
+   * 
+   * @param name User's name; can also include middle name
+   * @param lastName User's last name
+   * @return
+   */
+  public User getUserByName(String name, String lastName) {
+    return this.users.stream().filter(u -> u.name().equals(name) && u.lastName().equals(lastName)).findFirst()
+        .orElse(new User(name, lastName));
   }
 
 }

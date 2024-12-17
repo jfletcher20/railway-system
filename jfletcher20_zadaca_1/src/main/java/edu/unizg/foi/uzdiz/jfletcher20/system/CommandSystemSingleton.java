@@ -38,13 +38,19 @@ public class CommandSystemSingleton {
   Pattern viewCompositionPattern = Pattern.compile( //
       "^IK (?<compositionCode>[0-9]+)$" //
   );
-  Pattern addUserPattern = Pattern.compile("^DK (?<name>.+) (?<lastName>.+)$");
-  Pattern viewUsersPattern = Pattern.compile("^PK$");
 
   Pattern viewTrainsPattern = Pattern.compile("^IV$");
   Pattern viewTrainStagesPattern = Pattern.compile("^IEV (?<trainCode>\\d+)$");
   Pattern viewTrainsWithStagesOnPattern = Pattern.compile("^IEVD (?<days>[A-Za-z]+)$");
   Pattern viewTrainTimetablePattern = Pattern.compile("^IVRV (?<trainCode>.+)$");
+
+  Pattern addUserPattern = Pattern.compile("^DK (?<name>.+) (?<lastName>.+)$");
+  Pattern viewUsersPattern = Pattern.compile("^PK$");
+
+  Pattern linkPattern = Pattern
+      .compile("^LINK (?<name>.+) (?<lastName>.+) - (?<groupId>.+) - (?<action>.+)$|^LINK PREGLED$");
+
+  private final ChatMediator mediator = new ChatMediator();
 
   public static CommandSystemSingleton instance = new CommandSystemSingleton();
 
@@ -158,6 +164,7 @@ public class CommandSystemSingleton {
     Matcher viewTrainStagesMatcher = viewTrainStagesPattern.matcher(command);
     Matcher viewTrainsWithStagesOnMatcher = viewTrainsWithStagesOnPattern.matcher(command);
     Matcher ivrvMatcher = viewTrainTimetablePattern.matcher(command);
+    Matcher linkMatcher = linkPattern.matcher(command);
     if (vtMatcher.matches()) {
       viewTracks();
     } else if (vsMatcher.matches()) {
@@ -170,6 +177,8 @@ public class CommandSystemSingleton {
       viewUsers();
     } else if (viewTrainsMatcher.matches()) {
       viewTrains();
+    } else if (linkMatcher.matches()) {
+      processLinkCommand(command);
     } else if (viewTrainStagesMatcher.matches()) {
       viewTrainStagesOfTrain(viewTrainStagesMatcher.group("trainCode"));
     } else if (ivrvMatcher.matches()) {
@@ -214,6 +223,9 @@ public class CommandSystemSingleton {
     Logs.o("IVRV [oznakaVlaka]\t\t\t- Pregled vlakova i njihovih etapa", false);
     Logs.o("DK [ime] [prezime]\t\t\t- Dodavanje korisnika", false);
     Logs.o("PK\t\t\t\t\t- Pregled korisnika", false);
+
+    Logs.withPadding(() -> Logs.o("LINK [ime] [prz] - [grupa] - [O|Z|poruka] - Otvori/zatvori vezu između korisnika i grupe ili pošalji obavijest u grupu", false), true, false);
+    Logs.o("LINK PREGLED\t\t\t\t- Pregled svih grupa", false);
 
     Logs.withPadding(() -> Logs.o("Q - Izlaz iz programa", false), true, true);
     outputDebugMenu();
@@ -499,6 +511,48 @@ public class CommandSystemSingleton {
 
     Logs.printTable();
     Logs.footer(true);
+  }
+
+  /**
+   * Process the LINK command (dodatna funkcionalnost izvan specifikacija zadaće
+   * 2).
+   * 
+   * @param command The command string.
+   */
+  private void processLinkCommand(String command) {
+    var matcher = linkPattern.matcher(command);
+    if (!matcher.matches()) {
+      Logs.e("Nije validna naredba LINK. Sintaksa: LINK PREGLED ili LINK [ime] [prezime] - [grupa] - [O|Z|poruka]");
+      return;
+    }
+
+    String name = matcher.group("name");
+    String lastName = matcher.group("lastName");
+    String groupId = matcher.group("groupId");
+    String action = matcher.group("action");
+
+    // find the user with the same name and lastname
+    var user = RailwaySingleton.getInstance().getUserByName(name, lastName);
+
+    switch (action) {
+      case "O":
+        mediator.linkUser(groupId, user);
+        Logs.o(user + " has joined group: " + groupId);
+        break;
+
+      case "Z":
+        mediator.unlinkUser(groupId, user);
+        Logs.o(user + " has left group: " + groupId);
+        break;
+
+      default:
+        if (!action.isEmpty()) {
+          mediator.broadcast(groupId, user, action);
+        } else {
+          Logs.e("Message cannot be empty.");
+        }
+        break;
+    }
   }
 }
 
