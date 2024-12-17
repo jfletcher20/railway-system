@@ -1,8 +1,10 @@
 package edu.unizg.foi.uzdiz.jfletcher20.system;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,6 +16,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
 import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
+import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 
 /*
  * 
@@ -95,11 +98,12 @@ public class CommandSystemSingleton {
   Pattern viewTrainStagesPattern = Pattern.compile("^IEV (?<trainCode>\\d+)$");
   Pattern viewTrainsWithStagesOnPattern = Pattern.compile("^IEVD (?<days>[A-Za-z]+)$");
   Pattern viewTrainTimetablePattern = Pattern.compile("^IVRV (?<trainCode>.+)$");
-  // IVI2S
-  Pattern viewPossibleTripsPattern = Pattern.compile(
-      "^IVI2S (?<startStation>.+) - (?<endStation>.+) - (?<days>[A-Za-z]+) - (?<fromTime>\\d+:\\d+) - (?<toTime>\\d+:\\d+) - (?<display>"
-          + "S*" + "P*" + "K*" + "V*"
-          + ")$"); // legal 'display' control characters are S, P, K, V
+  // Pattern trainScheduleBetweenStationsPattern = Pattern.compile(
+  //     "^IVI2S (?<startStation>.+) - (?<endStation>.+) - (?<days>[A-Za-z]+) - (?<fromTime>\\d+:\\d+) - (?<toTime>\\d+:\\d+) - (?<display>"
+  //         + /* any combination of S, P, K, V */ "(?=.*[SPVK])[SPVK]"
+  //         + ")$");
+  private Pattern trainScheduleBetweenStationsPattern = Pattern.compile(
+  "^IVI2S\\s+([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)$");
 
   Pattern viewUsersPattern = Pattern.compile("^PK$");
   Pattern addUserPattern = // Pattern.compile("^DK (?<name>.+) (?<lastName>\\S+)$");
@@ -243,6 +247,7 @@ public class CommandSystemSingleton {
     Matcher ivrvMatcher = viewTrainTimetablePattern.matcher(command);
     Matcher linkMatcher = linkPattern.matcher(command);
     Matcher addTrainObserverPatternMatcher = addTrainObserverPattern.matcher(command);
+    Matcher trainScheduleBetweenStationsMatcher = trainScheduleBetweenStationsPattern.matcher(command);
     if (vtMatcher.matches()) {
       viewTracks();
     } else if (vsMatcher.matches()) {
@@ -263,6 +268,8 @@ public class CommandSystemSingleton {
       viewTrainTimetable(ivrvMatcher.group("trainCode"));
     } else if (addTrainObserverPatternMatcher.matches()) {
       addTrainObserver(command);
+    } else if (trainScheduleBetweenStationsMatcher.matches()) {
+      viewTrainScheduleBetweenStations(trainScheduleBetweenStationsMatcher);
     } else if (viewTrainsWithStagesOnMatcher.matches()) {
       try {
         viewTrainsWithStagesOnDays(Weekday.daysFromString(viewTrainsWithStagesOnMatcher.group("days")));
@@ -294,10 +301,13 @@ public class CommandSystemSingleton {
         false);
     Logs.o("IK [oznakaKompozicije]\t\t\t- Pregled kompozicija", false);
     Logs.o("IV\t\t\t\t\t- Pregled vlakova", false);
-    Logs.o("IEV [oznakaVlaka]\t\t\t- Pregled etapa vlaka", false);
+    Logs.o("IEV [oznakaVlaka]\t\t\t\t- Pregled etapa vlaka", false);
     Logs.o("IEVD [dani]\t\t\t\t- Pregled vlakova koji voze sve etape na određene dane u tjednu",
         false);
     Logs.o("IVRV [oznakaVlaka]\t\t\t- Pregled vlakova i njihovih etapa", false);
+    Logs.o("IVI2S [polaznaStanica] - [odredišnaStanica] - [dan] - [odVr] - [doVr] - [prikaz]", false);
+    Logs.o("\t\t\t\t\t\t- Pregled vlakova između dvije stanice na određeni dan u tjednu unutar zadanog vremena", false);
+
     Logs.o("DK [ime] [prezime]\t\t\t- Dodavanje korisnika", false);
     Logs.o("PK\t\t\t\t\t- Pregled korisnika", false);
     Logs.withPadding(() -> Logs.o(
@@ -693,6 +703,66 @@ public class CommandSystemSingleton {
       Logs.o("Korisnik " + user + " sada prati dolazak vlaka " + trainID + " u stanicu " + station);
     }
     Logs.footer(true);
+  }
+
+  public void viewTrainScheduleBetweenStations(Matcher ivi2sMatcher) {
+    String startStation = ivi2sMatcher.group(1).trim();
+    String endStation = ivi2sMatcher.group(2).trim();
+    String day = ivi2sMatcher.group(3).trim();
+    String fromTime = ivi2sMatcher.group(4).trim();
+    String toTime = ivi2sMatcher.group(5).trim();
+    String displayFormat = ivi2sMatcher.group(6).trim();
+
+    Logs.header("Pregled vlakova između " + startStation + " - " + endStation, true);
+
+    // Convert inputs
+    Weekday weekday = Weekday.dayFromString(day);
+    ScheduleTime startTime = new ScheduleTime(fromTime);
+    ScheduleTime endTime = new ScheduleTime(toTime);
+
+    if (weekday == null || startTime == null || endTime == null) {
+      Logs.e("Nevažeći parametri");
+      return;
+    }
+
+    // Get data from ScheduleComposite
+    List<Map<String, String>> data = RailwaySingleton.getInstance()
+        .getSchedule()
+        .commandIVI2S(startStation, endStation, weekday, startTime, endTime, displayFormat);
+
+    if (data == null || data.isEmpty()) {
+      Logs.e("Nema pronađenih vlakova");
+      return;
+    }
+
+    List<String> headers = createHeadersFromFormat(displayFormat);
+    Logs.tableHeader(headers);
+
+    for (Map<String, String> row : data) {
+      List<String> tableRow = new ArrayList<>();
+      for (String header : headers) {
+        tableRow.add(row.get(header));
+      }
+      Logs.tableRow(tableRow);
+    }
+
+    Logs.printTable();
+    Logs.footer(true);
+
+  }
+
+  private List<String> createHeadersFromFormat(String format) {
+    List<String> headers = new ArrayList<>();
+    for (char c : format.toCharArray()) {
+      switch (c) {
+        case 'S' -> headers.add("Stanica");
+        case 'P' -> headers.add("Pruga");
+        case 'K' -> headers.add("Km");
+        case 'V' -> headers.add("Vrijeme");
+        default -> throw new IllegalArgumentException("Nepoznat format: " + c);
+      }
+    }
+    return headers;
   }
 }
 

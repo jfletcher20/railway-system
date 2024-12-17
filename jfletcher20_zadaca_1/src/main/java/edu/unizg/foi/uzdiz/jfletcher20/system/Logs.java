@@ -208,11 +208,11 @@ public abstract class Logs {
       int[] columnLengths = new int[tableOutput.get(0).size()];
       for (List<String> row : tableOutput)
         for (int i = 0; i < row.size(); i++) {
-          String cell = row.get(i);
+          String cell = row.get(i) == null ? "" : row.get(i);
           if (cell.length() > maxColumnLength)
             cell = cell.substring(0, maxColumnLength - 3) + "...";
           try {
-            columnLengths[i] = Math.max(columnLengths[i], cell.length());
+            columnLengths[i] = Math.max(columnLengths[i], cell == null ? 0 : cell.length());
           } catch (ArrayIndexOutOfBoundsException e) {
             columnLengths = new int[row.size()];
             for (int c = 0; c < row.size(); c++) {
@@ -224,7 +224,7 @@ public abstract class Logs {
         List<String> row = tableOutput.get(rowIndex);
         StringBuilder line = new StringBuilder();
         for (int i = 0; i < row.size(); i++) {
-          String cell = row.get(i);
+          String cell = row.get(i) == null ? "" : row.get(i);
           if (cell.length() > maxColumnLength)
             cell = cell.substring(0, maxColumnLength - 3) + "...";
           if (cell.matches("-?\\d+(\\.\\d+)?")) {

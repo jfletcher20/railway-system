@@ -524,9 +524,9 @@ public class RailwaySingleton {
   }
 
   public class Edge {
-    Station from;
-    Station to;
-    double weight;
+    public Station from;
+    public Station to;
+    public double weight;
 
     public Edge(Station from, Station to, double weight) {
       this.from = from;

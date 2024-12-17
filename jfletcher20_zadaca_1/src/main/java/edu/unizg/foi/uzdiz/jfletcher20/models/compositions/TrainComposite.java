@@ -241,4 +241,78 @@ public class TrainComposite implements IComponent, ISubject {
         return false;
     }
 
+    public TrainTrackStageComposite firstWithStation(String station) {
+        for (TrainTrackStageComposite stage : this.children) {
+            if (stage.hasStation(station)) {
+                return stage;
+            }
+        }
+        return null;
+    }
+
+    public boolean operatesOnDay(Weekday day) {
+        return this.children.stream()
+                .anyMatch(stage -> stage.schedule.days().contains(day));
+    }
+
+    public boolean hasStations(List<String> stationNames) {
+        for (String stationName : stationNames) {
+            if (!this.hasStation(stationName)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public ScheduleTime getDepartureTimeAtStation(Station start) {
+        if (this.children.isEmpty()) {
+            return null;
+        }
+        if (!this.hasStation(start.name())) {
+            return null;
+        }
+
+        // find the first stage that contains the station
+        TrainTrackStageComposite withStation = this.firstWithStation(start.name());
+        // calculate the schedule time of departure for the station
+        ScheduleTime departureTime = withStation.fromTime();
+        for (StationLeaf leaf : withStation.children) {
+            if (leaf.getStation().name().equals(start.name())) {
+                break;
+            }
+            departureTime = departureTime.addMinutes(leaf.getStation().timeForTrainType(withStation.schedule.trainType()));
+        }
+        return departureTime;
+    }
+
+    public ScheduleTime getArrivalTimeAtStation(Station end) {
+        if (this.children.isEmpty()) {
+            return null;
+        }
+        if (!this.hasStation(end.name())) {
+            return null;
+        }
+
+        TrainTrackStageComposite withStation = this.children.stream()
+                .filter(stage -> stage.hasStation(end.name()))
+                .reduce((first, second) -> second)
+                .orElse(null);
+        ScheduleTime arrivalTime = withStation.toTime();
+        for (StationLeaf leaf : withStation.children.reversed()) {
+            if (leaf.getStation().name().equals(end.name())) {
+                break;
+            }
+            arrivalTime = arrivalTime.subtractMinutes(leaf.getStation().timeForTrainType(withStation.schedule.trainType()));
+        }
+        return arrivalTime;
+    }
+
+    public List<Map<String, String>> commandIVI2S(String displayFormat) {
+        List<Map<String, String>> commandIVI2S = new ArrayList<>();
+        for (TrainTrackStageComposite stage : this.children) {
+            commandIVI2S.add(stage.commandIVI2S(displayFormat));
+        }
+        return commandIVI2S;
+    }
+
 }

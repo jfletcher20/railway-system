@@ -3,6 +3,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.models.schedule;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
@@ -11,6 +12,9 @@ import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackStageComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
+
+import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
+import edu.unizg.foi.uzdiz.jfletcher20.models.stations.StationLeaf;
 
 /**
  * Composite class for the Schedule
@@ -124,7 +128,7 @@ public class ScheduleComposite implements IComposite {
         }
         return commandIEVD;
     }
-    
+
     /**
      * Inserts a new entry into the sorted list using insertion sort logic.
      * Sorting is based on the 'fromTime' column (index 4).
@@ -140,7 +144,6 @@ public class ScheduleComposite implements IComposite {
         }
         list.add(i, newEntry);
     }
-    
 
     public List<List<String>> commandIVRV(String trainID) {
         TrainComposite train = getCompositeByTrainID(trainID);
@@ -149,6 +152,76 @@ public class ScheduleComposite implements IComposite {
             return Collections.emptyList();
         }
         return train.commandIVRV();
+    }
+
+    Station getStationByName(String stationName) {
+        for (TrainComposite train : this.children) {
+            for (TrainTrackStageComposite stage : train.getChildren()) {
+                for (StationLeaf station : stage.children) {
+                    if (station.getStation().name().equals(stationName)) {
+                        return station.getStation();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    List<TrainComposite> hasStations(List<String> stationNames) {
+        List<TrainComposite> trains = new ArrayList<>();
+        for (TrainComposite train : this.children) {
+            if (train.hasStations(stationNames)) {
+                trains.add(train);
+            }
+        }
+        return trains;
+    }
+
+    public List<Map<String, String>> commandIVI2S(String startStation, String endStation, Weekday weekday,
+            ScheduleTime startTime, ScheduleTime endTime, String displayFormat) {
+        Station start = getStationByName(startStation);
+        if (start == null) {
+            Logs.e("Početna stanica " + startStation + " nije pronađena");
+            return Collections.emptyList();
+        }
+        Station end = getStationByName(endStation);
+        if (end == null) {
+            Logs.e("Završna stanica " + endStation + " nije pronađena");
+            return Collections.emptyList();
+        }
+
+        List<Map<String, String>> commandIVI2S = new ArrayList<>();
+        for (TrainComposite train : hasStations(List.of(startStation, endStation))) {
+            // check if the stages of the train all have the weekday
+            boolean isWeekdayInStages = train.getChildren().stream().allMatch(stage -> stage.schedule.days().contains(weekday));
+            if (!isWeekdayInStages) {
+                continue;
+            }
+            // get the ScheduleTime that the train would head out from the station at
+            ScheduleTime timeAtStart = train.getDepartureTimeAtStation(start);
+            if (timeAtStart == null) {
+                continue;
+            }
+
+            // check if the train leaves the station after the start time
+            if (timeAtStart.compareTo(startTime) < 0) {
+                continue;
+            }
+
+            // check if the train arrives at the end station before the end time
+            ScheduleTime timeAtEnd = train.getArrivalTimeAtStation(end);
+            if (timeAtEnd == null) {
+                continue;
+            }
+
+            if (timeAtEnd.compareTo(endTime) > 0) {
+                continue;
+            }
+
+            // if all conditions are met, add the train to the list
+            commandIVI2S.addAll(train.commandIVI2S(displayFormat));
+        }
+        return commandIVI2S;
     }
 
 }
