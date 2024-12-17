@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
+
 import java.util.AbstractMap;
 
 public abstract class Logs {
@@ -349,6 +352,10 @@ public abstract class Logs {
       return logWarnings;
     }
 
+  }
+
+  public static void u(User user, String trainID, String stationName) {
+    throw new UnsupportedOperationException("Unimplemented method 'u'");
   }
 
 }

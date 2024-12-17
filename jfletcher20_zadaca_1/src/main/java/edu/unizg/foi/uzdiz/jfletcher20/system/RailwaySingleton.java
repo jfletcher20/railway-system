@@ -606,9 +606,11 @@ public class RailwaySingleton {
    * @param lastName User's last name
    * @return
    */
-  public User getUserByName(String name, String lastName) {
+  public User getUserByName(String name, String lastName, boolean createIfNotExists) {
     return this.users.stream().filter(u -> u.name().equals(name) && u.lastName().equals(lastName)).findFirst()
         .orElseGet(() -> {
+          if (!createIfNotExists)
+            return null;
           Logs.o("Korisnik " + name + " " + lastName + " ne postoji. Dodajem korisnika...");
           User newUser = new User(name, lastName);
           this.users.add(newUser);

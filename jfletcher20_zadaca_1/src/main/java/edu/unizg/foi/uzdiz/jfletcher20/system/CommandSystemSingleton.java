@@ -9,8 +9,10 @@ import java.util.regex.Pattern;
 
 import edu.unizg.foi.uzdiz.jfletcher20.Main;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
+import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
+import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 
 /**
@@ -47,11 +49,29 @@ public class CommandSystemSingleton {
 
   Pattern viewUsersPattern = Pattern.compile("^PK$");
   Pattern addUserPattern = Pattern.compile("^DK (?<name>.+) (?<lastName>\\S+)$");
-
+  Pattern addTrainObserverPattern = Pattern.compile(
+      "^DPK (?<name>\\S+) (?<lastName>\\S+) - (?<trainId>[^-]+?)( - (?<station>.+))?$");
   Pattern linkPattern = Pattern
       .compile("^LINK (?<name>.+) (?<lastName>\\S+) - (?<groupId>.+) - (?<action>.+)$|^LINK PREGLED$");
+  /*
+   * ● Dodavanje korisnika za praćenja putovanja vlaka ili dolaska u određenu
+   * željezničku
+   * stanicu
+   * ○ Sintaksa:
+   * ■ DPK ime prezime - oznakaVlaka [- stanica]
+   * ○ Primjer:
+   * ■ DPK Pero Kos - 3301
+   * ■ DPK Mato Medved - 3309 - Donji Kraljevec
+   * ○ Opis primjera:
+   * ■ Dodavanje korisnika Pero Kos za praćenje vlaka s oznakom 3301
+   * ■ Dodavanje korisnika Mato Medved za praćenje vlaka s oznakom 3309 za
+   * željezničku stanicu Donji Kraljevec
+   */
+  private final ChatMediator userChat = new ChatMediator();
 
-  private final ChatMediator mediator = new ChatMediator();
+  public ChatMediator getUserChat() {
+    return userChat;
+  }
 
   public static CommandSystemSingleton instance = new CommandSystemSingleton();
 
@@ -98,11 +118,16 @@ public class CommandSystemSingleton {
           "IV",
           "IEV 3609",
           "IEV 0",
+          "IEV 3301",
           "IEVD PoSrPeN",
           "IEVD Po",
           "IEVD PoUSrČPeSuN",
           "IVRV 3609",
           "IVRV 0",
+          "IVRV 3301",
+          "IVRV 3302",
+          "IVRV 991",
+          "IVRV B 791",
           "DK Pero Kos",
           "DK Joshua Lee Fletcher",
           "PK",
@@ -117,9 +142,9 @@ public class CommandSystemSingleton {
           "ISI2S Kotoriba - Ludbreg",
           "IK 8001",
           "IV",
-          "IEV 3609",
+          "IEV 3301",
           "IEVD PoSrPeN",
-          "IVRV 3609",
+          "IVRV 3302",
           "DK Pero Kos",
           "PK",
       };
@@ -151,6 +176,10 @@ public class CommandSystemSingleton {
       case "g3" -> "IEVD PoUSrPeSuN";
       case "h" -> "IVRV 3609";
       case "h2" -> "IVRV 0";
+      case "h3" -> "IVRV 3301";
+      case "h4" -> "IVRV 3302";
+      case "h5" -> "IVRV 991";
+      case "h6" -> "IVRV B 791";
       case "i" -> "DK Pero Kos";
       case "i2" -> "DK Joshua Lee Fletcher";
       case "j" -> "PK";
@@ -170,6 +199,7 @@ public class CommandSystemSingleton {
     Matcher viewTrainsWithStagesOnMatcher = viewTrainsWithStagesOnPattern.matcher(command);
     Matcher ivrvMatcher = viewTrainTimetablePattern.matcher(command);
     Matcher linkMatcher = linkPattern.matcher(command);
+    Matcher addTrainObserverPatternMatcher = addTrainObserverPattern.matcher(command);
     if (vtMatcher.matches()) {
       viewTracks();
     } else if (vsMatcher.matches()) {
@@ -188,6 +218,8 @@ public class CommandSystemSingleton {
       viewTrainStagesOfTrain(viewTrainStagesMatcher.group("trainCode"));
     } else if (ivrvMatcher.matches()) {
       viewTrainTimetable(ivrvMatcher.group("trainCode"));
+    } else if (addTrainObserverPatternMatcher.matches()) {
+      addTrainObserver(command);
     } else if (viewTrainsWithStagesOnMatcher.matches()) {
       try {
         viewTrainsWithStagesOnDays(Weekday.daysFromString(viewTrainsWithStagesOnMatcher.group("days")));
@@ -210,9 +242,7 @@ public class CommandSystemSingleton {
 
   private void outputMenu() {
     Logs.header("JLF Željeznica: Interaktivni način rada", true);
-
     Logs.withPadding(() -> Logs.o("Validne komande:"), false, true);
-
     Logs.o("IP\t\t\t\t\t- Pregled pruga", false);
     Logs.o(
         "ISP [oznakaPruge] [N|O]\t\t\t- Pregled stanica uz prugu u normalnom ili obrnutom redoslijedu",
@@ -220,7 +250,6 @@ public class CommandSystemSingleton {
     Logs.o("ISI2S [nazivStanice1] - [nazivStanice2]\t- Pregled stanica između dvije stanice",
         false);
     Logs.o("IK [oznakaKompozicije]\t\t\t- Pregled kompozicija", false);
-
     Logs.o("IV\t\t\t\t\t- Pregled vlakova", false);
     Logs.o("IEV [oznakaVlaka]\t\t\t- Pregled etapa vlaka", false);
     Logs.o("IEVD [dani]\t\t\t\t- Pregled vlakova koji voze sve etape na određene dane u tjednu",
@@ -228,18 +257,18 @@ public class CommandSystemSingleton {
     Logs.o("IVRV [oznakaVlaka]\t\t\t- Pregled vlakova i njihovih etapa", false);
     Logs.o("DK [ime] [prezime]\t\t\t- Dodavanje korisnika", false);
     Logs.o("PK\t\t\t\t\t- Pregled korisnika", false);
-
+    Logs.withPadding(() -> Logs.o(
+        "DPK [ime] [prz] - [oznVlaka] [- stanica]  - Dodavanje korisnika za praćenje putovanja vlaka ili dolaska u određenu željezničku stanicu",
+        false), true, false);
     Logs.withPadding(() -> Logs.o(
         "LINK [ime] [prz] - [grupa] - [O|Z|poruka] - Otvori/zatvori vezu između korisnika i grupe ili pošalji obavijest u grupu",
         false), true, false);
     Logs.o("LINK PREGLED\t\t\t\t- Pregled svih grupa", false);
-
     Logs.withPadding(() -> Logs.o("Q - Izlaz iz programa", false), true, true);
-    outputDebugMenu();
     Logs.o("Uzorci dizajna, 2024. - Joshua Lee Fletcher");
   }
 
-  private void outputDebugMenu() {
+  public static void outputDebugMenu() {
     if (Main.debugMode) {
       Logs.o("\t\t[DEBUG] All\t\t\t- Za potpuno testiranje cijelog sustava", false);
       Logs.o("\t\t[DEBUG] All1\t\t\t- Za testiranje svake naredbe samo jednom", false);
@@ -253,13 +282,13 @@ public class CommandSystemSingleton {
       Logs.o("\t\t[DEBUG] d\t\t\t\t- Pregled kompozicija (oznaka 8001)", false);
       Logs.o("\t\t[DEBUG] d2\t\t\t\t- Pregled kompozicija (oznaka 1)", false);
       Logs.o("\t\t[DEBUG] e\t\t\t\t- Pregled vlakova", false);
-      Logs.o("\t\t[DEBUG] f\t\t\t\t- Pregled etapa vlaka (oznaka 3609)", false);
-      Logs.o("\t\t[DEBUG] f2\t\t\t\t- Pregled etapa vlaka (oznaka 0)", false);
+      Logs.o("\t\t[DEBUG] f\t\t\t\t- Pregled etapa vlaka", false);
+      Logs.o("\t\t[DEBUG] f2\t\t\t\t- Pregled etapa vlaka", false);
       Logs.o("\t\t[DEBUG] g\t\t\t\t- Pregled vlakova koji voze sve etape na PoSrPeN", false);
       Logs.o("\t\t[DEBUG] g2\t\t\t\t- Pregled vlakova koji voze sve etape na Po", false);
       Logs.o("\t\t[DEBUG] g3\t\t\t\t- Pregled vlakova koji voze sve etape na PoUSrPeSuN", false);
-      Logs.o("\t\t[DEBUG] h\t\t\t\t- Pregled vlakova i njihovih etapa (oznaka 3609)", false);
-      Logs.o("\t\t[DEBUG] h2\t\t\t\t- Pregled vlakova i njihovih etapa (oznaka 0)", false);
+      Logs.o("\t\t[DEBUG] h\t\t\t\t- Pregled vlakova i njihovih etapa", false);
+      Logs.o("\t\t[DEBUG] h2\t\t\t\t- Pregled vlakova i njihovih etapa", false);
       Logs.o("\t\t[DEBUG] i\t\t\t\t- Dodavanje korisnika Pero Kos", false);
       Logs.o("\t\t[DEBUG] i2\t\t\t\t- Dodavanje korisnika Joshua Lee Fletcher", false);
       Logs.o("\t\t[DEBUG] j\t\t\t\t- Pregled korisnika", false);
@@ -304,7 +333,7 @@ public class CommandSystemSingleton {
     if ("O".equalsIgnoreCase(order))
       Collections.reverse(data);
     for (var station : data) {
-      double distance = "O".equalsIgnoreCase(order) ? data.reversed().get(data.indexOf(station)).getDistanceFromEnd()
+      double distance = !"O".equalsIgnoreCase(order) ? data.reversed().get(data.indexOf(station)).getDistanceFromEnd()
           : station.getDistanceFromStart();
       List<String> row = Arrays.asList(
           station.name(),
@@ -546,7 +575,7 @@ public class CommandSystemSingleton {
       String groupId = matcher.group("groupId");
       String action = matcher.group("action");
 
-      var user = RailwaySingleton.getInstance().getUserByName(name, lastName);
+      var user = RailwaySingleton.getInstance().getUserByName(name, lastName, true);
       if (user == null) {
         Logs.e("Korisnik nije pronađen: " + name + " " + lastName);
         return;
@@ -554,16 +583,16 @@ public class CommandSystemSingleton {
 
       switch (action) {
         case "O":
-          mediator.linkUser(groupId, user);
+          userChat.linkUser(groupId, user);
           Logs.o("Korisnik je pridružen grupi: " + groupId);
           break;
         case "Z":
-          mediator.unlinkUser(groupId, user);
+          userChat.unlinkUser(groupId, user);
           Logs.o("Korisnik je uklonjen iz grupe: " + groupId);
           break;
         default:
           if (!action.isEmpty()) {
-            mediator.broadcast(groupId, user, action);
+            userChat.broadcast(groupId, user, action);
           } else {
             Logs.e("Poruka ne smije biti prazna.");
           }
@@ -574,7 +603,7 @@ public class CommandSystemSingleton {
 
   private void viewGroupChatListWithMembers() {
     Logs.header("Pregled grupa", true);
-    var data = mediator.groupChats();
+    var data = userChat.groupChats();
     if (data == null || data.isEmpty()) {
       Logs.e("Nema grupa.");
       Logs.footer(true);
@@ -585,6 +614,43 @@ public class CommandSystemSingleton {
     for (var group : data)
       Logs.tableRow(group);
     Logs.printTable(120);
+    Logs.footer(true);
+  }
+
+  private void addTrainObserver(String command) {
+    Logs.header("Dodavanje korisnika za praćenje vlaka ili dolaska u određenu željezničku stanicu", true);
+    var matcher = addTrainObserverPattern.matcher(command);
+    matcher.matches();
+    String name = matcher.group("name");
+    String lastName = matcher.group("lastName");
+    User user = RailwaySingleton.getInstance().getUserByName(name, lastName, false);
+    if (user == null) {
+      Logs.e("Korisnik nije pronađen: " + name + " " + lastName);
+      Logs.footer(true);
+      return;
+    }
+    String station = matcher.group("station");
+    String trainID = matcher.group("trainId");
+    TrainComposite train = RailwaySingleton.getInstance().getSchedule().children.stream()
+        .filter(t -> t.trainID.equals(trainID)).findFirst().orElse(null);
+    if (train == null) {
+      Logs.e("Vlak s oznakom " + trainID + " nije pronađen.");
+      Logs.footer(true);
+      return;
+    }
+    if (station == null) {
+      train.registerObserver(user);
+      Logs.o("Korisnik " + user + " sada prati vlak " + trainID);
+    } else {
+      boolean stationExists = train.hasStation(station);
+      if (!stationExists) {
+        Logs.e("Vlak " + trainID + " ne prolazi kroz stanicu " + station);
+        Logs.footer(true);
+        return;
+      }
+      train.registerObserver(user, station);
+      Logs.o("Korisnik " + user + " sada prati dolazak vlaka " + trainID + " u stanicu " + station);
+    }
     Logs.footer(true);
   }
 }

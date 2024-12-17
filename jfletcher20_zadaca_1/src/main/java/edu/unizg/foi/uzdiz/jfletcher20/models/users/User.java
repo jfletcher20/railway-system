@@ -1,5 +1,8 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.users;
 
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IObserver;
+import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
+
 /*
  * 
  *  Dodavanje korisnika u registar korisnika 
@@ -20,7 +23,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.models.users;
 public record User(
         String name, // Ime korisnika
         String lastName // Prezime korisnika
-) {
+) implements IObserver {
     public User {
         if (name == null || lastName == null) {
             throw new IllegalArgumentException("Ime i prezime korisnika ne smiju biti null");
@@ -33,6 +36,11 @@ public record User(
 
     public User(String fullName) {
         this(fullName.split(" ", -1)[0], fullName.split(" ", -1)[1]);
+    }
+
+    @Override
+    public void update(String trainID, String stationName) {
+        Logs.u(this, trainID, stationName);
     }
 
     @Override

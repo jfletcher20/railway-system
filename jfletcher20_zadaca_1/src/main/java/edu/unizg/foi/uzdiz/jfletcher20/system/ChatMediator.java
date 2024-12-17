@@ -47,7 +47,7 @@ public class ChatMediator {
         }
         for (User user : users) {
             if (!user.equals(sender)) {
-                System.out.println(user + " prima poruku \"" + message + "\" od " + sender);
+                Logs.o(user + " prima poruku \"" + message + "\" od " + sender);
             }
         }
     }

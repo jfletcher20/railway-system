@@ -2,24 +2,32 @@ package edu.unizg.foi.uzdiz.jfletcher20.models.compositions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IObserver;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComponent;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ISubject;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.Schedule;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.StationLeaf;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackStageComposite;
+import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 
-public class TrainComposite implements IComponent {
+public class TrainComposite implements IComponent, ISubject {
 
+    private Map<String, Set<IObserver>> observers = new HashMap<>();
     public String trainID;
     private List<TrainTrackStageComposite> children = new ArrayList<TrainTrackStageComposite>();
+
     public List<TrainTrackStageComposite> getChildren() {
         List<TrainTrackStageComposite> sortedChildren = new ArrayList<>(this.children);
         sortedChildren.sort((a, b) -> a.fromTime().compareTo(b.fromTime()));
@@ -139,7 +147,7 @@ public class TrainComposite implements IComponent {
             commandIEVD.add(output);
         }
         return commandIEVD;
-        
+
     }
 
     public List<List<String>> commandIVRV() {
@@ -167,34 +175,70 @@ public class TrainComposite implements IComponent {
                     Station prevStation = stage.get(stationIndex - 1).getStation();
                     distance = RailwaySingleton.getInstance().calculateDistance(prevStation, station);
                     cumulativeDistance += distance;
-                    departureTime = departureTime.addMinutes(station.timeForTrainType(trainTrackStage.schedule.trainType()));
+                    departureTime = departureTime
+                            .addMinutes(station.timeForTrainType(trainTrackStage.schedule.trainType()));
                 }
-                if (!station.supportsTrainType(trainTrackStage.schedule.trainType())) continue;
+                if (!station.supportsTrainType(trainTrackStage.schedule.trainType()))
+                    continue;
                 List<String> row = Arrays.asList(
-                    this.trainID,
-                    trainTrackStage.trackID,
-                    stationName,
-                    departureTime.toString(),
-                    String.format("%.2f", cumulativeDistance)
-                );
+                        this.trainID,
+                        trainTrackStage.trackID,
+                        stationName,
+                        departureTime.toString(),
+                        String.format("%.2f", cumulativeDistance));
                 result.add(row);
             }
         }
         return result;
     }
 
-}
+    @Override
+    public void registerObserver(IObserver observer) {
+        if (observers.containsKey(trainID)) {
+            observers.get(trainID).add(observer);
+            return;
+        } else {
+            observers.put(trainID, new HashSet<IObserver>());
+            observers.get(trainID).add(observer);
+        }
+    }
 
-/*
- * ● Pregled vlakova koji voze sve etape na određene dane u tjednu
- * ○ Sintaksa:
- * ■ IEVD dani
- * ○ Primjer:
- * ■ IEVD PoSrPeN
- * ○ Opis primjera:
- * ■ Ispis tablice sa vlakovima i njihovim etapama koje voze na određene dane
- * u tjednu (oznaka vlaka, oznaka pruge, polazna željeznička stanica etape,
- * odredišna željeznička stanica etape, vrijeme polaska s polazne željezničke
- * stanice etape, vrijeme dolaska u odredišnu željezničke stanicu etape
- * daniUTjednu za etapu).
- */
+    @Override
+    public void removeObserver(IObserver observer) {
+        observers.get(trainID).remove(observer);
+    }
+
+    @Override
+    public void notifyObservers(String stationName) {
+        for (IObserver observer : observers.get(trainID)) {
+            observer.update(trainID, stationName);
+        }
+    }
+
+    public void arriveAtStation(String stationName) {
+        notifyObservers(stationName);
+    }
+
+    public void registerObserver(User user, String station) {
+        String key = trainID + " " + station;
+        if (observers.containsKey(key)) {
+            observers.get(key).add(user);
+            return;
+        } else {
+            observers.put(key, new HashSet<IObserver>());
+            observers.get(key).add(user);
+        }
+    }
+
+    public boolean hasStation(String station) {
+        for (TrainTrackStageComposite stage : this.children) {
+            for (StationLeaf leaf : stage.children) {
+                if (leaf.getStation().name().equals(station)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+}
