@@ -17,26 +17,26 @@ public class ChatMediator {
         for (String groupId : groupUsers.keySet()) {
             List<String> groupChat = new ArrayList<String>();
             groupChat.add(groupId);
-            for (User user : groupUsers.get(groupId)) {
-                groupChat.add(user.toString());
-            }
-            groupChats.add(groupChat);
+            String users = groupUsers.get(groupId).toString();
+            users = users.length() > 2 ? users.substring(1, users.length() - 1) : "-";
+            groupChats.add(List.of(groupId, users));
         }
         return groupChats;
     }
 
     public void linkUser(String groupId, User user) {
         groupUsers.computeIfAbsent(groupId, k -> new HashSet<>()).add(user);
+        Logs.o(user + " je postao član grupe " + groupId);
     }
 
     public void unlinkUser(String groupId, User user) {
         Set<User> users = groupUsers.get(groupId);
         if (users != null) {
             users.remove(user);
-            if (users.isEmpty()) {
+            if (users.isEmpty())
                 groupUsers.remove(groupId);
-            }
         }
+        Logs.o(user + " više nije član grupe " + groupId);
     }
 
     public void broadcast(String groupId, User sender, String message) {

@@ -8,7 +8,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.system.SystemInitializationDirector;
  * Main class
  */
 public class Main {
-  public static boolean debugMode = false;
+  public static boolean debugMode = true;
   public static void main(String[] args) {
     RailwaySingleton.getInstance().setInitArgs(args);
     var initDirector = new SystemInitializationDirector(new RailwaySingletonBuilder());

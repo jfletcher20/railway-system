@@ -584,7 +584,12 @@ public class RailwaySingleton {
    */
   public User getUserByName(String name, String lastName) {
     return this.users.stream().filter(u -> u.name().equals(name) && u.lastName().equals(lastName)).findFirst()
-        .orElse(new User(name, lastName));
+        .orElseGet(() -> {
+          Logs.o("Korisnik " + name + " " + lastName + " ne postoji. Dodajem korisnika...");
+          User newUser = new User(name, lastName);
+          this.users.add(newUser);
+          return newUser;
+        });
   }
 
 }

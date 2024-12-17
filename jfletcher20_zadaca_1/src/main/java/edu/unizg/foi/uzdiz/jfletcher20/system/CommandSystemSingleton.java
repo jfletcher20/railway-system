@@ -224,7 +224,9 @@ public class CommandSystemSingleton {
     Logs.o("DK [ime] [prezime]\t\t\t- Dodavanje korisnika", false);
     Logs.o("PK\t\t\t\t\t- Pregled korisnika", false);
 
-    Logs.withPadding(() -> Logs.o("LINK [ime] [prz] - [grupa] - [O|Z|poruka] - Otvori/zatvori vezu između korisnika i grupe ili pošalji obavijest u grupu", false), true, false);
+    Logs.withPadding(() -> Logs.o(
+        "LINK [ime] [prz] - [grupa] - [O|Z|poruka] - Otvori/zatvori vezu između korisnika i grupe ili pošalji obavijest u grupu",
+        false), true, false);
     Logs.o("LINK PREGLED\t\t\t\t- Pregled svih grupa", false);
 
     Logs.withPadding(() -> Logs.o("Q - Izlaz iz programa", false), true, true);
@@ -521,38 +523,43 @@ public class CommandSystemSingleton {
    */
   private void processLinkCommand(String command) {
     var matcher = linkPattern.matcher(command);
-    if (!matcher.matches()) {
-      Logs.e("Nije validna naredba LINK. Sintaksa: LINK PREGLED ili LINK [ime] [prezime] - [grupa] - [O|Z|poruka]");
+    if (matcher.group("name") == null) {
+      viewGroupChatListWithMembers();
+    } else {
+      String name = matcher.group("name"), lastName = matcher.group("lastName");
+      String groupId = matcher.group("groupId"), action = matcher.group("action");
+      var user = RailwaySingleton.getInstance().getUserByName(name, lastName);
+      switch (action) {
+        case "O":
+          mediator.linkUser(groupId, user);
+          break;
+        case "Z":
+          mediator.unlinkUser(groupId, user);
+          break;
+        default:
+          if (!action.isEmpty()) {
+            mediator.broadcast(groupId, user, action);
+          } else
+            Logs.e("Poruka ne smije biti prazna.");
+          break;
+      }
+    }
+  }
+
+  private void viewGroupChatListWithMembers() {
+    Logs.header("Pregled grupa", true);
+    var data = mediator.groupChats();
+    if (data == null || data.isEmpty()) {
+      Logs.e("Nema grupa.");
+      Logs.footer(true);
       return;
     }
-
-    String name = matcher.group("name");
-    String lastName = matcher.group("lastName");
-    String groupId = matcher.group("groupId");
-    String action = matcher.group("action");
-
-    // find the user with the same name and lastname
-    var user = RailwaySingleton.getInstance().getUserByName(name, lastName);
-
-    switch (action) {
-      case "O":
-        mediator.linkUser(groupId, user);
-        Logs.o(user + " has joined group: " + groupId);
-        break;
-
-      case "Z":
-        mediator.unlinkUser(groupId, user);
-        Logs.o(user + " has left group: " + groupId);
-        break;
-
-      default:
-        if (!action.isEmpty()) {
-          mediator.broadcast(groupId, user, action);
-        } else {
-          Logs.e("Message cannot be empty.");
-        }
-        break;
-    }
+    List<String> header = Arrays.asList("Grupa", "--Članovi--");
+    Logs.tableHeader(header);
+    for (var group : data)
+      Logs.tableRow(group);
+    Logs.printTable(120);
+    Logs.footer(true);
   }
 }
 

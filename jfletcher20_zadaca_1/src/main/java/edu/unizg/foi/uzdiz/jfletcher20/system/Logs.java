@@ -72,6 +72,10 @@ public abstract class Logs {
     LogsSingleton.getInstance().printTable();
   }
 
+  public static void printTable(int maxColumnLength) {
+    LogsSingleton.getInstance().printTable(maxColumnLength);
+  }
+
   public static List<String> flushTable() {
     return LogsSingleton.getInstance().flushTable();
   }
@@ -204,7 +208,14 @@ public abstract class Logs {
           String cell = row.get(i);
           if (cell.length() > maxColumnLength)
             cell = cell.substring(0, maxColumnLength - 3) + "...";
-          columnLengths[i] = Math.max(columnLengths[i], cell.length());
+          try {
+            columnLengths[i] = Math.max(columnLengths[i], cell.length());
+          } catch (ArrayIndexOutOfBoundsException e) {
+            columnLengths = new int[row.size()];
+            for (int c = 0; c < row.size(); c++) {
+              columnLengths[c] = row.get(c).length();
+            }
+          }
         }
       for (int rowIndex = 0; rowIndex < tableOutput.size(); rowIndex++) {
         List<String> row = tableOutput.get(rowIndex);
@@ -215,6 +226,12 @@ public abstract class Logs {
             cell = cell.substring(0, maxColumnLength - 3) + "...";
           if (cell.matches("-?\\d+(\\.\\d+)?")) {
             line.append(String.format("%" + columnLengths[i] + "s", cell));
+          }
+          // cells that have text that is wrapped in --text-- are centered
+          else if (cell.matches("--.*--")) {
+            String centeredText = cell.substring(2, cell.length() - 2);
+            int padding = Math.abs((columnLengths[i] - centeredText.length()) / 2);
+            line.append(" ".repeat(padding) + centeredText + " ".repeat(padding));
           } else {
             line.append(String.format("%-" + columnLengths[i] + "s", cell));
           }
@@ -235,6 +252,15 @@ public abstract class Logs {
 
       tableOutput.clear();
       return rows;
+    }
+
+    public void printTable(int maxColumnLength) {
+      int temp = this.maxColumnLength;
+      this.maxColumnLength = maxColumnLength;
+      List<String> rows = flushTable();
+      for (String row : rows)
+        Logs.o(" " + row, false);
+      this.maxColumnLength = temp;
     }
 
     public void printTable() {
