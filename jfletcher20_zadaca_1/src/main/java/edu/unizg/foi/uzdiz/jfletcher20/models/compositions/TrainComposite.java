@@ -17,7 +17,12 @@ import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 public class TrainComposite implements IComponent {
 
     public String trainID;
-    public List<TrainTrackStageComposite> children = new ArrayList<TrainTrackStageComposite>();
+    private List<TrainTrackStageComposite> children = new ArrayList<TrainTrackStageComposite>();
+    public List<TrainTrackStageComposite> getChildren() {
+        List<TrainTrackStageComposite> sortedChildren = new ArrayList<>(this.children);
+        sortedChildren.sort((a, b) -> a.fromTime().compareTo(b.fromTime()));
+        return sortedChildren;
+    }
 
     public TrainComposite(Schedule schedule) {
         this.trainID = schedule.scheduledTrainID();
@@ -76,7 +81,17 @@ public class TrainComposite implements IComponent {
                 return 0;
             }
         }
-        return this.children.add((TrainTrackStageComposite) component) ? 1 : 0;
+        // return this.children.add((TrainTrackStageComposite) component) ? 1 : 0;
+        // use insertion sort to add according to departure time
+        TrainTrackStageComposite newStage = (TrainTrackStageComposite) component;
+        for (int i = 0; i < this.children.size(); i++) {
+            TrainTrackStageComposite stage = this.children.get(i);
+            if (newStage.fromTime().compareTo(stage.fromTime()) < 0) {
+                this.children.add(i, newStage);
+                return 1;
+            }
+        }
+        return this.children.add(newStage) ? 1 : 0;
     }
 
     @Override
@@ -139,38 +154,29 @@ public class TrainComposite implements IComponent {
         }
 
         // iterate over the stationLeaves and calculate the time and cumulative distance
-        for (int i = 0; i < stationLeaves.size(); i++) {
-            List<StationLeaf> leaves = stationLeaves.get(i);
-            TrainTrackStageComposite stage = stages.get(i);
-
-            for (int j = 0; j < leaves.size(); j++) {
-                StationLeaf stationLeaf = leaves.get(j);
-                Station station = stationLeaf.getStation();
+        int i = 0;
+        for (List<StationLeaf> stage : stationLeaves) {
+            TrainTrackStageComposite trainTrackStage = stages.get(i++);
+            for (Station station : stage.stream().map(StationLeaf::getStation).toList()) {
+                int stationIndex = stage.stream().map(StationLeaf::getStation).toList().indexOf(station);
                 String stationName = station.name();
-
-                // Calculate cumulative distance
-                if (i == 0 && j == 0) {
-                    cumulativeDistance = 0.0; // Starting station of the first stage
-                } else if (j == 0) {
-                    // First station of a new stage
-                    TrainTrackStageComposite prevStage = stages.get(i - 1);
-                    StationLeaf prevStationLeaf = stationLeaves.get(i - 1).get(stationLeaves.get(i - 1).size() - 1);
-                    Station prevStation = prevStationLeaf.getStation();
-                    double distance = RailwaySingleton.getInstance().calculateDistance(prevStation, station);
+                double distance = 0.0;
+                if (stationIndex == 0) {
                     cumulativeDistance += distance;
+                    departureTime = trainTrackStage.fromTime();
                 } else {
                     // Calculate distance from previous station in the same stage
-                    StationLeaf prevStationLeaf = leaves.get(j - 1);
-                    Station prevStation = prevStationLeaf.getStation();
-                    double distance = RailwaySingleton.getInstance().calculateDistance(prevStation, station);
+                    Station prevStation = stage.get(stationIndex - 1).getStation();
+                    distance = RailwaySingleton.getInstance().calculateDistance(prevStation, station);
                     cumulativeDistance += distance;
+                    departureTime = departureTime.addMinutes(station.timeForTrainType(trainTrackStage.schedule.trainType()));
                 }
 
-                departureTime = departureTime.addMinutes(station.timeForTrainType(stage.schedule.trainType()));
+                if (!station.supportsTrainType(trainTrackStage.schedule.trainType())) continue;
 
                 List<String> row = Arrays.asList(
                     this.trainID,
-                    stage.trackID,
+                    trainTrackStage.trackID,
                     stationName,
                     departureTime.toString(),
                     String.format("%.2f", cumulativeDistance)

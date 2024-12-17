@@ -55,7 +55,7 @@ public class ScheduleComposite implements IComposite {
             String newTrainID = ((TrainComposite) component).trainID;
             for (TrainComposite child : this.children) {
                 if (child.trainID.equals(newTrainID)) {
-                    for (TrainTrackStageComposite newStage : ((TrainComposite) component).children) {
+                    for (TrainTrackStageComposite newStage : ((TrainComposite) component).getChildren()) {
                         child.Add(newStage);
                         return 1;
                     }
@@ -122,7 +122,7 @@ public class ScheduleComposite implements IComposite {
             // if all of a train composite's stage's schedules contain all of the days, add
             // to the commandIEVD output
             List<Schedule> schedules = new ArrayList<Schedule>();
-            for (TrainTrackStageComposite stage : child.children) {
+            for (TrainTrackStageComposite stage : child.getChildren()) {
                 schedules.add(stage.schedule);
             }
             boolean daysAreInSchedules = schedules.stream().allMatch(s -> s.days().containsAll(days));
