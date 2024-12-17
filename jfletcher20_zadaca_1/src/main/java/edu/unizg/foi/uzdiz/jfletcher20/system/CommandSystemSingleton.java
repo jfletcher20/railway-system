@@ -304,7 +304,8 @@ public class CommandSystemSingleton {
     if ("O".equalsIgnoreCase(order))
       Collections.reverse(data);
     for (var station : data) {
-      double distance = "O".equalsIgnoreCase(order) ? station.getDistanceFromEnd() : station.getDistanceFromStart();
+      double distance = "O".equalsIgnoreCase(order) ? data.reversed().get(data.indexOf(station)).getDistanceFromEnd()
+          : station.getDistanceFromStart();
       List<String> row = Arrays.asList(
           station.name(),
           station.type().toString(),
