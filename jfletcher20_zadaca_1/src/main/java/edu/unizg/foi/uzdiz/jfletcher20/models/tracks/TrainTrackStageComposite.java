@@ -88,7 +88,15 @@ public class TrainTrackStageComposite implements IComposite {
             Logs.e("Pokušaj dodavanja iste komponente u TrainTrackStageComposite::Add()");
             return 0;
         }
-        return this.children.add((StationLeaf) component) ? 1 : 0;
+        if (((StationLeaf) component).getStation().supportsTrainType(this.schedule.trainType())) {
+            return this.children.add((StationLeaf) component) ? 1 : 0;
+        } else {
+            Logs.e("Nekompatibilna stanica " + ((StationLeaf) component).getStation().name()
+                    + "(" + ((StationLeaf) component).getStation().timeForTrainType(this.schedule.trainType()) + ")"
+                    + " prilikom poziva TrainTrackStageComposite::Add(component) obzirom na tip vlaka "
+                    + this.schedule.trainType().name());
+            return 0;
+        }
     }
 
     @Override

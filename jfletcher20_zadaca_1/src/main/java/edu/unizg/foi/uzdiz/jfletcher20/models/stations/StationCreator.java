@@ -28,9 +28,9 @@ public class StationCreator implements ICreator {
         StationActivity.fromCSV(parts[4], parts[5]), // Aktivnosti na stanici
         ParsingUtil.i(parts[7]), // Broj perona
         parts[3], // Status stanice
-        !parts[13].isBlank() ? ParsingUtil.i(parts[13]) : -1, // Vrijeme normalni vlak
-        !parts[14].isBlank() ? ParsingUtil.i(parts[14]) : -1, // Vrijeme ubrzani vlak
-        !parts[15].isBlank() ? ParsingUtil.i(parts[15]) : -1 // Vrijeme brzi vlak
+        !parts[14].isBlank() ? ParsingUtil.i(parts[14]) : -1, // Vrijeme normalni vlak
+        !parts[15].isBlank() ? ParsingUtil.i(parts[15]) : -1, // Vrijeme ubrzani vlak
+        !parts[16].isBlank() ? ParsingUtil.i(parts[16]) : -1 // Vrijeme brzi vlak
     );
   }
 
