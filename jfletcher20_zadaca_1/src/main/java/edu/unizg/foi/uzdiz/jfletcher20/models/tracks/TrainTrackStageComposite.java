@@ -206,6 +206,8 @@ public class TrainTrackStageComposite implements IComposite {
     public Map<String, String> commandIVI2S(String displayFormat) {
         // need to return a map of values according to IVI2S output format - available display controls are: S, P, K, V
         // S maps to station name, P maps to track ID, K maps to distance, V maps to departure time
+        System.out.println("Display format: " + displayFormat);
+        System.out.println("S: " + this.schedule.departure().name() + " | P: " + this.trackID + " | K: " + this.compileDistance() + " | V: " + this.schedule.departureTime().toString());
         return Map.of(
                 "S", this.schedule.departure().name(),
                 "P", this.trackID,

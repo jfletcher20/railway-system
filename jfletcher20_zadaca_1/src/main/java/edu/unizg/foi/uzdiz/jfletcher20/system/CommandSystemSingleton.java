@@ -730,6 +730,13 @@ public class CommandSystemSingleton {
         .getSchedule()
         .commandIVI2S(startStation, endStation, weekday, startTime, endTime, displayFormat);
 
+    // sort the order of the rows in data by key V, which is the ScheduleTime
+    data.sort((a, b) -> {
+      ScheduleTime timeA = new ScheduleTime(a.get("V"));
+      ScheduleTime timeB = new ScheduleTime(b.get("V"));
+      return timeA.compareTo(timeB);
+    });
+
     if (data == null || data.isEmpty()) {
       Logs.e("Nema pronađenih vlakova");
       return;
@@ -755,10 +762,10 @@ public class CommandSystemSingleton {
     List<String> headers = new ArrayList<>();
     for (char c : format.toCharArray()) {
       switch (c) {
-        case 'S' -> headers.add("Stanica");
-        case 'P' -> headers.add("Pruga");
-        case 'K' -> headers.add("Km");
-        case 'V' -> headers.add("Vrijeme");
+        case 'S' -> headers.add("S");
+        case 'P' -> headers.add("P");
+        case 'K' -> headers.add("K");
+        case 'V' -> headers.add("V");
         default -> throw new IllegalArgumentException("Nepoznat format: " + c);
       }
     }

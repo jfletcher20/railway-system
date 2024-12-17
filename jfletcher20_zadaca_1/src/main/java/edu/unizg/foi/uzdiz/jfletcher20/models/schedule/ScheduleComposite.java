@@ -193,10 +193,11 @@ public class ScheduleComposite implements IComposite {
         List<Map<String, String>> commandIVI2S = new ArrayList<>();
         for (TrainComposite train : hasStations(List.of(startStation, endStation))) {
             // check if the stages of the train all have the weekday
-            boolean isWeekdayInStages = train.getChildren().stream().allMatch(stage -> stage.schedule.days().contains(weekday));
+            boolean isWeekdayInStages = train.getChildren().stream().anyMatch(stage -> stage.schedule.days().contains(weekday));
             if (!isWeekdayInStages) {
                 continue;
             }
+            // System.out.println("Day provided is " + weekday.name());
             // get the ScheduleTime that the train would head out from the station at
             ScheduleTime timeAtStart = train.getDepartureTimeAtStation(start);
             if (timeAtStart == null) {
@@ -207,6 +208,7 @@ public class ScheduleComposite implements IComposite {
             if (timeAtStart.compareTo(startTime) < 0) {
                 continue;
             }
+            System.out.println("Train " + train.trainID + " leaves " + startStation + " at " + timeAtStart.toString());
 
             // check if the train arrives at the end station before the end time
             ScheduleTime timeAtEnd = train.getArrivalTimeAtStation(end);
@@ -217,10 +219,12 @@ public class ScheduleComposite implements IComposite {
             if (timeAtEnd.compareTo(endTime) > 0) {
                 continue;
             }
+            System.out.println("Train " + train.trainID + " arrives at " + endStation + " at " + timeAtEnd.toString());
 
             // if all conditions are met, add the train to the list
             commandIVI2S.addAll(train.commandIVI2S(displayFormat));
         }
+        System.out.println("commandIVI2S: " + commandIVI2S);
         return commandIVI2S;
     }
 

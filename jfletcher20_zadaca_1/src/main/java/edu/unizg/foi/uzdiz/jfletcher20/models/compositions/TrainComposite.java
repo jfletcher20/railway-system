@@ -310,6 +310,7 @@ public class TrainComposite implements IComponent, ISubject {
     public List<Map<String, String>> commandIVI2S(String displayFormat) {
         List<Map<String, String>> commandIVI2S = new ArrayList<>();
         for (TrainTrackStageComposite stage : this.children) {
+            System.out.println("stage: " + stage.schedule.departure().name());
             commandIVI2S.add(stage.commandIVI2S(displayFormat));
         }
         return commandIVI2S;
