@@ -124,39 +124,53 @@ public class TrainComposite implements IComponent {
     public List<List<String>> commandIVRV() {
         List<List<String>> result = new ArrayList<>();
         double cumulativeDistance = 0.0;
+        ScheduleTime departureTime = this.children.get(0).fromTime();
 
-        for (TrainTrackStageComposite stage : children) {
-            String trackID = stage.trackID;
-            List<StationLeaf> stations = stage.children;
+        // copy the list of children
+        var stages = new ArrayList<>(this.children);
+        // sort the list of children depending if the schedule departure time is before the next, so that the earliest is first
+        stages.sort((a, b) -> a.fromTime().compareTo(b.fromTime()));
 
-            for (int i = 0; i < stations.size(); i++) {
-                StationLeaf stationLeaf = stations.get(i);
+        // iterate over every stage and get the list of StationLeafs for each stage
+        List<List<StationLeaf>> stationLeaves = new ArrayList<>();
+        for (TrainTrackStageComposite stage : stages) {
+            List<StationLeaf> compatibleLeaves = stage.getCompatibleLeaves();
+            stationLeaves.add(compatibleLeaves);
+        }
+
+        // iterate over the stationLeaves and calculate the time and cumulative distance
+        for (int i = 0; i < stationLeaves.size(); i++) {
+            List<StationLeaf> leaves = stationLeaves.get(i);
+            TrainTrackStageComposite stage = stages.get(i);
+
+            for (int j = 0; j < leaves.size(); j++) {
+                StationLeaf stationLeaf = leaves.get(j);
                 Station station = stationLeaf.getStation();
                 String stationName = station.name();
 
-                ScheduleTime departureTime = stage.fromTime();
-
                 // Calculate cumulative distance
-                if (i == 0 && stage == children.get(0)) {
+                if (i == 0 && j == 0) {
                     cumulativeDistance = 0.0; // Starting station of the first stage
-                } else if (i == 0) {
+                } else if (j == 0) {
                     // First station of a new stage
-                    TrainTrackStageComposite prevStage = children.get(children.indexOf(stage) - 1);
-                    StationLeaf prevStationLeaf = prevStage.children.get(prevStage.children.size() - 1);
+                    TrainTrackStageComposite prevStage = stages.get(i - 1);
+                    StationLeaf prevStationLeaf = stationLeaves.get(i - 1).get(stationLeaves.get(i - 1).size() - 1);
                     Station prevStation = prevStationLeaf.getStation();
                     double distance = RailwaySingleton.getInstance().calculateDistance(prevStation, station);
                     cumulativeDistance += distance;
                 } else {
                     // Calculate distance from previous station in the same stage
-                    StationLeaf prevStationLeaf = stations.get(i - 1);
+                    StationLeaf prevStationLeaf = leaves.get(j - 1);
                     Station prevStation = prevStationLeaf.getStation();
                     double distance = RailwaySingleton.getInstance().calculateDistance(prevStation, station);
                     cumulativeDistance += distance;
                 }
 
+                departureTime = departureTime.addMinutes(station.timeForTrainType(stage.schedule.trainType()));
+
                 List<String> row = Arrays.asList(
                     this.trainID,
-                    trackID,
+                    stage.trackID,
                     stationName,
                     departureTime.toString(),
                     String.format("%.2f", cumulativeDistance)
@@ -164,6 +178,46 @@ public class TrainComposite implements IComponent {
                 result.add(row);
             }
         }
+
+        // for (TrainTrackStageComposite stage : children) {
+        //     String trackID = stage.trackID;
+        //     List<StationLeaf> stations = stage.children;
+
+        //     for (int i = 0; i < stations.size(); i++) {
+        //         StationLeaf stationLeaf = stations.get(i);
+        //         Station station = stationLeaf.getStation();
+        //         String stationName = station.name();
+
+        //         ScheduleTime departureTime = stage.fromTime();
+
+        //         // Calculate cumulative distance
+        //         if (i == 0 && stage == children.get(0)) {
+        //             cumulativeDistance = 0.0; // Starting station of the first stage
+        //         } else if (i == 0) {
+        //             // First station of a new stage
+        //             TrainTrackStageComposite prevStage = children.get(children.indexOf(stage) - 1);
+        //             StationLeaf prevStationLeaf = prevStage.children.get(prevStage.children.size() - 1);
+        //             Station prevStation = prevStationLeaf.getStation();
+        //             double distance = RailwaySingleton.getInstance().calculateDistance(prevStation, station);
+        //             cumulativeDistance += distance;
+        //         } else {
+        //             // Calculate distance from previous station in the same stage
+        //             StationLeaf prevStationLeaf = stations.get(i - 1);
+        //             Station prevStation = prevStationLeaf.getStation();
+        //             double distance = RailwaySingleton.getInstance().calculateDistance(prevStation, station);
+        //             cumulativeDistance += distance;
+        //         }
+
+        //         List<String> row = Arrays.asList(
+        //             this.trainID,
+        //             trackID,
+        //             stationName,
+        //             departureTime.toString(),
+        //             String.format("%.2f", cumulativeDistance)
+        //         );
+        //         result.add(row);
+        //     }
+        // }
         return result;
     }
 

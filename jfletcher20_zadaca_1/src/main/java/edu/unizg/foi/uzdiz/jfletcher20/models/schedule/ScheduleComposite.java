@@ -105,6 +105,10 @@ public class ScheduleComposite implements IComposite {
 
     public List<List<String>> commandIEVD(List<Weekday> days) {
         List<List<String>> commandIEVD = new ArrayList<List<String>>();
+        if (days == null || days.isEmpty()) {
+            Logs.e("Nisu pronađeni dani vožnje");
+            return Collections.emptyList();
+        }
         for (TrainComposite child : this.children) {
             // for (TrainTrackStageComposite stage : child.children) {
             // boolean daysAreInStage = stage.schedule.days().containsAll(days);

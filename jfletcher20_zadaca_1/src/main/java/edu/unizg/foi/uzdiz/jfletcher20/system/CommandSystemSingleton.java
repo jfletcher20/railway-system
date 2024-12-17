@@ -586,17 +586,3 @@ public class CommandSystemSingleton {
     Logs.footer(true);
   }
 }
-
-/*
- * ● Pregled vlakova koji voze sve etape na određene dane u tjednu
- * ○ Sintaksa:
- * ■ IEVD dani
- * ○ Primjer:
- * ■ IEVD PoSrPeN
- * ○ Opis primjera:
- * ■ Ispis tablice sa vlakovima i njihovim etapama koje voze na određene dane
- * u tjednu (oznaka vlaka, oznaka pruge, polazna željeznička stanica etape,
- * odredišna željeznička stanica etape, vrijeme polaska s polazne željezničke
- * stanice etape, vrijeme dolaska u odredišnu željezničke stanicu etape
- * daniUTjednu za etapu).
- */

@@ -99,7 +99,7 @@ public enum Weekday {
             case FRIDAY -> "Pe";
             case SATURDAY -> "Su";
             case SUNDAY -> "N";
-            case ALL -> "";
+            case ALL -> "PoUSrČPeSuN";
         };
     }
 

@@ -132,18 +132,9 @@ public class TrainTrackStageComposite implements IComposite {
                 Weekday.listToString(this.schedule.days()));
     }
 
-}
+    public List<StationLeaf> getCompatibleLeaves() {
+        return this.children.stream().filter(child -> child.getStation().supportsTrainType(schedule.trainType()))
+                .toList();
+    }
 
-/*
- * ● Pregled vlakova koji voze sve etape na određene dane u tjednu
- * ○ Sintaksa:
- * ■ IEVD dani
- * ○ Primjer:
- * ■ IEVD PoSrPeN
- * ○ Opis primjera:
- * ■ Ispis tablice sa vlakovima i njihovim etapama koje voze na određene dane
- * u tjednu (oznaka vlaka, oznaka pruge, polazna željeznička stanica etape,
- * odredišna željeznička stanica etape, vrijeme polaska s polazne željezničke
- * stanice etape, vrijeme dolaska u odredišnu željezničke stanicu etape
- * daniUTjednu za etapu).
- */
+}
