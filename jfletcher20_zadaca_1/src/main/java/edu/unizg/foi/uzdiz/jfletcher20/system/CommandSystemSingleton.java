@@ -44,11 +44,11 @@ public class CommandSystemSingleton {
   Pattern viewTrainsWithStagesOnPattern = Pattern.compile("^IEVD (?<days>[A-Za-z]+)$");
   Pattern viewTrainTimetablePattern = Pattern.compile("^IVRV (?<trainCode>.+)$");
 
-  Pattern addUserPattern = Pattern.compile("^DK (?<name>.+) (?<lastName>.+)$");
   Pattern viewUsersPattern = Pattern.compile("^PK$");
+  Pattern addUserPattern = Pattern.compile("^DK (?<name>.+) (?<lastName>\\S+)$");
 
   Pattern linkPattern = Pattern
-      .compile("^LINK (?<name>.+) (?<lastName>.+) - (?<groupId>.+) - (?<action>.+)$|^LINK PREGLED$");
+      .compile("^LINK (?<name>.+) (?<lastName>\\S+) - (?<groupId>.+) - (?<action>.+)$|^LINK PREGLED$");
 
   private final ChatMediator mediator = new ChatMediator();
 
@@ -127,30 +127,34 @@ public class CommandSystemSingleton {
         identifyCommand(c);
       }
     } else {
-      switch (command.trim().toLowerCase()) {
-        case "a" -> command = "IP";
-        case "b" -> command = "ISP M501 N";
-        case "b2" -> command = "ISP M501 O";
-        case "c" -> command = "ISI2S Kotoriba - Ludbreg";
-        case "c2" -> command = "ISI2S Ludbreg - Kotoriba";
-        case "c3" -> command = "ISI2S Kotoriba - Macinec";
-        case "c4" -> command = "ISI2S Macinec - Kotoriba";
-        case "d" -> command = "IK 8001";
-        case "d2" -> command = "IK 1";
-        case "e" -> command = "IV";
-        case "f" -> command = "IEV 3609";
-        case "f2" -> command = "IEV 0";
-        case "g" -> command = "IEVD PoSrPeN";
-        case "g2" -> command = "IEVD Po";
-        case "g3" -> command = "IEVD PoUSrPeSuN";
-        case "h" -> command = "IVRV 3609";
-        case "h2" -> command = "IVRV 0";
-        case "i" -> command = "DK Pero Kos";
-        case "i2" -> command = "DK Joshua Lee Fletcher";
-        case "j" -> command = "PK";
-      }
-      identifyCommand(command);
+      identifyCommand(debugCommands(command));
     }
+  }
+
+  private String debugCommands(String command) {
+    return switch (command.trim().toLowerCase()) {
+      case "a" -> "IP";
+      case "b" -> "ISP M501 N";
+      case "b2" -> "ISP M501 O";
+      case "c" -> "ISI2S Kotoriba - Ludbreg";
+      case "c2" -> "ISI2S Ludbreg - Kotoriba";
+      case "c3" -> "ISI2S Kotoriba - Macinec";
+      case "c4" -> "ISI2S Macinec - Kotoriba";
+      case "d" -> "IK 8001";
+      case "d2" -> "IK 1";
+      case "e" -> "IV";
+      case "f" -> "IEV 3609";
+      case "f2" -> "IEV 0";
+      case "g" -> "IEVD PoSrPeN";
+      case "g2" -> "IEVD Po";
+      case "g3" -> "IEVD PoUSrPeSuN";
+      case "h" -> "IVRV 3609";
+      case "h2" -> "IVRV 0";
+      case "i" -> "DK Pero Kos";
+      case "i2" -> "DK Joshua Lee Fletcher";
+      case "j" -> "PK";
+      default -> command;
+    };
   }
 
   private boolean identifyCommand(String command) {
@@ -523,24 +527,44 @@ public class CommandSystemSingleton {
    */
   private void processLinkCommand(String command) {
     var matcher = linkPattern.matcher(command);
+
+    // Validate the match first
+    if (!matcher.matches()) {
+      Logs.e("Neispravan format naredbe LINK.");
+      return;
+    }
+
+    // Check for LINK PREGLED
     if (matcher.group("name") == null) {
       viewGroupChatListWithMembers();
     } else {
-      String name = matcher.group("name"), lastName = matcher.group("lastName");
-      String groupId = matcher.group("groupId"), action = matcher.group("action");
+      // Extract the parameters safely
+      String name = matcher.group("name");
+      String lastName = matcher.group("lastName");
+      String groupId = matcher.group("groupId");
+      String action = matcher.group("action");
+
       var user = RailwaySingleton.getInstance().getUserByName(name, lastName);
+      if (user == null) {
+        Logs.e("Korisnik nije pronađen: " + name + " " + lastName);
+        return;
+      }
+
       switch (action) {
         case "O":
           mediator.linkUser(groupId, user);
+          Logs.o("Korisnik je pridružen grupi: " + groupId);
           break;
         case "Z":
           mediator.unlinkUser(groupId, user);
+          Logs.o("Korisnik je uklonjen iz grupe: " + groupId);
           break;
         default:
           if (!action.isEmpty()) {
             mediator.broadcast(groupId, user, action);
-          } else
+          } else {
             Logs.e("Poruka ne smije biti prazna.");
+          }
           break;
       }
     }
