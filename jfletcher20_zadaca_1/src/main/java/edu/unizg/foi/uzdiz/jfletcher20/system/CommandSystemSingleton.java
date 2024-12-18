@@ -21,52 +21,25 @@ import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 
 /*
- * 
- * 
- * ● Pregled vlakova (voznog reda) kojima se može putovati od jedne željezničke stanice do 
-druge željezničke stanice na određen dan u tjednu unutar zadanog vremena 
+ * ● Simulacija vožnje vlaka na određeni dan u tjednu uz koeficijent za sekundu 
 ○ Sintaksa:  
-■ IVI2S polaznaStanica - odredišnaStanica - dan - odVr - doVr - prikaz 
-○ Primjeri:  
-■ IVI2S Donji Kraljevec - Čakovec - N - 0:00 - 23:59 - SPKV 
-■ IVI2S Donji Kraljevec - Novi Marof - Pe - 08:00 - 16:00 - KPSV 
-■ IVI2S Donji Kraljevec - Ludbreg - Su - 5:20 - 20:30 - VSPK 
+■ SVV oznaka - dan - koeficijent 
+○ Primjer:  
+■ SVV 3609 - Po - 60 
 ○ Opis primjera:  
-■ Ispis tablice sa željezničkim stanicama između dviju željezničkih stanica, s 
-brojem kilometara, vremenima polaska vlakova sa željezničkih stanica. 
-Prikazuju se samo oni vlakovi koji prometuju na određeni dan i čije je 
-vrijeme polaska s polazne željezničke stanice nakon odVr vremena i 
-vrijeme dolaska u odredišnu željezničku stanicu prije doVr vremena. 
-Podaci se prikazuju u stupcima čiji redoslijed je proizvoljan i stupcima se 
-mogu ponavljati. S označava naziv željezničke stanice, P označava prugu, 
-K označava broj km od polazne željezničke stanice, V označava vrijeme 
-polaska određenog vlaka sa željezničke stanice. V se odnosi na jedan ili 
-više stupaca. Potrebno je prilagoditi ispis zaglavlja i redova zadanom 
-prikazu. Osim gornjih primjera prikaza mogu biti i drugi prikazi kao npr: SPV 
-(nema prikaza broj kilometara), KPSVK (broj kilometara se prikazuje u 
-prvom i posljednjem stupcu). U stupcu pojedinog vlaka ispisuje se vrijeme 
-polaska sa željezničke stanice. U 1. primjeru su stanice koje su na istoj 
-pruzi, na 2. primjeru su željezničke stanice koje su na dvije pruge, a na 3. 
-primjeru su željezničke stanice koje su na tri pruge. Vlakovi se ispisuju u 
-kronološkom redoslijedu vremena polaska vlaka s njegove polazne 
-željezničke stanice. Slika 1 prikazuje djelomični izvod iz voznog reda od 
-željezničke stanice Zabok do druge željezničke stanice Gornja Stubica za 
-ponedjeljak od vremena 5:00 do vremena 12:00 uz oznake KSV. Na slici 
-treba zanemariti oznake dana u tjednu. 
- * 
- * Ispis tablice ima stupce i retke zamijenjeno, npr. (ovo nije primjer ispisa za ovaj zadatak, samo primjer kako izgleda dok su zamijenjeni stupci)
- * 
- *
- * Udaljenost od pocetne stanice | od               | 3210 | 3212 | 3214 | 3216 | 3218
- . ----------------------------- | ---------------- | ---- | ---- | ---- | ---- | -----
- .                         0     | Zabok            | 5:10 | 6:10 | 7:46 | 8:47 | 10:51
- .                         2     | Hum Lug          | 5:13 | 6:13 | 7:49 | 8:50 | 10:54
- .                         4     | Oroslavje        | 5:17 | 6:17 | 7:53 | 8:54 | 10:58
- .                         7     | Stubi?ke Toplice | 5:22 | 6:22 | 7:58 | 8:59 | 11:03
- .                         9     | Donja Stubica    | 5:26 | 6:26 | 8:02 | 9:03 | 11:07
- .                         12    | Gornja Stubica   | 5:31 | 6:31 | 8:07 | 9:08 | 11:12
- *
- * 
+■ Simulira se vožnja vlaka od vremena polaska s polazne željezničke stanice 
+do dolaska u odredišnu željezničku stanicu. Odnos simulacijskog i stvarnog 
+vremena upravlja se koeficijentom. Ako je koeficijent 60 tada jedna minuta 
+u simulaciji putovanja vlaka traje 1 stvarnu sekundu odnosno virtualno 
+vremenu je 60 puta brže od stvarnog vremena. Simulacija se provodi tako 
+da se virtualno vrijeme postavi na vrijeme polaska vlaka s polazne 
+željezničke stanice i zatim se izvršava jedna virtualna minuta. Ako je 
+virtualno vrijeme jednako vremenu sljedeće željezničke stanica znači da je 
+vlak došao u željezničku stanicu te se ispisuje njeni podaci (oznaka pruge, 
+željeznička stanica, vrijeme) i obavještavaju se svi korisnici koji prate taj 
+vlak ili tu njegovu željezničku stanicu. Simulacija završava kada vlak stigne 
+i obradi odredišnu željezničku stanicu ili se na konzoli unese znak X, što se 
+provjerava nakon svake simulirane minute. 
  */
 
 /**
@@ -100,23 +73,19 @@ public class CommandSystemSingleton {
   Pattern viewTrainStagesPattern = Pattern.compile("^IEV (?<trainCode>.+)$");
   Pattern viewTrainsWithStagesOnPattern = Pattern.compile("^IEVD (?<days>[A-Za-z]+)$");
   Pattern viewTrainTimetablePattern = Pattern.compile("^IVRV (?<trainCode>.+)$");
-  // Pattern trainScheduleBetweenStationsPattern = Pattern.compile(
-  // "^IVI2S (?<startStation>.+) - (?<endStation>.+) - (?<days>[A-Za-z]+) -
-  // (?<fromTime>\\d+:\\d+) - (?<toTime>\\d+:\\d+) - (?<display>"
-  // + /* any combination of S, P, K, V */ "(?=.*[SPVK])[SPVK]"
-  // + ")$");
-  private Pattern trainScheduleBetweenStationsPattern = Pattern.compile(
+  Pattern trainScheduleBetweenStationsPattern = Pattern.compile(
       "^IVI2S\\s+([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)$");
 
+  Pattern addUserPattern = Pattern.compile("^DK (?<name>[\\p{L}]+(?: [\\p{L}]+)*) (?<lastName>[\\p{L}]+)$");
   Pattern viewUsersPattern = Pattern.compile("^PK$");
-  Pattern addUserPattern = // Pattern.compile("^DK (?<name>.+) (?<lastName>\\S+)$");
-      Pattern.compile("^DK (?<name>[\\p{L}]+(?: [\\p{L}]+)*) (?<lastName>[\\p{L}]+)$");
-
   Pattern addTrainObserverPattern = Pattern.compile(
       "^DPK (?<name>[\\p{L}]+(?: [\\p{L}]+)*) (?<lastName>[\\p{L}]+) - (?<trainId>[^-]+?)( - (?<station>.+))?$");
-  Pattern linkPattern = Pattern
-      .compile(
-          "^LINK (?<name>[\\p{L}]+(?: [\\p{L}]+)*) (?<lastName>[\\p{L}]+) - (?<groupId>.+) - (?<action>.+)$|^LINK PREGLED$");
+
+  Pattern simulateTrainPattern = Pattern
+      .compile("^SVV (?<trainId>[^-]+?) - (?<day>[\\p{L}]+) - (?<coefficient>[0-9]+)$");
+
+  Pattern linkPattern = Pattern.compile("^LINK (?<name>[\\p{L}]+(?: [\\p{L}]+)*) (?<lastName>[\\p{L}]+) -"
+      + " (?<groupId>.+) - (?<action>.+)$|^LINK PREGLED$");
   private final ChatMediator userChat = new ChatMediator();
 
   public ChatMediator getUserChat() {
@@ -178,9 +147,22 @@ public class CommandSystemSingleton {
           "IVRV 3302",
           "IVRV 991",
           "IVRV B 791",
+          "IVI2S Kotoriba - Ludbreg - Po - 00:00 - 23:59 - SPKVK",
+          "IVI2S Kotoriba - Ludbreg - PoA - 00:00 - 23:59 - SPKVK",
           "DK Pero Kos",
           "DK Joshua Lee Fletcher",
           "PK",
+          "DPK Pero Kos - 3301",
+          "DPK Pero Kos - 3301 - Mala Subotica",
+          "DPK Pero Kos - 3301 - asdf",
+          "DPK Pero Kos - asdf",
+          "LINK Pero Kos - 3301 - Z",
+          "LINK Pero Kos - 3301 - O",
+          "LINK Pero Kos - 3301 - Z",
+          "LINK Joshua Lee Fletcher - 3301 - O",
+          "LINK Pero Kos - 3301 - Hello world",
+          "LINK Misteriozna Osoba - Chat1 - O",
+          "LINK PREGLED",
       };
       for (String c : commands) {
         Logs.c("Izvršavanje komande: " + c);
@@ -195,8 +177,10 @@ public class CommandSystemSingleton {
           "IEV 3301",
           "IEVD PoSrPeN",
           "IVRV 3302",
+          "IVI2S Kotoriba - Ludbreg - Po - 00:00 - 23:59 - SPKVK",
           "DK Pero Kos",
           "PK",
+          "DPK Joshua Lee Fletcher - 3301",
       };
       for (String c : commands) {
         Logs.c("Izvršavanje komande: " + c);
@@ -309,46 +293,22 @@ public class CommandSystemSingleton {
         false);
     Logs.o("IVRV [oznakaVlaka]\t\t\t- Pregled vlakova i njihovih etapa", false);
     Logs.o("IVI2S [polaznaStanica] - [odredišnaStanica] - [dan] - [odVr] - [doVr] - [prikaz]", false);
-    Logs.o("\t\t\t\t\t\t- Pregled vlakova između dvije stanice na određeni dan u tjednu unutar zadanog vremena", false);
+    Logs.o("\t\t\t\t\t\t- Pregled vlakova između dvije stanice na "
+        + "određeni dan u tjednu unutar zadanog vremena", false);
 
     Logs.o("DK [ime] [prezime]\t\t\t- Dodavanje korisnika", false);
     Logs.o("PK\t\t\t\t\t- Pregled korisnika", false);
     Logs.withPadding(() -> Logs.o(
-        "DPK [ime] [prz] - [oznVlaka] [- stanica]  - Dodavanje korisnika za praćenje putovanja vlaka ili dolaska u određenu željezničku stanicu",
+        "DPK [ime] [prz] - [oznVlaka] [- stanica]  "
+            + "- Dodavanje korisnika za praćenje putovanja vlaka ili dolaska u određenu željezničku stanicu",
         false), true, false);
     Logs.withPadding(() -> Logs.o(
-        "LINK [ime] [prz] - [grupa] - [O|Z|poruka] - Otvori/zatvori vezu između korisnika i grupe ili pošalji obavijest u grupu",
+        "LINK [ime] [prz] - [grupa] - [O|Z|poruka] "
+            + "- Otvori/zatvori vezu između korisnika i grupe ili pošalji obavijest u grupu",
         false), true, false);
     Logs.o("LINK PREGLED\t\t\t\t- Pregled svih grupa", false);
     Logs.withPadding(() -> Logs.o("Q - Izlaz iz programa", false), true, true);
     Logs.o("Uzorci dizajna, 2024. - Joshua Lee Fletcher");
-  }
-
-  public static void outputDebugMenu() {
-    if (Main.debugMode) {
-      Logs.o("\t\t[DEBUG] All\t\t\t- Za potpuno testiranje cijelog sustava", false);
-      Logs.o("\t\t[DEBUG] All1\t\t\t- Za testiranje svake naredbe samo jednom", false);
-      Logs.o("\t\t[DEBUG] a\t\t\t\t- Pregled pruga", false);
-      Logs.o("\t\t[DEBUG] b\t\t\t\t- Pregled stanica uz prugu (normalni redoslijed)", false);
-      Logs.o("\t\t[DEBUG] b2\t\t\t\t- Pregled stanica uz prugu (obrnuti redoslijed)", false);
-      Logs.o("\t\t[DEBUG] c\t\t\t\t- Pregled stanica između Kotoriba - Ludbreg", false);
-      Logs.o("\t\t[DEBUG] c2\t\t\t\t- Pregled stanica između Ludbreg - Kotoriba", false);
-      Logs.o("\t\t[DEBUG] c3\t\t\t\t- Pregled stanica između Kotoriba - Macinec", false);
-      Logs.o("\t\t[DEBUG] c4\t\t\t\t- Pregled stanica između Macinec - Kotoriba", false);
-      Logs.o("\t\t[DEBUG] d\t\t\t\t- Pregled kompozicija (oznaka 8001)", false);
-      Logs.o("\t\t[DEBUG] d2\t\t\t\t- Pregled kompozicija (oznaka 1)", false);
-      Logs.o("\t\t[DEBUG] e\t\t\t\t- Pregled vlakova", false);
-      Logs.o("\t\t[DEBUG] f\t\t\t\t- Pregled etapa vlaka", false);
-      Logs.o("\t\t[DEBUG] f2\t\t\t\t- Pregled etapa vlaka", false);
-      Logs.o("\t\t[DEBUG] g\t\t\t\t- Pregled vlakova koji voze sve etape na PoSrPeN", false);
-      Logs.o("\t\t[DEBUG] g2\t\t\t\t- Pregled vlakova koji voze sve etape na Po", false);
-      Logs.o("\t\t[DEBUG] g3\t\t\t\t- Pregled vlakova koji voze sve etape na PoUSrPeSuN", false);
-      Logs.o("\t\t[DEBUG] h\t\t\t\t- Pregled vlakova i njihovih etapa", false);
-      Logs.o("\t\t[DEBUG] h2\t\t\t\t- Pregled vlakova i njihovih etapa", false);
-      Logs.o("\t\t[DEBUG] i\t\t\t\t- Dodavanje korisnika Pero Kos", false);
-      Logs.o("\t\t[DEBUG] i2\t\t\t\t- Dodavanje korisnika Joshua Lee Fletcher", false);
-      Logs.o("\t\t[DEBUG] j\t\t\t\t- Pregled korisnika", false);
-    }
   }
 
   private void viewTracks() {
