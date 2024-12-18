@@ -61,12 +61,23 @@ public class TrainTrackStageComposite implements IComposite {
     public Map<ScheduleTime, StationLeaf> getStationMap() {
         Map<ScheduleTime, StationLeaf> stationMap = new HashMap<>();
         // get the compiled schedule
-        var compiledSchedule = this.compileSchedule(this.schedule);
+        var compiledSchedule = this.compileRoute(this.schedule);
         // iterate through the compiled schedule to get the time it takes to get to each station and map out the times
         ScheduleTime time = this.schedule.departureTime();
         for (StationLeaf station : compiledSchedule) {
-            stationMap.put(time, station);
-            time = time.addMinutes(station.getStation().timeForTrainType(this.schedule.trainType()));
+            if (station.getStation().equals(this.schedule.departure())) {
+                // System.out.println("Departure station: " + station.getStation().name() + " at " + fromTime());
+                stationMap.put(fromTime(), station);
+                continue;
+            } else if (station.getStation().equals(this.schedule.destination())) {
+                // System.out.println("Destination station: " + station.getStation().name() + " at " + toTime());
+                stationMap.put(toTime(), station);
+                break;
+            } else {
+                // time = time.addMinutes(station.getStation().timeForTrainType(this.schedule.trainType()));
+                stationMap.put(time, station);
+                // System.out.println("Station: " + station.getStation().name() + " at " + time.toString());
+            }
         }
         return stationMap;
     }
@@ -81,7 +92,7 @@ public class TrainTrackStageComposite implements IComposite {
         }
     }
 
-    public List<StationLeaf> compileSchedule(Schedule schedule) {
+    public List<StationLeaf> compileRoute(Schedule schedule) {
         List<StationLeaf> compatibleLeaves = new ArrayList<StationLeaf>();
         for (StationLeaf child : this.children) {
             if (child.getStation().supportsTrainType(schedule.trainType())) {

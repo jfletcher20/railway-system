@@ -169,6 +169,14 @@ public class CommandSystemSingleton {
         Logs.c("Izvršavanje komande: " + c);
         identifyCommand(c);
       }
+    } else if (command.trim().equalsIgnoreCase("simulate")) {
+      String[] commands = new String[] {
+          "DK Joshua Lee Fletcher", "DPK Joshua Lee Fletcher - 3301", "SVV 3301 - Po - 60",
+      };
+      for (String c : commands) {
+        Logs.c("Izvršavanje komande: " + c);
+        identifyCommand(c);
+      }
     } else if (command.trim().equalsIgnoreCase("All1")) {
       String[] commands = new String[] {
           "IP", "ISP M501 N",
@@ -692,7 +700,13 @@ public class CommandSystemSingleton {
       Logs.e("Nema pronađenih vlakova");
       return;
     }
-    ivi2sSecondPart(dt, format);
+    try {
+      ivi2sSecondPart(dt, format);
+    } catch (Exception e) {
+      Logs.e("Neispravan format prikaza: " + format);
+      Logs.footer(true);
+      return;
+    }
     Logs.printTable();
     Logs.footer(true);
   }
@@ -703,7 +717,7 @@ public class CommandSystemSingleton {
     try {
       schDay = Weekday.dayFromString(day);
     } catch (IllegalArgumentException e) {
-      Logs.e("Nepoznata oznaka dana: " + day);
+      Logs.e("Nepoznata oznaka dana: " + day + "; ova naredba samo prima oznaku jednog dana u tjednu.");
       return true;
     }
     ScheduleTime scStart, scEnd;
@@ -760,10 +774,9 @@ public class CommandSystemSingleton {
   private void fixDistances(List<Map<String, String>> data, List<String> headers, List<String> finalHeaders,
       List<List<String>> tableRows, String displayFormat) {
     // get the distance ("K") in the very first row and store it as the starting
-    // point
-    // for every row, starting from the first, reduce the K value by the K value of
+    // point for every row, starting from the first, reduce the K value by the K
+    // value of the starting point this way, the distance will be calculated from
     // the starting point
-    // this way, the distance will be calculated from the starting point
 
     Map<String, String> firstRow = data.get(0);
     double startingDistance = Double.parseDouble(firstRow.get("K"));
@@ -884,7 +897,7 @@ public class CommandSystemSingleton {
       boolean arrivedAtStation = train.isCurrentlyAtStation(currentTime);
       if (arrivedAtStation) {
         Station currentStation = train.getCurrentStation(currentTime);
-         Logs.s(currentTime, "Vlak " + trainId + " je stigao na stanicu " + currentStation.name());
+        Logs.s(currentTime, "Vlak " + trainId + " je na " + train.getTypeOfStation(currentStation) + " " + currentStation.name());
         train.notifyObservers(currentStation.name());
       }
 
@@ -897,7 +910,7 @@ public class CommandSystemSingleton {
       GlobalClock.setTime(currentTime);
 
       try {
-        Thread.sleep(1000 / coefficient);
+        Thread.sleep(1000 * 60 / coefficient);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         break;

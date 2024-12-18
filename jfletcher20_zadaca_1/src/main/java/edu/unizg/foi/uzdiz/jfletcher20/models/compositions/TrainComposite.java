@@ -409,6 +409,8 @@ public class TrainComposite implements IComponent, ISubject {
             Map<ScheduleTime, StationLeaf> stationMap = stage.getStationMap();
             for (ScheduleTime time : stationMap.keySet()) {
                 if (time.equals(currentTime)) {
+                    // System.out.println(stationMap);
+                    // System.out.println("Current station: " + stationMap.get(time).getStation().name());
                     return stationMap.get(time).getStation();
                 }
             }
@@ -421,6 +423,21 @@ public class TrainComposite implements IComponent, ISubject {
             return false;
         TrainTrackStageComposite lastStage = this.children.get(this.children.size() - 1);
         return lastStage.toTime().equals(currentTime);
+    }
+
+    public int getStationRole(Station currentStation) {
+        return -1;
+    }
+
+    public String getTypeOfStation(Station currentStation) {
+        // if type is 0, output "polaznoj", if type is 1, output "međustanici", if type is 2, output "odredišnoj"
+        int type = this.getStationRole(currentStation);
+        return switch (type) {
+            case 0 -> "polaznoj stanici";
+            case 1 -> "stanici";
+            case 2 -> "odredišnoj stanici";
+            default -> "stanici";
+        };
     }
 
 }

@@ -17,5 +17,10 @@ public class StationLeaf extends Leaf {
     public Station getStation() {
         return this.station;
     }
+
+    @Override
+    public String toString() {
+        return this.station.name();
+    }
 	
 }
