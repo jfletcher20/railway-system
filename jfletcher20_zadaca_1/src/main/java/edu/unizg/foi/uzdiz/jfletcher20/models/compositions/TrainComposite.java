@@ -213,12 +213,12 @@ public class TrainComposite implements IComponent, ISubject {
 
     @Override
     public void notifyObservers(String stationName) {
-        if (!observers.containsKey(trainID)) {
-            return;
-        }
-        for (IObserver observer : observers.get(trainID)) {
-            observer.update(trainID, stationName);
-        }
+        if (observers.containsKey(trainID))
+            for (IObserver observer : observers.get(trainID))
+                observer.update(trainID, stationName);
+        if (observers.containsKey(trainID + ":" + stationName))
+            for (IObserver observer : observers.get(trainID + ":" + stationName))
+                observer.update(trainID, stationName);
     }
 
     public void arriveAtStation(String stationName) {
@@ -226,7 +226,7 @@ public class TrainComposite implements IComponent, ISubject {
     }
 
     public void registerObserver(User user, String station) {
-        String key = trainID + " " + station;
+        String key = trainID + ":" + station;
         if (observers.containsKey(key)) {
             observers.get(key).add(user);
             return;
@@ -389,7 +389,8 @@ public class TrainComposite implements IComponent, ISubject {
         TrainTrackStageComposite firstStage = this.children.get(0);
         if (firstStage.schedule.days().contains(day))
             return firstStage.fromTime();
-        else return null;
+        else
+            return null;
     }
 
     public boolean isCurrentlyAtStation(ScheduleTime currentTime) {
@@ -410,7 +411,8 @@ public class TrainComposite implements IComponent, ISubject {
             for (ScheduleTime time : stationMap.keySet()) {
                 if (time.equals(currentTime)) {
                     // System.out.println(stationMap);
-                    // System.out.println("Current station: " + stationMap.get(time).getStation().name());
+                    // System.out.println("Current station: " +
+                    // stationMap.get(time).getStation().name());
                     return stationMap.get(time).getStation();
                 }
             }
@@ -430,7 +432,8 @@ public class TrainComposite implements IComponent, ISubject {
     }
 
     public String getTypeOfStation(Station currentStation) {
-        // if type is 0, output "polaznoj", if type is 1, output "međustanici", if type is 2, output "odredišnoj"
+        // if type is 0, output "polaznoj", if type is 1, output "međustanici", if type
+        // is 2, output "odredišnoj"
         int type = this.getStationRole(currentStation);
         return switch (type) {
             case 0 -> "polaznoj stanici";

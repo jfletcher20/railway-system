@@ -63,7 +63,7 @@ public record ScheduleTime(
         newMinutes %= 60;
         return new ScheduleTime(newHours, newMinutes);
     }
-
+    
     public ScheduleTime subtractMinutes(int minutes) {
         int newMinutes = this.minutes - minutes;
         int newHours = this.hours - newMinutes / 60;

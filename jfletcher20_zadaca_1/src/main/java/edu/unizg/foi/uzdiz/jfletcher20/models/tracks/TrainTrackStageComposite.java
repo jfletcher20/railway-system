@@ -74,7 +74,7 @@ public class TrainTrackStageComposite implements IComposite {
                 stationMap.put(toTime(), station);
                 break;
             } else {
-                // time = time.addMinutes(station.getStation().timeForTrainType(this.schedule.trainType()));
+                time = time.addMinutes(station.getStation().timeForTrainType(this.schedule.trainType()));
                 stationMap.put(time, station);
                 // System.out.println("Station: " + station.getStation().name() + " at " + time.toString());
             }

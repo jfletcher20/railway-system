@@ -1,6 +1,5 @@
 package edu.unizg.foi.uzdiz.jfletcher20.system;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -171,7 +170,15 @@ public class CommandSystemSingleton {
       }
     } else if (command.trim().equalsIgnoreCase("simulate")) {
       String[] commands = new String[] {
-          "DK Joshua Lee Fletcher", "DPK Joshua Lee Fletcher - 3301", "SVV 3301 - Po - 60",
+          "DK Joshua Lee Fletcher", "DPK Joshua Lee Fletcher - 3301", "SVV 3301 - Po - 600",
+      };
+      for (String c : commands) {
+        Logs.c("Izvršavanje komande: " + c);
+        identifyCommand(c);
+      }
+    } else if (command.trim().equalsIgnoreCase("simulate2")) {
+      String[] commands = new String[] {
+          "DK Joshua Lee Fletcher", "DPK Joshua Lee Fletcher - 3301 - Varaždin", "SVV 3301 - Po - 600",
       };
       for (String c : commands) {
         Logs.c("Izvršavanje komande: " + c);
@@ -874,48 +881,12 @@ public class CommandSystemSingleton {
 
     ScheduleTime currentTime = train.getDepartureTime(day);
     if (currentTime == null) {
-      Logs.e("Vlak ne radi danom " + day);
-      return;
+        Logs.e("Vlak ne radi danom " + day);
+        return;
     }
-    GlobalClock.setTime(currentTime);
 
-    Logs.s(currentTime, "Vlak " + trainId + " počinje s radom.");
-    while (true) {
-      try {
-        if (System.in.available() > 0) {
-          String input = System.console().readLine();
-          if ("X".equalsIgnoreCase(input.trim())) {
-            Logs.s(currentTime, "Simulacija vlaka " + trainId + " je prekinuta.");
-            break;
-          }
-        }
-      } catch (IOException e) {
-        // Ignore
-      }
+    GlobalClock.simulate(train, day, currentTime, coefficient);
 
-      // Update train position
-      boolean arrivedAtStation = train.isCurrentlyAtStation(currentTime);
-      if (arrivedAtStation) {
-        Station currentStation = train.getCurrentStation(currentTime);
-        Logs.s(currentTime, "Vlak " + trainId + " je na " + train.getTypeOfStation(currentStation) + " " + currentStation.name());
-        train.notifyObservers(currentStation.name());
-      }
-
-      if (train.hasReachedDestination(currentTime)) {
-        Logs.s(currentTime, "Vlak " + trainId + " je stigao na odredište.");
-        break;
-      }
-
-      currentTime = currentTime.addMinutes(1);
-      GlobalClock.setTime(currentTime);
-
-      try {
-        Thread.sleep(1000 * 60 / coefficient);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        break;
-      }
-    }
   }
 }
 
