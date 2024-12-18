@@ -302,4 +302,13 @@ public class ScheduleComposite implements IComposite {
         }
     }
 
+    public TrainComposite getTrainById(String trainId) {
+        for (TrainComposite train : this.children) {
+            if (train.trainID.equals(trainId)) {
+                return train;
+            }
+        }
+        return null;
+    }
+
 }

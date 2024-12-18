@@ -1,5 +1,6 @@
 package edu.unizg.foi.uzdiz.jfletcher20.system;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -235,6 +236,7 @@ public class CommandSystemSingleton {
     Matcher linkMatcher = linkPattern.matcher(command);
     Matcher addTrainObserverPatternMatcher = addTrainObserverPattern.matcher(command);
     Matcher trainScheduleBetweenStationsMatcher = trainScheduleBetweenStationsPattern.matcher(command);
+    Matcher simulateTrainMatcher = simulateTrainPattern.matcher(command);
     if (vtMatcher.matches()) {
       viewTracks();
     } else if (vsMatcher.matches()) {
@@ -257,6 +259,8 @@ public class CommandSystemSingleton {
       addTrainObserver(command);
     } else if (trainScheduleBetweenStationsMatcher.matches()) {
       viewTrainScheduleBetweenStations(trainScheduleBetweenStationsMatcher);
+    } else if (simulateTrainMatcher.matches()) {
+      simulateTrain(simulateTrainMatcher);
     } else if (viewTrainsWithStagesOnMatcher.matches()) {
       try {
         viewTrainsWithStagesOnDays(Weekday.daysFromString(viewTrainsWithStagesOnMatcher.group("days")));
@@ -302,6 +306,11 @@ public class CommandSystemSingleton {
         "DPK [ime] [prz] - [oznVlaka] [- stanica]  "
             + "- Dodavanje korisnika za praćenje putovanja vlaka ili dolaska u određenu željezničku stanicu",
         false), true, false);
+    // SVV instructions
+    Logs.o(
+        "SVV [oznakaVlaka] - [dan] - [koeficijent]\t- Simulacija vožnje vlaka na dan u tjednu u koeficijentu vremena",
+        false);
+
     Logs.withPadding(() -> Logs.o(
         "LINK [ime] [prz] - [grupa] - [O|Z|poruka] "
             + "- Otvori/zatvori vezu između korisnika i grupe ili pošalji obavijest u grupu",
@@ -819,6 +828,81 @@ public class CommandSystemSingleton {
       }
     }
     return headers;
+  }
+
+  private void simulateTrain(Matcher simulateTrainMatcher) {
+    String trainId = simulateTrainMatcher.group("trainId").trim();
+    String dayStr = simulateTrainMatcher.group("day").trim();
+    String coefficientStr = simulateTrainMatcher.group("coefficient").trim();
+
+    // Validate inputs
+    Weekday day;
+    try {
+      day = Weekday.dayFromString(dayStr);
+    } catch (IllegalArgumentException e) {
+      Logs.e("Nepoznata oznaka dana: " + dayStr);
+      return;
+    }
+    int coefficient;
+    try {
+      coefficient = Integer.parseInt(coefficientStr);
+    } catch (NumberFormatException e) {
+      Logs.e("Neispravan koeficijent: " + coefficientStr);
+      return;
+    }
+
+    TrainComposite train = RailwaySingleton.getInstance()
+        .getSchedule()
+        .getTrainById(trainId);
+    if (train == null) {
+      Logs.e("Vlak s oznakom ID " + trainId + " ne postoji.");
+      return;
+    }
+
+    ScheduleTime currentTime = train.getDepartureTime(day);
+    if (currentTime == null) {
+      Logs.e("Vlak ne radi danom " + day);
+      return;
+    }
+    GlobalClock.setTime(currentTime);
+
+    Logs.s(currentTime, "Vlak " + trainId + " počinje s radom.");
+    while (true) {
+      try {
+        if (System.in.available() > 0) {
+          String input = System.console().readLine();
+          if ("X".equalsIgnoreCase(input.trim())) {
+            Logs.s(currentTime, "Simulacija vlaka " + trainId + " je prekinuta.");
+            break;
+          }
+        }
+      } catch (IOException e) {
+        // Ignore
+      }
+
+      // Update train position
+      boolean arrivedAtStation = train.isCurrentlyAtStation(currentTime);
+      if (arrivedAtStation) {
+        Station currentStation = train.getCurrentStation(currentTime);
+         Logs.s(currentTime, "Vlak " + trainId + " je stigao na stanicu " + currentStation.name());
+        train.notifyObservers(currentStation.name());
+      }
+
+      if (train.hasReachedDestination(currentTime)) {
+        Logs.s(currentTime, "Vlak " + trainId + " je stigao na odredište.");
+        break;
+      }
+
+      currentTime = currentTime.addMinutes(1);
+      GlobalClock.setTime(currentTime);
+
+      try {
+        Thread.sleep(1000 / coefficient);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        break;
+      }
+    }
   }
 }
 

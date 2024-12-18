@@ -58,6 +58,19 @@ public class TrainTrackStageComposite implements IComposite {
         }
     }
 
+    public Map<ScheduleTime, StationLeaf> getStationMap() {
+        Map<ScheduleTime, StationLeaf> stationMap = new HashMap<>();
+        // get the compiled schedule
+        var compiledSchedule = this.compileSchedule(this.schedule);
+        // iterate through the compiled schedule to get the time it takes to get to each station and map out the times
+        ScheduleTime time = this.schedule.departureTime();
+        for (StationLeaf station : compiledSchedule) {
+            stationMap.put(time, station);
+            time = time.addMinutes(station.getStation().timeForTrainType(this.schedule.trainType()));
+        }
+        return stationMap;
+    }
+
     @Override
     public void Operation() {
         Logs.i("\t\tSTAGE | " + this.trackID + " | " + this.schedule.scheduledTrainID() + " | "

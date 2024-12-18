@@ -205,11 +205,17 @@ public class TrainComposite implements IComponent, ISubject {
 
     @Override
     public void removeObserver(IObserver observer) {
+        if (!observers.containsKey(trainID)) {
+            return;
+        }
         observers.get(trainID).remove(observer);
     }
 
     @Override
     public void notifyObservers(String stationName) {
+        if (!observers.containsKey(trainID)) {
+            return;
+        }
         for (IObserver observer : observers.get(trainID)) {
             observer.update(trainID, stationName);
         }
@@ -375,6 +381,46 @@ public class TrainComposite implements IComponent, ISubject {
             }
         }
         return foundStart && foundEnd;
+    }
+
+    public ScheduleTime getDepartureTime(Weekday day) {
+        if (this.children.isEmpty())
+            return null;
+        TrainTrackStageComposite firstStage = this.children.get(0);
+        if (firstStage.schedule.days().contains(day))
+            return firstStage.fromTime();
+        else return null;
+    }
+
+    public boolean isCurrentlyAtStation(ScheduleTime currentTime) {
+        for (TrainTrackStageComposite stage : this.children) {
+            Map<ScheduleTime, StationLeaf> stationMap = stage.getStationMap();
+            for (ScheduleTime time : stationMap.keySet()) {
+                if (time.equals(currentTime)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public Station getCurrentStation(ScheduleTime currentTime) {
+        for (TrainTrackStageComposite stage : this.children) {
+            Map<ScheduleTime, StationLeaf> stationMap = stage.getStationMap();
+            for (ScheduleTime time : stationMap.keySet()) {
+                if (time.equals(currentTime)) {
+                    return stationMap.get(time).getStation();
+                }
+            }
+        }
+        return null;
+    }
+
+    public boolean hasReachedDestination(ScheduleTime currentTime) {
+        if (this.children.isEmpty())
+            return false;
+        TrainTrackStageComposite lastStage = this.children.get(this.children.size() - 1);
+        return lastStage.toTime().equals(currentTime);
     }
 
 }

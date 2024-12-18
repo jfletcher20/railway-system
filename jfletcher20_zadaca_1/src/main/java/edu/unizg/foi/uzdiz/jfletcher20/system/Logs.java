@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 
 import java.util.AbstractMap;
@@ -352,10 +353,42 @@ public abstract class Logs {
       return logWarnings;
     }
 
+    public void logUserMessage(User user, String trainID, String stationName) {
+      System.out.println("\t\t<" + user + ">: " + trainID + " - " + stationName);
+    }
+
+    public void logUserMessage(User user, String message) {
+      System.out.println("\t\t<" + user + ">: " + message);
+    }
+
+    public void logUserCommunication(User receiver, User sender, String message) {
+      System.out.println("\t\t<" + receiver + "> <-prima-od- <" + sender + ">: " + message);
+    }
+
+    public void logSimulationMessage(ScheduleTime time, String message) {
+      System.out.println("\t" + time + " >> " + message);
+    }
+
   }
 
   public static void u(User user, String trainID, String stationName) {
-    throw new UnsupportedOperationException("Unimplemented method 'u'");
+    LogsSingleton.getInstance().logUserMessage(user, trainID, stationName);
+  }
+
+  public static void u(User user, String message) {
+    LogsSingleton.getInstance().logUserMessage(user, message);
+  }
+
+  public static void u(User receiver, User sender, String message) {
+    LogsSingleton.getInstance().logUserCommunication(receiver, sender, message);
+  }
+
+  public static void s(ScheduleTime time, String message) {
+    LogsSingleton.getInstance().logSimulationMessage(time, message);
+  }
+
+  public static void s(String message) {
+    LogsSingleton.getInstance().logSimulationMessage(GlobalClock.getTime(), message);
   }
 
 }
