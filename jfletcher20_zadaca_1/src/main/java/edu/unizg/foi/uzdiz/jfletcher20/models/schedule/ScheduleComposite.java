@@ -191,89 +191,115 @@ public class ScheduleComposite implements IComposite {
             return Collections.emptyList();
         }
 
-        List<Map<String, String>> commandIVI2S = new ArrayList<>();
+        List<TrainComposite> finalTrainsWithStations = filterTrainsWithStations(startStation, endStation, weekday,
+                startTime, endTime);
+
+        return buildCommandIVI2S(finalTrainsWithStations, startStation, endStation);
+    }
+
+    private List<TrainComposite> filterTrainsWithStations(String startStation, String endStation, Weekday weekday,
+            ScheduleTime startTime, ScheduleTime endTime) {
         List<TrainComposite> trainsWithStations = hasStations(List.of(startStation, endStation));
-        // now check if the startStation is before the endStation for each train
-        List<TrainComposite> finalTrainsWithStations = new ArrayList<>();
+        List<TrainComposite> filteredTrains = new ArrayList<>();
+
         for (TrainComposite train : trainsWithStations) {
-            if (train.isStationBefore(startStation, endStation)) {
-                finalTrainsWithStations.add(train);
+            if (train.isStationBefore(startStation, endStation)
+                    && isTrainWithinSchedule(train, weekday, startTime, endTime)) {
+                filteredTrains.add(train);
             }
         }
-        // list of { TRAINID: { STATION-NAME: DEPARTURE TIME } }
-        List<Map<String, Map<String, String>>> trainStations = new ArrayList<>();
+
+        return filteredTrains;
+    }
+
+    private boolean isTrainWithinSchedule(TrainComposite train, Weekday weekday, ScheduleTime startTime,
+            ScheduleTime endTime) {
+        boolean isWeekdayInStages = train.getChildren().stream()
+                .allMatch(stage -> stage.schedule.days().contains(weekday));
+        if (!isWeekdayInStages)
+            return false;
+
+        boolean trainIsAfterStart = train.startsAfter(startTime);
+        boolean trainIsBeforeEnd = train.endsBefore(endTime);
+
+        return trainIsAfterStart && trainIsBeforeEnd;
+    }
+
+    private List<Map<String, String>> buildCommandIVI2S(List<TrainComposite> finalTrainsWithStations,
+            String startStation, String endStation) {
+        List<Map<String, String>> commandIVI2S = new ArrayList<>();
+
         for (TrainComposite train : finalTrainsWithStations) {
-            boolean isWeekdayInStages = train.getChildren().stream()
-                    .allMatch(stage -> stage.schedule.days().contains(weekday));
-            if (!isWeekdayInStages)
-                continue;
-            boolean trainIsAfterStart = train.startsAfter(startTime);
-            boolean trainIsBeforeEnd = train.endsBefore(endTime);
-            if (!(trainIsAfterStart && trainIsBeforeEnd))
-                continue;
-            // get the IVRV output for that train:
-            /*
-             * IVRV 3050
-             * Oznaka vlaka | Oznaka pruge | ?eljezni?ka stanica | Vrijeme polaska | Broj km
-             * od polazne ...
-             * ------------ | ------------ | ---------------------- | --------------- |
-             * ----------------------
-             * 3050 | M101 | Zagreb glavni kolodvor | 05:43 | 0.00
-             */
             List<List<String>> trainIVRV = train.commandIVRV();
-            // now grab a sublist of the trainIVRV from startStation to endStation,
-            // including start and end in the final result
-            // get the first row whose list item's index 2 is equal to startStation's name,
-            // and hte last row whose list item's index 2 is equal to endStation's name
-            int startStationIndex = -1;
-            int endStationIndex = -1;
-            for (int i = 0; i < trainIVRV.size(); i++) {
-                if (trainIVRV.get(i).get(2).equals(startStation)) {
-                    startStationIndex = i;
-                }
-                if (trainIVRV.get(i).get(2).equals(endStation)) {
-                    endStationIndex = i;
-                }
-            }
-            // now we have the start and end station indexes, we can get the sublist
+            int startStationIndex = getStationIndex(trainIVRV, startStation);
+            int endStationIndex = getStationIndex(trainIVRV, endStation);
+
             if (startStationIndex == -1 || endStationIndex == -1) {
                 Logs.e("Početna ili završna stanica nije pronađena u IVRV izlazu");
                 continue;
             }
-            trainIVRV = trainIVRV.subList(startStationIndex, endStationIndex + 1);
-            // now we can convert the trainIVRV to a map of stations and their departure
-            // times for that train
-            for (List<String> ivrvRowData : trainIVRV) {
-                String stationName = ivrvRowData.get(2);
-                String departureTime = ivrvRowData.get(3);
-                String trackID = ivrvRowData.get(1);
-                Map<String, String> stationDeparture = Map.of(stationName, departureTime);
-                trainStations.add(Map.of(train.trainID, stationDeparture));
-                String distanceFromStartStation = ivrvRowData.get(4);
-                if (commandIVI2S.isEmpty()) {
-                    commandIVI2S.add(new HashMap<>());
-                    commandIVI2S.get(0).putAll(Map.of("S", stationName, "P", trackID, "K", distanceFromStartStation,
-                            "V:" + train.trainID, departureTime));
-                } else {
-                    boolean found = false;
-                    for (Map<String, String> row : commandIVI2S) {
-                        if (row.get("P").equals(trackID) && row.get("S").equals(stationName)) {
-                            Map<String, String> newRow = new HashMap<>(row);
-                            newRow.put("V:" + train.trainID, departureTime);
-                            commandIVI2S.set(commandIVI2S.indexOf(row), newRow);
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        commandIVI2S.add(Map.of("S", stationName, "P", trackID, "K", distanceFromStartStation,
-                                "V:" + train.trainID, departureTime));
-                    }
-                }
-            }
+
+            processTrainIVRV(commandIVI2S, train, trainIVRV.subList(startStationIndex, endStationIndex + 1));
         }
 
         return commandIVI2S;
+    }
+
+    private int getStationIndex(List<List<String>> trainIVRV, String stationName) {
+        for (int i = 0; i < trainIVRV.size(); i++) {
+            if (trainIVRV.get(i).get(2).equals(stationName)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void processTrainIVRV(List<Map<String, String>> commandIVI2S, TrainComposite train,
+            List<List<String>> trainIVRV) {
+        for (List<String> ivrvRowData : trainIVRV) {
+            String stationName = ivrvRowData.get(2);
+            String departureTime = ivrvRowData.get(3);
+            String trackID = ivrvRowData.get(1);
+            String distanceFromStartStation = ivrvRowData.get(4);
+
+            if (commandIVI2S.isEmpty()) {
+                addInitialRow(commandIVI2S, stationName, trackID, distanceFromStartStation, train.trainID,
+                        departureTime);
+            } else {
+                updateOrAddRow(commandIVI2S, stationName, trackID, distanceFromStartStation, train.trainID,
+                        departureTime);
+            }
+        }
+    }
+
+    private void addInitialRow(List<Map<String, String>> commandIVI2S, String stationName, String trackID,
+            String distanceFromStartStation, String trainID, String departureTime) {
+        commandIVI2S.add(new HashMap<>(Map.of(
+                "S", stationName,
+                "P", trackID,
+                "K", distanceFromStartStation,
+                "V:" + trainID, departureTime)));
+    }
+
+    private void updateOrAddRow(List<Map<String, String>> commandIVI2S, String stationName, String trackID,
+            String distanceFromStartStation, String trainID, String departureTime) {
+        boolean found = false;
+
+        for (Map<String, String> row : commandIVI2S) {
+            if (row.get("P").equals(trackID) && row.get("S").equals(stationName)) {
+                row.put("V:" + trainID, departureTime);
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            commandIVI2S.add(new HashMap<>(Map.of(
+                    "S", stationName,
+                    "P", trackID,
+                    "K", distanceFromStartStation,
+                    "V:" + trainID, departureTime)));
+        }
     }
 
 }
