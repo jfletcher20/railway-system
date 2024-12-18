@@ -709,139 +709,132 @@ public class CommandSystemSingleton {
   }
 
   public void viewTrainScheduleBetweenStations(Matcher ivi2sMatcher) {
-    String startStation = ivi2sMatcher.group(1).trim();
-    String endStation = ivi2sMatcher.group(2).trim();
-    String day = ivi2sMatcher.group(3).trim();
-    String fromTime = ivi2sMatcher.group(4).trim();
-    String toTime = ivi2sMatcher.group(5).trim();
-    String displayFormat = ivi2sMatcher.group(6).trim();
-    Weekday weekday;
-    try {
-      weekday = Weekday.dayFromString(day);
-    } catch (IllegalArgumentException e) {
-      Logs.e("Nepoznata oznaka dana: " + day);
+    String stStart = ivi2sMatcher.group(1).trim(), stEnd = ivi2sMatcher.group(2).trim();
+    String day = ivi2sMatcher.group(3).trim(), format = ivi2sMatcher.group(6).trim();
+    String toTime = ivi2sMatcher.group(5).trim(), fromTime = ivi2sMatcher.group(4).trim();
+    if (invalidIVI2SParams(stStart, stEnd, day, fromTime, toTime, format))
       return;
-    }
-    ScheduleTime startTime, endTime;
-    try {
-      startTime = new ScheduleTime(fromTime);
-      endTime = new ScheduleTime(toTime);
-    } catch (IllegalArgumentException e) {
-      Logs.e("Neispravno vrijeme: " + e.getMessage());
-      return;
-    }
-    if (weekday == null || startTime == null || endTime == null) {
-      Logs.e("Nevažeći parametri");
-      return;
-    }
-    Logs.header("Pregled vlakova koji prolaze kroz " + startStation + " - " + endStation + " (" + weekday + ": "
-        + startTime + "-" + endTime + ")", true);
-    var data = RailwaySingleton.getInstance()
-        .getSchedule()
-        .commandIVI2S(startStation, endStation, weekday, startTime, endTime, displayFormat);
-
-    if (data == null || data.isEmpty()) {
+    Weekday schDay = Weekday.dayFromString(day);
+    ScheduleTime scStart = new ScheduleTime(fromTime), scEnd = new ScheduleTime(toTime);
+    Logs.header("Pregled vlakova koji prolaze kroz " + stStart + " - " + stEnd + " (" + schDay + ": "
+        + scStart + "-" + scEnd + ")", true);
+    var dt = RailwaySingleton.getInstance().getSchedule().commandIVI2S(stStart, stEnd, schDay, scStart, scEnd, format);
+    if (dt == null || dt.isEmpty()) {
       Logs.e("Nema pronađenih vlakova");
       return;
     }
+    ivi2sSecondPart(dt, format);
+    Logs.printTable();
+    Logs.footer(true);
+  }
 
-    // Sort data based on the earliest "V" column value
-    // data.sort((a, b) -> {
-    //   String vKeyA = a.keySet().stream().filter(k -> k.startsWith("V")).findFirst().orElse(null);
-    //   String vKeyB = b.keySet().stream().filter(k -> k.startsWith("V")).findFirst().orElse(null);
-    //   if (vKeyA == null || vKeyB == null || a.get(vKeyA) == null || b.get(vKeyB) == null) {
-    //     return 0;
-    //   }
-    //   ScheduleTime timeA = new ScheduleTime(a.get(vKeyA));
-    //   ScheduleTime timeB = new ScheduleTime(b.get(vKeyB));
-    //   return timeA.compareTo(timeB);
-    // });
-    // Sort data based on the K column's double
+  private boolean invalidIVI2SParams(String stStart, String stEnd, String day, String fromTime, String toTime,
+      String format) {
+    Weekday schDay;
+    try {
+      schDay = Weekday.dayFromString(day);
+    } catch (IllegalArgumentException e) {
+      Logs.e("Nepoznata oznaka dana: " + day);
+      return true;
+    }
+    ScheduleTime scStart, scEnd;
+    try {
+      scStart = new ScheduleTime(fromTime);
+      scEnd = new ScheduleTime(toTime);
+    } catch (IllegalArgumentException e) {
+      Logs.e("Neispravno vrijeme: " + e.getMessage());
+      return true;
+    }
+    if (schDay == null) {
+      Logs.e("Nepoznata oznaka dana: " + day);
+      return true;
+    }
+    if (scStart == null || scEnd == null) {
+      Logs.e("Neispravno vrijeme: " + fromTime + " - " + toTime);
+      return true;
+    }
+    return false;
+  }
+
+  private void ivi2sSecondPart(List<Map<String, String>> data, String displayFormat) {
     data.sort((a, b) -> {
       String kKeyA = a.keySet().stream().filter(k -> k.startsWith("K")).findFirst().orElse("0");
       String kKeyB = b.keySet().stream().filter(k -> k.startsWith("K")).findFirst().orElse("0");
-      if (kKeyA == null || kKeyB == null || a.get(kKeyA) == null || b.get(kKeyB) == null) {
+      if (kKeyA == null || kKeyB == null || a.get(kKeyA) == null || b.get(kKeyB) == null)
         return 0;
-      }
-      double kA = Double.parseDouble(a.get(kKeyA));
-      double kB = Double.parseDouble(b.get(kKeyB));
+      double kA = Double.parseDouble(a.get(kKeyA)), kB = Double.parseDouble(b.get(kKeyB));
       return Double.compare(kA, kB);
     });
-
-    // Create headers from format
     List<String> headers = createHeadersFromFormat(displayFormat);
     List<String> finalHeaders = new ArrayList<>();
     List<List<String>> tableRows = new ArrayList<>();
-
-    // should reconstruct the entire row by:
-    // storing the values of the row's existing v-keys in a map
-    // remove the row's existing v-keys
-    // iterating over all the vkeys in the allvkeysintable and for those that are not in the map, add them with a default value, for those which are readd the existing value
-    Set<String> allVKeysInTable = data.stream()
-        .flatMap(row -> row.keySet().stream().filter(k -> k.startsWith("V")))
+    Set<String> allVKeysInTable = data.stream().flatMap(row -> row.keySet().stream().filter(k -> k.startsWith("V")))
         .collect(Collectors.toSet());
-        
     var newTableRows = new ArrayList<>(data);
     for (Map<String, String> row : data) {
       Map<String, String> newRow = new HashMap<>();
       Map<String, String> vValues = new HashMap<>();
       for (String key : row.keySet()) {
-        if (key.startsWith("V")) {
+        if (key.startsWith("V"))
           vValues.put(key, row.get(key));
-        } else {
+        else
           newRow.put(key, row.get(key));
-        }
       }
-      for (String vKey : allVKeysInTable) {
+      for (String vKey : allVKeysInTable)
         newRow.put(vKey, vValues.getOrDefault(vKey, "-"));
-      }
-      // swap out the row
       newTableRows.set(newTableRows.indexOf(row), newRow);
     }
-
     data = newTableRows;
+    fixDistances(data, headers, finalHeaders, tableRows, displayFormat);
+  }
 
-    // Process each row for the table
+  private void fixDistances(List<Map<String, String>> data, List<String> headers, List<String> finalHeaders,
+      List<List<String>> tableRows, String displayFormat) {
+    // get the distance ("K") in the very first row and store it as the starting point
+    // for every row, starting from the first, reduce the K value by the K value of the starting point
+    // this way, the distance will be calculated from the starting point
+
+    // get the first row
+    Map<String, String> firstRow = data.get(0);
+    double startingDistance = Double.parseDouble(firstRow.get("K"));
+    System.out.println("Starting distance: " + startingDistance);
+
+    for (Map<String, String> row : data) {
+      double currentDistanceForRow = Double.parseDouble(row.get("K"));
+      double distanceFromStart = currentDistanceForRow - startingDistance;
+      row.put("K", String.valueOf(distanceFromStart));
+    }
+
+    ivi2sOutputTable(data, headers, finalHeaders, tableRows, displayFormat);
+  }
+
+  private void ivi2sOutputTable(List<Map<String, String>> data, List<String> headers, List<String> finalHeaders,
+      List<List<String>> tableRows, String displayFormat) {
     for (Map<String, String> row : data) {
       List<String> tableRow = new ArrayList<>();
-      for (String header : headers) {
+      for (String header : headers)
         if (header.equals("V")) {
-          // Handle all "V" keys in the row
-          List<String> vKeys = row.keySet().stream()
-              .filter(k -> k.startsWith("V"))
-              .toList();
+          List<String> vKeys = row.keySet().stream().filter(k -> k.startsWith("V")).toList();
           for (String key : vKeys) {
             tableRow.add(row.get(key));
-            finalHeaders.add(key); // Use the actual key as the header
+            finalHeaders.add(key);
           }
         } else {
           tableRow.add(row.getOrDefault(header, ""));
           finalHeaders.add(header);
         }
-      }
       tableRows.add(tableRow);
     }
-
-    // Ensure headers align with repeated characters in displayFormat
     finalHeaders = new ArrayList<>();
-    for (char c : displayFormat.toCharArray()) {
+    for (char c : displayFormat.toCharArray())
       if (c == 'V') {
-        data.stream()
-            .flatMap(row -> row.keySet().stream().filter(k -> k.startsWith("V")))
-            .distinct()
+        data.stream().flatMap(row -> row.keySet().stream().filter(k -> k.startsWith("V"))).distinct()
             .forEach(finalHeaders::add);
-      } else {
+      } else
         finalHeaders.add(String.valueOf(c));
-      }
-    }
-
-    // Print the table
     Logs.tableHeader(finalHeaders);
-    for (List<String> row : tableRows) {
+    for (List<String> row : tableRows)
       Logs.tableRow(row);
-    }
-    Logs.printTable();
-    Logs.footer(true);
   }
 
   private List<String> createHeadersFromFormat(String format) {

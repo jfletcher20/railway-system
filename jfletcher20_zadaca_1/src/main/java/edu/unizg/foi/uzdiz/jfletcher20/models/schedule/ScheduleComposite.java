@@ -273,7 +273,6 @@ public class ScheduleComposite implements IComposite {
             }
         }
 
-        System.out.println("commandIVI2S: " + commandIVI2S);
         return commandIVI2S;
     }
 
