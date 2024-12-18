@@ -303,10 +303,78 @@ public class TrainComposite implements IComponent, ISubject {
     public List<Map<String, String>> commandIVI2S(String displayFormat) {
         List<Map<String, String>> commandIVI2S = new ArrayList<>();
         for (TrainTrackStageComposite stage : this.children) {
-            System.out.println("stage: " + stage.schedule.departure().name());
             commandIVI2S.add(stage.commandIVI2S(displayFormat));
         }
         return commandIVI2S;
+    }
+
+    public boolean startsAfter(ScheduleTime startTime) {
+        if (this.children == null || this.children.isEmpty())
+            return false;
+        return this.getChildren().stream().allMatch(stage -> stage.fromTime().isAfter(startTime));
+    }
+
+    public boolean endsBefore(ScheduleTime endTime) {
+        if (this.children == null || this.children.isEmpty())
+            return false;
+        return this.getChildren().stream().allMatch(stage -> stage.toTime().isBefore(endTime));
+    }
+
+    public TrainTrackStageComposite getTrackStageAtStation(Station start) {
+        if (this.children.isEmpty() || !this.hasStation(start.name()))
+            return null;
+        return this.firstWithStation(start.name());
+    }
+
+    public List<Station> getStationsBetween(String start, String end) {
+        // get the first station called start and the lsat station called end
+        Station startStation = null;
+        Station endStation = null;
+        List<Station> stations = new ArrayList<>();
+        for (TrainTrackStageComposite stage : this.children) {
+            for (StationLeaf leaf : stage.children) {
+                if (leaf.getStation().name().equals(start))
+                    startStation = leaf.getStation();
+                if (leaf.getStation().name().equals(end))
+                    endStation = leaf.getStation();
+            }
+            if (startStation != null && endStation != null)
+                break;
+        }
+        if (startStation == null || endStation == null)
+            return stations;
+        for (TrainTrackStageComposite stage : this.children) {
+            for (StationLeaf leaf : stage.children) {
+                if (leaf.getStation().equals(startStation)) {
+                    stations.add(leaf.getStation());
+                }
+                if (leaf.getStation().equals(endStation)) {
+                    stations.add(leaf.getStation());
+                    break;
+                }
+            }
+        }
+        return stations;
+    }
+
+    public boolean isStationBefore(String startStation, String endStation) {
+        boolean foundStart = false;
+        boolean foundEnd = false;
+        for (TrainTrackStageComposite stage : this.children) {
+            for (StationLeaf leaf : stage.children) {
+                if (leaf.getStation().name().equals(startStation)) {
+                    foundStart = true;
+                }
+                if (foundStart && leaf.getStation().name().equals(endStation)) {
+                    foundEnd = true;
+                    break;
+                }
+            }
+            if (foundEnd) {
+                break;
+            }
+        }
+        return foundStart && foundEnd;
     }
 
 }

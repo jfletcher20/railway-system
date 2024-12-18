@@ -734,7 +734,7 @@ public class CommandSystemSingleton {
     }
     Logs.header("Pregled vlakova koji prolaze kroz " + startStation + " - " + endStation + " (" + weekday + ": "
         + startTime + "-" + endTime + ")", true);
-    List<Map<String, String>> data = RailwaySingleton.getInstance()
+    var data = RailwaySingleton.getInstance()
         .getSchedule()
         .commandIVI2S(startStation, endStation, weekday, startTime, endTime, displayFormat);
 
@@ -744,16 +744,16 @@ public class CommandSystemSingleton {
     }
 
     // Sort data based on the earliest "V" column value
-    data.sort((a, b) -> {
-      String vKeyA = a.keySet().stream().filter(k -> k.startsWith("V")).findFirst().orElse(null);
-      String vKeyB = b.keySet().stream().filter(k -> k.startsWith("V")).findFirst().orElse(null);
-      if (vKeyA == null || vKeyB == null || a.get(vKeyA) == null || b.get(vKeyB) == null) {
-        return 0;
-      }
-      ScheduleTime timeA = new ScheduleTime(a.get(vKeyA));
-      ScheduleTime timeB = new ScheduleTime(b.get(vKeyB));
-      return timeA.compareTo(timeB);
-    });
+    // data.sort((a, b) -> {
+    //   String vKeyA = a.keySet().stream().filter(k -> k.startsWith("V")).findFirst().orElse(null);
+    //   String vKeyB = b.keySet().stream().filter(k -> k.startsWith("V")).findFirst().orElse(null);
+    //   if (vKeyA == null || vKeyB == null || a.get(vKeyA) == null || b.get(vKeyB) == null) {
+    //     return 0;
+    //   }
+    //   ScheduleTime timeA = new ScheduleTime(a.get(vKeyA));
+    //   ScheduleTime timeB = new ScheduleTime(b.get(vKeyB));
+    //   return timeA.compareTo(timeB);
+    // });
 
     // Create headers from format
     List<String> headers = createHeadersFromFormat(displayFormat);

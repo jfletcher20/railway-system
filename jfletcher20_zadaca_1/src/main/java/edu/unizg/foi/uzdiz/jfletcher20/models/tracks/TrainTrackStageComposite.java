@@ -1,6 +1,7 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.tracks;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -164,19 +165,6 @@ public class TrainTrackStageComposite implements IComposite {
                 .toList();
     }
 
-    public Map<String, String> commandIVI2S(String displayFormat) {
-        // need to return a map of values according to IVI2S output format - available display controls are: S, P, K, V
-        // S maps to station name, P maps to track ID, K maps to distance, V maps to departure time
-        System.out.println("Display format: " + displayFormat);
-        System.out.println("S: " + this.schedule.departure().name() + " | P: " + this.trackID + " | K: " + this.compileDistance() + " | V: " + this.schedule.departureTime().toString());
-        return Map.of(
-                "S", this.schedule.departure().name(),
-                "P", this.trackID,
-                "K", String.valueOf(this.compileDistance()),
-                "V:" + this.schedule.scheduledTrainID(), this.schedule.departureTime().toString()
-        );
-    }
-
     public boolean hasStation(String station) {
         return this.children.stream().anyMatch(child -> child.getStation().name().equals(station));
     }
@@ -244,6 +232,10 @@ public class TrainTrackStageComposite implements IComposite {
             return -1;
         }
         return station1.getStation().getDistanceTo(station2.getStation());
+    }
+
+    public Map<String, String> commandIVI2S(String displayFormat) {
+        return new HashMap<>();
     }
 
 }
