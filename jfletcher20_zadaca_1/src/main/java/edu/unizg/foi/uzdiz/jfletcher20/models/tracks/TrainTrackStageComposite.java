@@ -209,12 +209,10 @@ public class TrainTrackStageComposite implements IComposite {
             Logs.e("Stanica " + name + " nije pronađena u traci " + this.trackID);
             return -1;
         }
-        // iterate through the children
         double distance = 0;
         for (StationLeaf child : this.children) {
-            if (child.equals(station)) {
+            if (child.equals(station))
                 return distance;
-            }
             distance += child.getStation().getDistanceFromStart();
         }
         return -1;

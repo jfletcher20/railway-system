@@ -3,11 +3,13 @@ package edu.unizg.foi.uzdiz.jfletcher20.system;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import edu.unizg.foi.uzdiz.jfletcher20.Main;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
@@ -754,11 +756,50 @@ public class CommandSystemSingleton {
     //   ScheduleTime timeB = new ScheduleTime(b.get(vKeyB));
     //   return timeA.compareTo(timeB);
     // });
+    // Sort data based on the K column's double
+    data.sort((a, b) -> {
+      String kKeyA = a.keySet().stream().filter(k -> k.startsWith("K")).findFirst().orElse("0");
+      String kKeyB = b.keySet().stream().filter(k -> k.startsWith("K")).findFirst().orElse("0");
+      if (kKeyA == null || kKeyB == null || a.get(kKeyA) == null || b.get(kKeyB) == null) {
+        return 0;
+      }
+      double kA = Double.parseDouble(a.get(kKeyA));
+      double kB = Double.parseDouble(b.get(kKeyB));
+      return Double.compare(kA, kB);
+    });
 
     // Create headers from format
     List<String> headers = createHeadersFromFormat(displayFormat);
     List<String> finalHeaders = new ArrayList<>();
     List<List<String>> tableRows = new ArrayList<>();
+
+    // should reconstruct the entire row by:
+    // storing the values of the row's existing v-keys in a map
+    // remove the row's existing v-keys
+    // iterating over all the vkeys in the allvkeysintable and for those that are not in the map, add them with a default value, for those which are readd the existing value
+    Set<String> allVKeysInTable = data.stream()
+        .flatMap(row -> row.keySet().stream().filter(k -> k.startsWith("V")))
+        .collect(Collectors.toSet());
+        
+    var newTableRows = new ArrayList<>(data);
+    for (Map<String, String> row : data) {
+      Map<String, String> newRow = new HashMap<>();
+      Map<String, String> vValues = new HashMap<>();
+      for (String key : row.keySet()) {
+        if (key.startsWith("V")) {
+          vValues.put(key, row.get(key));
+        } else {
+          newRow.put(key, row.get(key));
+        }
+      }
+      for (String vKey : allVKeysInTable) {
+        newRow.put(vKey, vValues.getOrDefault(vKey, "-"));
+      }
+      // swap out the row
+      newTableRows.set(newTableRows.indexOf(row), newRow);
+    }
+
+    data = newTableRows;
 
     // Process each row for the table
     for (Map<String, String> row : data) {
