@@ -82,6 +82,11 @@ public class TrainTrackStageComposite implements IComposite {
         return stationMap;
     }
 
+    public Map<StationLeaf, ScheduleTime> getInverseStationMap() {
+        var stationMap = this.getStationMap();
+        return stationMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+    }
+
     @Override
     public void Operation() {
         Logs.i("\t\tSTAGE | " + this.trackID + " | " + this.schedule.scheduledTrainID() + " | "

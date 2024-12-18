@@ -163,6 +163,7 @@ public class CommandSystemSingleton {
           "LINK Pero Kos - 3301 - Hello world",
           "LINK Misteriozna Osoba - Chat1 - O",
           "LINK PREGLED",
+          "IVI2S Donji Kraljevec - Čakovec - N - 0:00 - 23:59 - SPKV",
       };
       for (String c : commands) {
         Logs.c("Izvršavanje komande: " + c);
@@ -184,6 +185,8 @@ public class CommandSystemSingleton {
         Logs.c("Izvršavanje komande: " + c);
         identifyCommand(c);
       }
+    } else if (command.trim().equalsIgnoreCase("testivi")) {
+      identifyCommand("IVI2S Donji Kraljevec - Čakovec - N - 0:00 - 23:59 - SPKV");
     } else if (command.trim().equalsIgnoreCase("All1")) {
       String[] commands = new String[] {
           "IP", "ISP M501 N",
@@ -881,8 +884,8 @@ public class CommandSystemSingleton {
 
     ScheduleTime currentTime = train.getDepartureTime(day);
     if (currentTime == null) {
-        Logs.e("Vlak ne radi danom " + day);
-        return;
+      Logs.e("Vlak ne radi danom " + day);
+      return;
     }
 
     GlobalClock.simulate(train, day, currentTime, coefficient);

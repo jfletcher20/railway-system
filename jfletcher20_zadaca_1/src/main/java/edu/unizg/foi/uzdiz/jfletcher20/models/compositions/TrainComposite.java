@@ -175,8 +175,10 @@ public class TrainComposite implements IComponent, ISubject {
                     Station prevStation = stage.get(stationIndex - 1).getStation();
                     distance = RailwaySingleton.getInstance().calculateDistance(prevStation, station);
                     cumulativeDistance += distance;
-                    departureTime = departureTime
-                            .addMinutes(station.timeForTrainType(trainTrackStage.schedule.trainType()));
+                    var stationMap = trainTrackStage.getInverseStationMap();
+                    var stationLeaf = stage.get(stationIndex);
+                    ScheduleTime arrivalTime = stationMap.get(stationLeaf);
+                    departureTime = arrivalTime;
                 }
                 if (!station.supportsTrainType(trainTrackStage.schedule.trainType()))
                     continue;
