@@ -737,46 +737,70 @@ public class CommandSystemSingleton {
     List<Map<String, String>> data = RailwaySingleton.getInstance()
         .getSchedule()
         .commandIVI2S(startStation, endStation, weekday, startTime, endTime, displayFormat);
+
     if (data == null || data.isEmpty()) {
       Logs.e("Nema pronađenih vlakova");
       return;
     }
+
+    // Sort data based on the earliest "V" column value
     data.sort((a, b) -> {
-      String vKey = a.keySet().stream().filter(k -> k.startsWith("V")).findFirst().orElse(null);
-      if (vKey == null || !a.containsKey(vKey) || !b.containsKey(vKey) || a.get(vKey) == null || b.get(vKey) == null) {
+      String vKeyA = a.keySet().stream().filter(k -> k.startsWith("V")).findFirst().orElse(null);
+      String vKeyB = b.keySet().stream().filter(k -> k.startsWith("V")).findFirst().orElse(null);
+      if (vKeyA == null || vKeyB == null || a.get(vKeyA) == null || b.get(vKeyB) == null) {
         return 0;
       }
-      ScheduleTime timeA = new ScheduleTime(a.get(vKey));
-      ScheduleTime timeB = new ScheduleTime(b.get(vKey));
+      ScheduleTime timeA = new ScheduleTime(a.get(vKeyA));
+      ScheduleTime timeB = new ScheduleTime(b.get(vKeyB));
       return timeA.compareTo(timeB);
     });
+
+    // Create headers from format
     List<String> headers = createHeadersFromFormat(displayFormat);
     List<String> finalHeaders = new ArrayList<>();
+    List<List<String>> tableRows = new ArrayList<>();
+
+    // Process each row for the table
     for (Map<String, String> row : data) {
       List<String> tableRow = new ArrayList<>();
       for (String header : headers) {
-        System.out.println("Header: " + header);
-        // if header is "V", then need to find the key that starts with "V"
         if (header.equals("V")) {
-          List<String> keys = row.keySet().stream().filter(k -> k.startsWith("V")).toList();
-          for (String key : keys) {
+          // Handle all "V" keys in the row
+          List<String> vKeys = row.keySet().stream()
+              .filter(k -> k.startsWith("V"))
+              .toList();
+          for (String key : vKeys) {
             tableRow.add(row.get(key));
-            finalHeaders.add(key);
+            finalHeaders.add(key); // Use the actual key as the header
           }
-          continue;
         } else {
-          tableRow.add(row.get(header));
+          tableRow.add(row.getOrDefault(header, ""));
           finalHeaders.add(header);
         }
       }
-      Logs.tableRow(tableRow);
+      tableRows.add(tableRow);
     }
 
-    Logs.tableHeader(finalHeaders);
+    // Ensure headers align with repeated characters in displayFormat
+    finalHeaders = new ArrayList<>();
+    for (char c : displayFormat.toCharArray()) {
+      if (c == 'V') {
+        data.stream()
+            .flatMap(row -> row.keySet().stream().filter(k -> k.startsWith("V")))
+            .distinct()
+            .forEach(finalHeaders::add);
+      } else {
+        finalHeaders.add(String.valueOf(c));
+      }
+    }
 
+    // Print the table
+    Logs.tableHeader(finalHeaders);
+    for (List<String> row : tableRows) {
+      Logs.tableRow(row);
+    }
     Logs.printTable();
     Logs.footer(true);
-
   }
 
   private List<String> createHeadersFromFormat(String format) {

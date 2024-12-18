@@ -192,7 +192,6 @@ public class ScheduleComposite implements IComposite {
 
         List<Map<String, String>> commandIVI2S = new ArrayList<>();
         for (TrainComposite train : hasStations(List.of(startStation, endStation))) {
-            // check if the stages of the train all have the weekday
             boolean isWeekdayInStages = train.getChildren().stream()
                     .allMatch(stage -> stage.schedule.days().contains(weekday));
             if (!isWeekdayInStages)
