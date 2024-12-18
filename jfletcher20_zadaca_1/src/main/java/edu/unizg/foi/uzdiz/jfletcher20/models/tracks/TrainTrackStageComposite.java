@@ -159,45 +159,6 @@ public class TrainTrackStageComposite implements IComposite {
                 .collect(Collectors.toList());
     }
 
-    public ScheduleTime getDepartureTimeAtStation(Station station) {
-        int index = getStationIndex(station);
-        if (index == -1)
-            return null;
-
-        ScheduleTime baseTime = this.schedule.departureTime();
-        int minutesToAdd = calculateMinutesToStation(index);
-
-        return baseTime.addMinutes(minutesToAdd);
-    }
-
-    private int getStationIndex(Station station) {
-        for (int i = 0; i < this.children.size(); i++) {
-            if (this.children.get(i).getStation().equals(station)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private int calculateMinutesToStation(int stationIndex) {
-        if (stationIndex == 0)
-            return 0;
-
-        int minutes = 0;
-        for (int i = 0; i < stationIndex; i++) {
-            Station current = this.children.get(i).getStation();
-            Station next = this.children.get(i + 1).getStation();
-            minutes += calculateTravelTime(current, next);
-        }
-        return minutes;
-    }
-
-    private int calculateTravelTime(Station from, Station to) {
-        double distance = from.getDistanceTo(to);
-        // Assume average speed of 60 km/h
-        return (int) (distance / 60.0 * 60);
-    }
-
     public List<StationLeaf> getCompatibleLeaves() {
         return this.children.stream().filter(child -> child.getStation().supportsTrainType(schedule.trainType()))
                 .toList();
@@ -212,12 +173,77 @@ public class TrainTrackStageComposite implements IComposite {
                 "S", this.schedule.departure().name(),
                 "P", this.trackID,
                 "K", String.valueOf(this.compileDistance()),
-                "V", this.schedule.departureTime().toString()
+                "V:" + this.schedule.scheduledTrainID(), this.schedule.departureTime().toString()
         );
     }
 
     public boolean hasStation(String station) {
         return this.children.stream().anyMatch(child -> child.getStation().name().equals(station));
+    }
+
+    public ScheduleTime fromTime(String name) {
+        StationLeaf station = this.children.stream().filter(child -> child.getStation().name().equals(name)).findFirst().orElse(null);
+        if (station == null) {
+            Logs.e("Stanica " + name + " nije pronađena u traci " + this.trackID);
+            return null;
+        }
+        // iterate through the children until we find the station, compiling the time it takes to get there
+        ScheduleTime time = this.schedule.departureTime();
+        for (StationLeaf child : this.children) {
+            if (child.equals(station)) {
+                return time;
+            }
+            time = time.addMinutes(child.getStation().timeForTrainType(this.schedule.trainType()));
+        }
+        return null;
+    }
+
+    public ScheduleTime arrivalTime(String name) {
+        StationLeaf station = this.children.stream().filter(child -> child.getStation().name().equals(name)).findFirst().orElse(null);
+        if (station == null) {
+            Logs.e("Stanica " + name + " nije pronađena u traci " + this.trackID);
+            return null;
+        }
+        // iterate through the children
+        ScheduleTime time = this.schedule.departureTime();
+        for (StationLeaf child : this.children) {
+            time = time.addMinutes(child.getStation().timeForTrainType(this.schedule.trainType()));
+            if (child.equals(station)) {
+                return time;
+            }
+        }
+        return null;
+    }
+
+    public double distanceFromStart(String name) {
+        StationLeaf station = this.children.stream().filter(child -> child.getStation().name().equals(name)).findFirst().orElse(null);
+        if (station == null) {
+            Logs.e("Stanica " + name + " nije pronađena u traci " + this.trackID);
+            return -1;
+        }
+        // iterate through the children
+        double distance = 0;
+        for (StationLeaf child : this.children) {
+            if (child.equals(station)) {
+                return distance;
+            }
+            distance += child.getStation().getDistanceFromStart();
+        }
+        return -1;
+    }
+
+    public double distanceBetweenStations(String name1, String name2) {
+        StationLeaf station1 = this.children.stream().filter(child -> child.getStation().name().equals(name1)).findFirst().orElse(null);
+        StationLeaf station2 = this.children.stream().filter(child -> child.getStation().name().equals(name2)).findFirst().orElse(null);
+        if (station1 == null) {
+            Logs.e("Stanica " + name1 + " nije pronađena u traci " + this.trackID);
+            return -1;
+        }
+        if (station2 == null) {
+            Logs.e("Stanica " + name2 + " nije pronađena u traci " + this.trackID);
+            return -1;
+        }
+        return station1.getStation().getDistanceTo(station2.getStation());
     }
 
 }

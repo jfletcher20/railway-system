@@ -95,15 +95,16 @@ public class CommandSystemSingleton {
   );
 
   Pattern viewTrainsPattern = Pattern.compile("^IV$");
-  Pattern viewTrainStagesPattern = Pattern.compile("^IEV (?<trainCode>\\d+)$");
+  Pattern viewTrainStagesPattern = Pattern.compile("^IEV (?<trainCode>.+)$");
   Pattern viewTrainsWithStagesOnPattern = Pattern.compile("^IEVD (?<days>[A-Za-z]+)$");
   Pattern viewTrainTimetablePattern = Pattern.compile("^IVRV (?<trainCode>.+)$");
   // Pattern trainScheduleBetweenStationsPattern = Pattern.compile(
-  //     "^IVI2S (?<startStation>.+) - (?<endStation>.+) - (?<days>[A-Za-z]+) - (?<fromTime>\\d+:\\d+) - (?<toTime>\\d+:\\d+) - (?<display>"
-  //         + /* any combination of S, P, K, V */ "(?=.*[SPVK])[SPVK]"
-  //         + ")$");
+  // "^IVI2S (?<startStation>.+) - (?<endStation>.+) - (?<days>[A-Za-z]+) -
+  // (?<fromTime>\\d+:\\d+) - (?<toTime>\\d+:\\d+) - (?<display>"
+  // + /* any combination of S, P, K, V */ "(?=.*[SPVK])[SPVK]"
+  // + ")$");
   private Pattern trainScheduleBetweenStationsPattern = Pattern.compile(
-  "^IVI2S\\s+([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)$");
+      "^IVI2S\\s+([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)$");
 
   Pattern viewUsersPattern = Pattern.compile("^PK$");
   Pattern addUserPattern = // Pattern.compile("^DK (?<name>.+) (?<lastName>\\S+)$");
@@ -712,46 +713,66 @@ public class CommandSystemSingleton {
     String fromTime = ivi2sMatcher.group(4).trim();
     String toTime = ivi2sMatcher.group(5).trim();
     String displayFormat = ivi2sMatcher.group(6).trim();
-
-    Logs.header("Pregled vlakova između " + startStation + " - " + endStation, true);
-
-    // Convert inputs
-    Weekday weekday = Weekday.dayFromString(day);
-    ScheduleTime startTime = new ScheduleTime(fromTime);
-    ScheduleTime endTime = new ScheduleTime(toTime);
-
+    Weekday weekday;
+    try {
+      weekday = Weekday.dayFromString(day);
+    } catch (IllegalArgumentException e) {
+      Logs.e("Nepoznata oznaka dana: " + day);
+      return;
+    }
+    ScheduleTime startTime, endTime;
+    try {
+      startTime = new ScheduleTime(fromTime);
+      endTime = new ScheduleTime(toTime);
+    } catch (IllegalArgumentException e) {
+      Logs.e("Neispravno vrijeme: " + e.getMessage());
+      return;
+    }
     if (weekday == null || startTime == null || endTime == null) {
       Logs.e("Nevažeći parametri");
       return;
     }
-
-    // Get data from ScheduleComposite
+    Logs.header("Pregled vlakova koji prolaze kroz " + startStation + " - " + endStation + " (" + weekday + ": "
+        + startTime + "-" + endTime + ")", true);
     List<Map<String, String>> data = RailwaySingleton.getInstance()
         .getSchedule()
         .commandIVI2S(startStation, endStation, weekday, startTime, endTime, displayFormat);
-
-    // sort the order of the rows in data by key V, which is the ScheduleTime
-    data.sort((a, b) -> {
-      ScheduleTime timeA = new ScheduleTime(a.get("V"));
-      ScheduleTime timeB = new ScheduleTime(b.get("V"));
-      return timeA.compareTo(timeB);
-    });
-
     if (data == null || data.isEmpty()) {
       Logs.e("Nema pronađenih vlakova");
       return;
     }
-
+    data.sort((a, b) -> {
+      String vKey = a.keySet().stream().filter(k -> k.startsWith("V")).findFirst().orElse(null);
+      if (vKey == null || !a.containsKey(vKey) || !b.containsKey(vKey) || a.get(vKey) == null || b.get(vKey) == null) {
+        return 0;
+      }
+      ScheduleTime timeA = new ScheduleTime(a.get(vKey));
+      ScheduleTime timeB = new ScheduleTime(b.get(vKey));
+      return timeA.compareTo(timeB);
+    });
     List<String> headers = createHeadersFromFormat(displayFormat);
-    Logs.tableHeader(headers);
-
+    List<String> finalHeaders = new ArrayList<>();
     for (Map<String, String> row : data) {
       List<String> tableRow = new ArrayList<>();
       for (String header : headers) {
-        tableRow.add(row.get(header));
+        System.out.println("Header: " + header);
+        // if header is "V", then need to find the key that starts with "V"
+        if (header.equals("V")) {
+          List<String> keys = row.keySet().stream().filter(k -> k.startsWith("V")).toList();
+          for (String key : keys) {
+            tableRow.add(row.get(key));
+            finalHeaders.add(key);
+          }
+          continue;
+        } else {
+          tableRow.add(row.get(header));
+          finalHeaders.add(header);
+        }
       }
       Logs.tableRow(tableRow);
     }
+
+    Logs.tableHeader(finalHeaders);
 
     Logs.printTable();
     Logs.footer(true);
@@ -824,4 +845,9 @@ public class CommandSystemSingleton {
  * . 12 | Gornja Stubica | 5:31 | 6:31 | 8:07 | 9:08 | 11:12
  *
  * 
+ */
+
+/*
+ * IVI2S Mala Subotica - Kotoriba - Pe - 00:00 - 23:59 - SPVK
+ * IVI2S Zabok - Zagreb glavni kolodvor - Pe - 06:55 - 07:22 - SPKV
  */

@@ -265,44 +265,37 @@ public class TrainComposite implements IComponent, ISubject {
     }
 
     public ScheduleTime getDepartureTimeAtStation(Station start) {
-        if (this.children.isEmpty()) {
+        if (this.children.isEmpty() || !this.hasStation(start.name()))
             return null;
-        }
-        if (!this.hasStation(start.name())) {
-            return null;
-        }
-
-        // find the first stage that contains the station
         TrainTrackStageComposite withStation = this.firstWithStation(start.name());
+        if (withStation == null)
+            return null;
         // calculate the schedule time of departure for the station
-        ScheduleTime departureTime = withStation.fromTime();
+        ScheduleTime departureTime = withStation.fromTime(start.name());
         for (StationLeaf leaf : withStation.children) {
             if (leaf.getStation().name().equals(start.name())) {
                 break;
             }
-            departureTime = departureTime.addMinutes(leaf.getStation().timeForTrainType(withStation.schedule.trainType()));
+            departureTime = departureTime
+                    .addMinutes(leaf.getStation().timeForTrainType(withStation.schedule.trainType()));
         }
         return departureTime;
     }
 
     public ScheduleTime getArrivalTimeAtStation(Station end) {
-        if (this.children.isEmpty()) {
+        if (this.children.isEmpty() || !this.hasStation(end.name()))
             return null;
-        }
-        if (!this.hasStation(end.name())) {
+        TrainTrackStageComposite withStation = this.firstWithStation(end.name());
+        if (withStation == null)
             return null;
-        }
-
-        TrainTrackStageComposite withStation = this.children.stream()
-                .filter(stage -> stage.hasStation(end.name()))
-                .reduce((first, second) -> second)
-                .orElse(null);
-        ScheduleTime arrivalTime = withStation.toTime();
-        for (StationLeaf leaf : withStation.children.reversed()) {
+        // calculate the schedule time of arrival for the station
+        ScheduleTime arrivalTime = withStation.arrivalTime(end.name());
+        for (StationLeaf leaf : withStation.children) {
+            arrivalTime = arrivalTime
+                    .addMinutes(leaf.getStation().timeForTrainType(withStation.schedule.trainType()));
             if (leaf.getStation().name().equals(end.name())) {
                 break;
             }
-            arrivalTime = arrivalTime.subtractMinutes(leaf.getStation().timeForTrainType(withStation.schedule.trainType()));
         }
         return arrivalTime;
     }
