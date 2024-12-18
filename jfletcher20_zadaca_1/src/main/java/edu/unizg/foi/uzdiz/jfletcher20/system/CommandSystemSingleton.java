@@ -790,14 +790,14 @@ public class CommandSystemSingleton {
 
   private void fixDistances(List<Map<String, String>> data, List<String> headers, List<String> finalHeaders,
       List<List<String>> tableRows, String displayFormat) {
-    // get the distance ("K") in the very first row and store it as the starting point
-    // for every row, starting from the first, reduce the K value by the K value of the starting point
+    // get the distance ("K") in the very first row and store it as the starting
+    // point
+    // for every row, starting from the first, reduce the K value by the K value of
+    // the starting point
     // this way, the distance will be calculated from the starting point
 
-    // get the first row
     Map<String, String> firstRow = data.get(0);
     double startingDistance = Double.parseDouble(firstRow.get("K"));
-    System.out.println("Starting distance: " + startingDistance);
 
     for (Map<String, String> row : data) {
       double currentDistanceForRow = Double.parseDouble(row.get("K"));
@@ -832,7 +832,17 @@ public class CommandSystemSingleton {
             .forEach(finalHeaders::add);
       } else
         finalHeaders.add(String.valueOf(c));
-    Logs.tableHeader(finalHeaders);
+    finishIvi2SOutput(finalHeaders, tableRows);
+  }
+
+  private void finishIvi2SOutput(List<String> finalHeaders, List<List<String>> tableRows) {
+    Logs.tableHeader(finalHeaders.stream().map(value -> switch (value) {
+      case "S" -> "od";
+      case "P" -> "pruga";
+      case "K" -> "km";
+      case "V" -> "vlak";
+      default -> value.startsWith("V:") ? value.substring(2) : value;
+    }).toList());
     for (List<String> row : tableRows)
       Logs.tableRow(row);
   }

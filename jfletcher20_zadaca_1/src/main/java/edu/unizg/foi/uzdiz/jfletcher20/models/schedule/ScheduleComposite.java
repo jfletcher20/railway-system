@@ -239,7 +239,7 @@ public class ScheduleComposite implements IComposite {
                 continue;
             }
 
-            processTrainIVRV(commandIVI2S, train, trainIVRV.subList(startStationIndex, endStationIndex + 1));
+            adaptIVRVtoIVI2S(commandIVI2S, train, trainIVRV.subList(startStationIndex, endStationIndex + 1));
         }
 
         return commandIVI2S;
@@ -254,7 +254,7 @@ public class ScheduleComposite implements IComposite {
         return -1;
     }
 
-    private void processTrainIVRV(List<Map<String, String>> commandIVI2S, TrainComposite train,
+    private void adaptIVRVtoIVI2S(List<Map<String, String>> commandIVI2S, TrainComposite train,
             List<List<String>> trainIVRV) {
         for (List<String> ivrvRowData : trainIVRV) {
             String stationName = ivrvRowData.get(2);
@@ -263,16 +263,16 @@ public class ScheduleComposite implements IComposite {
             String distanceFromStartStation = ivrvRowData.get(4);
 
             if (commandIVI2S.isEmpty()) {
-                addInitialRow(commandIVI2S, stationName, trackID, distanceFromStartStation, train.trainID,
+                addInitialIVI2SRow(commandIVI2S, stationName, trackID, distanceFromStartStation, train.trainID,
                         departureTime);
             } else {
-                updateOrAddRow(commandIVI2S, stationName, trackID, distanceFromStartStation, train.trainID,
+                updateOrAddIVI2SRow(commandIVI2S, stationName, trackID, distanceFromStartStation, train.trainID,
                         departureTime);
             }
         }
     }
 
-    private void addInitialRow(List<Map<String, String>> commandIVI2S, String stationName, String trackID,
+    private void addInitialIVI2SRow(List<Map<String, String>> commandIVI2S, String stationName, String trackID,
             String distanceFromStartStation, String trainID, String departureTime) {
         commandIVI2S.add(new HashMap<>(Map.of(
                 "S", stationName,
@@ -281,7 +281,7 @@ public class ScheduleComposite implements IComposite {
                 "V:" + trainID, departureTime)));
     }
 
-    private void updateOrAddRow(List<Map<String, String>> commandIVI2S, String stationName, String trackID,
+    private void updateOrAddIVI2SRow(List<Map<String, String>> commandIVI2S, String stationName, String trackID,
             String distanceFromStartStation, String trainID, String departureTime) {
         boolean found = false;
 
