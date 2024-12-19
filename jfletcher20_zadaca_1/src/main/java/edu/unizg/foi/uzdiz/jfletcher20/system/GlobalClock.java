@@ -71,6 +71,14 @@ public abstract class GlobalClock {
         return GlobalClock.state == ClockState.SIMULATING;
     }
 
+    public static boolean isStopped() {
+        return GlobalClock.state == ClockState.STOPPED;
+    }
+
+    public static boolean isPaused() {
+        return GlobalClock.state == ClockState.PAUSED;
+    }
+
     public static void simulate(TrainComposite train, Weekday day, ScheduleTime startTime, int coefficient) {
         ScheduleTime currentTime = startTime;
         GlobalClock.setTime(currentTime);

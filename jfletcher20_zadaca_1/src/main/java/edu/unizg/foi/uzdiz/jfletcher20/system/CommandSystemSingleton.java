@@ -20,28 +20,6 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 
-/*
- * ● Simulacija vožnje vlaka na određeni dan u tjednu uz koeficijent za sekundu 
-○ Sintaksa:  
-■ SVV oznaka - dan - koeficijent 
-○ Primjer:  
-■ SVV 3609 - Po - 60 
-○ Opis primjera:  
-■ Simulira se vožnja vlaka od vremena polaska s polazne željezničke stanice 
-do dolaska u odredišnu željezničku stanicu. Odnos simulacijskog i stvarnog 
-vremena upravlja se koeficijentom. Ako je koeficijent 60 tada jedna minuta 
-u simulaciji putovanja vlaka traje 1 stvarnu sekundu odnosno virtualno 
-vremenu je 60 puta brže od stvarnog vremena. Simulacija se provodi tako 
-da se virtualno vrijeme postavi na vrijeme polaska vlaka s polazne 
-željezničke stanice i zatim se izvršava jedna virtualna minuta. Ako je 
-virtualno vrijeme jednako vremenu sljedeće željezničke stanica znači da je 
-vlak došao u željezničku stanicu te se ispisuje njeni podaci (oznaka pruge, 
-željeznička stanica, vrijeme) i obavještavaju se svi korisnici koji prate taj 
-vlak ili tu njegovu željezničku stanicu. Simulacija završava kada vlak stigne 
-i obradi odredišnu željezničku stanicu ili se na konzoli unese znak X, što se 
-provjerava nakon svake simulirane minute. 
- */
-
 /**
  * The CommandSystem class is responsible for handling the command system of the
  * program.

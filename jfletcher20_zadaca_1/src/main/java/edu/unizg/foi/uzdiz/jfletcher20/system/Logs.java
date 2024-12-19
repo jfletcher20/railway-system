@@ -354,11 +354,13 @@ public abstract class Logs {
     }
 
     public void logUserMessage(User user, String trainID, String stationName) {
-      System.out.println("\t\t<" + user + ">: " + trainID + " - " + stationName);
+      System.out.println("\t\t" + (GlobalClock.isSimulating() || GlobalClock.isPaused() ? GlobalClock.getTime() + "::" : "")
+          + "<" + user + ">: " + trainID + " - " + stationName);
     }
 
     public void logUserMessage(User user, String message) {
-      System.out.println("\t\t<" + user + ">: " + message);
+      System.out.println("\t\t" + (GlobalClock.isSimulating() || GlobalClock.isPaused() ? GlobalClock.getTime() + "::" : "")
+          + "<" + user + ">: " + message);
     }
 
     public void logUserWarning(User user, String message) {
@@ -366,7 +368,8 @@ public abstract class Logs {
     }
 
     public void logUserCommunication(User receiver, User sender, String message) {
-      System.out.println("\t\t<" + receiver + "> <--poruka-- <" + sender + ">: " + message);
+      System.out.println("\t\t" + (GlobalClock.isSimulating() || GlobalClock.isPaused() ? GlobalClock.getTime() + "::" : "")
+          + "<" + receiver + "> <--poruka-- <" + sender + ">: " + message);
     }
 
     public void logSimulationMessage(ScheduleTime time, String message) {
@@ -374,7 +377,8 @@ public abstract class Logs {
     }
 
     public void logVoyage(User user, String trainID, String stationName) {
-      System.out.println("\t [" + trainID + "] --obavijest--> <" + user + "> ima svijest o dolasku vlaka na stanicu " + stationName);
+      System.out.println(
+          "\t [" + trainID + "] --obavijest--> <" + user + "> ima svijest o dolasku vlaka na stanicu " + stationName);
     }
 
   }
