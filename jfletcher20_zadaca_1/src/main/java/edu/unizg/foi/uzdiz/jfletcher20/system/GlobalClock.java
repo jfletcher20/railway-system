@@ -36,28 +36,8 @@ public abstract class GlobalClock {
     }
 
     public static void setTime(ScheduleTime time) {
-        if (GlobalClock.isSimulating()) {
-            List<TrainComposite> trainsToRemove = new ArrayList<TrainComposite>();
-            for (TrainComposite train : trains) {
-                boolean arrivedAtStation = train.isCurrentlyAtStation(GlobalClock.getTime());
-                if (arrivedAtStation) {
-                    Station currentStation = train.getCurrentStation(GlobalClock.getTime());
-                    Logs.s(GlobalClock.getTime(), "Vlak " + train.trainID + " je na " + train.getTypeOfStation(currentStation) + " "
-                            + currentStation.name());
-                    train.notifyObservers(currentStation.name());
-                }
-
-                if (train.hasReachedDestination(GlobalClock.getTime())) {
-                    Logs.s(GlobalClock.getTime(), "Vlak " + train.trainID + " je stigao na odredište.");
-                    trainsToRemove.add(train);
-                }
-            }
-            for (TrainComposite train : trainsToRemove)
-                trains.remove(train);
-            if (trains.isEmpty()) {
-                GlobalClock.setState(ClockState.STOPPED);
-            }
-        }
+        if (GlobalClock.isSimulating())
+            trainSimulation(GlobalClock.getTime());
         GlobalClock.time = time.getTotalTimeInMinutes();
     }
 
@@ -110,7 +90,8 @@ public abstract class GlobalClock {
             } catch (IOException e) {
             }
 
-            if (!GlobalClock.trains.contains(train)) GlobalClock.trains.add(train);
+            if (!GlobalClock.trains.contains(train))
+                GlobalClock.trains.add(train);
             currentTime = currentTime.addMinutes(1);
             GlobalClock.setTime(currentTime);
 
@@ -122,6 +103,30 @@ public abstract class GlobalClock {
             }
         }
 
+    }
+
+    private static void trainSimulation(ScheduleTime time) {
+        List<TrainComposite> trainsToRemove = new ArrayList<TrainComposite>();
+        for (TrainComposite train : trains) {
+            boolean arrivedAtStation = train.isCurrentlyAtStation(GlobalClock.getTime());
+            if (arrivedAtStation) {
+                Station currentStation = train.getCurrentStation(GlobalClock.getTime());
+                Logs.s(GlobalClock.getTime(),
+                        "Vlak " + train.trainID + " je na " + train.getTypeOfStation(currentStation) + " "
+                                + currentStation.name());
+                train.notifyObservers(currentStation.name());
+            }
+
+            if (train.hasReachedDestination(GlobalClock.getTime())) {
+                Logs.s(GlobalClock.getTime(), "Vlak " + train.trainID + " je stigao na odredište.");
+                trainsToRemove.add(train);
+            }
+        }
+        for (TrainComposite train : trainsToRemove)
+            trains.remove(train);
+        if (trains.isEmpty()) {
+            GlobalClock.setState(ClockState.STOPPED);
+        }
     }
 
 }

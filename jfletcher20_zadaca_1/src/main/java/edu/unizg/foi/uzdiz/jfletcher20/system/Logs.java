@@ -361,14 +361,26 @@ public abstract class Logs {
       System.out.println("\t\t<" + user + ">: " + message);
     }
 
+    public void logUserWarning(User user, String message) {
+      System.out.println("\t\t[LINK-OBAVIJEST] <" + user + "> " + message);
+    }
+
     public void logUserCommunication(User receiver, User sender, String message) {
-      System.out.println("\t\t<" + receiver + "> <-prima-od- <" + sender + ">: " + message);
+      System.out.println("\t\t<" + receiver + "> <--poruka-- <" + sender + ">: " + message);
     }
 
     public void logSimulationMessage(ScheduleTime time, String message) {
       System.out.println("\t" + time + " >> " + message);
     }
 
+    public void logVoyage(User user, String trainID, String stationName) {
+      System.out.println("\t [" + trainID + "] --obavijest--> <" + user + "> ima svijest o dolasku vlaka na stanicu " + stationName);
+    }
+
+  }
+
+  public static void voyage(User user, String trainID, String stationName) {
+    LogsSingleton.getInstance().logVoyage(user, trainID, stationName);
   }
 
   public static void u(User user, String trainID, String stationName) {
@@ -377,6 +389,10 @@ public abstract class Logs {
 
   public static void u(User user, String message) {
     LogsSingleton.getInstance().logUserMessage(user, message);
+  }
+
+  public static void uw(User user, String message) {
+    LogsSingleton.getInstance().logUserWarning(user, message);
   }
 
   public static void u(User receiver, User sender, String message) {

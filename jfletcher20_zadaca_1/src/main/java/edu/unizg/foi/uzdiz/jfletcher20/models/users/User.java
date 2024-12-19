@@ -1,6 +1,8 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.users;
 
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IObserver;
+import edu.unizg.foi.uzdiz.jfletcher20.system.ChatMediator;
+import edu.unizg.foi.uzdiz.jfletcher20.system.CommandSystemSingleton;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 
 /*
@@ -40,12 +42,23 @@ public record User(
 
     @Override
     public void update(String trainID, String stationName) {
-        Logs.u(this, trainID, stationName);
+        Logs.voyage(this, trainID, stationName);
+        chat().broadcast(trainID, this,
+                "Vlak " + trainID + " je stiglo u stanicu " + stationName, true);
+        // complain(trainID, stationName);
     }
 
     @Override
     public String toString() {
         return name.substring(0, 1).toUpperCase() + ". " + lastName;
+    }
+
+    private ChatMediator chat() {
+        return CommandSystemSingleton.getInstance().getUserChat();
+    }
+
+    private void complain() {
+        // random chance between 1-10
     }
 
 }

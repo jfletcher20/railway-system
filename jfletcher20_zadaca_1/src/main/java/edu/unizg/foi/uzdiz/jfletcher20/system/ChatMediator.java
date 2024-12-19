@@ -24,9 +24,20 @@ public class ChatMediator {
         return groupChats;
     }
 
+    public List<String> chatsUserIsIn(User user) {
+        List<String> chats = new ArrayList<String>();
+        for (String groupId : groupUsers.keySet()) {
+            Set<User> users = groupUsers.get(groupId);
+            if (users.contains(user)) {
+                chats.add(groupId);
+            }
+        }
+        return chats;
+    }
+
     public void linkUser(String groupId, User user) {
         groupUsers.computeIfAbsent(groupId, k -> new HashSet<>()).add(user);
-        Logs.o(user + " sada participira u grupi " + groupId);
+        Logs.uw(user, "sada participira u grupi " + groupId);
     }
 
     public void unlinkUser(String groupId, User user) {
@@ -35,21 +46,35 @@ public class ChatMediator {
             users.remove(user);
             if (users.isEmpty())
                 groupUsers.remove(groupId);
-                Logs.o(user + " više nije u grupi " + groupId);
+            Logs.uw(user, "više nije u grupi " + groupId);
         } else {
-            Logs.o(user + " nije u grupi " + groupId + " pa se ne mora izbaciti.");
+            Logs.uw(user, "nije u grupi " + groupId + " pa se ne mora izbaciti");
         }
     }
 
     public void broadcast(String groupId, User sender, String message) {
         Set<User> users = groupUsers.get(groupId);
         if (users == null || users.isEmpty()) {
-            Logs.o("Grupa " + groupId + " nema korisnika koji bi primili poruku.");
+            Logs.uw(sender, "grupa " + groupId + " nema korisnika koji bi primili poruku");
             return;
         }
         for (User user : users) {
             if (!user.equals(sender)) {
-                Logs.o(user + " prima poruku \"" + message + "\" od " + sender);
+                Logs.u(user, sender, message);
+            }
+        }
+    }
+
+    public void broadcast(String groupId, User sender, String message, boolean checkIfEmpty) {
+        Set<User> users = groupUsers.get(groupId);
+        if (users == null || users.isEmpty()) {
+            if (!checkIfEmpty)
+                Logs.uw(sender, "grupa " + groupId + " nema korisnika koji bi primili poruku");
+            return;
+        }
+        for (User user : users) {
+            if (!user.equals(sender)) {
+                Logs.u(user, sender, message);
             }
         }
     }

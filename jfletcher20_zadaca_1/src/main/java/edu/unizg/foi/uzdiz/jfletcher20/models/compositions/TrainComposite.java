@@ -186,7 +186,7 @@ public class TrainComposite implements IComponent, ISubject {
                         this.trainID,
                         trainTrackStage.trackID,
                         stationName,
-                        departureTime.toString(),
+                        departureTime == null ? "-" : departureTime.toString(),
                         String.format("%.2f", cumulativeDistance));
                 result.add(row);
             }
