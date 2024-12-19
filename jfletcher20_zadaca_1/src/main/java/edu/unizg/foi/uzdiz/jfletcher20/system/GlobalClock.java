@@ -39,17 +39,16 @@ public abstract class GlobalClock {
         if (GlobalClock.isSimulating()) {
             List<TrainComposite> trainsToRemove = new ArrayList<TrainComposite>();
             for (TrainComposite train : trains) {
-                boolean arrivedAtStation = train.isCurrentlyAtStation(time);
-                // System.out.println("Vlak " + train.trainID + " je na stanici: " + arrivedAtStation);
+                boolean arrivedAtStation = train.isCurrentlyAtStation(GlobalClock.getTime());
                 if (arrivedAtStation) {
-                    Station currentStation = train.getCurrentStation(time);
-                    Logs.s(time, "Vlak " + train.trainID + " je na " + train.getTypeOfStation(currentStation) + " "
+                    Station currentStation = train.getCurrentStation(GlobalClock.getTime());
+                    Logs.s(GlobalClock.getTime(), "Vlak " + train.trainID + " je na " + train.getTypeOfStation(currentStation) + " "
                             + currentStation.name());
                     train.notifyObservers(currentStation.name());
                 }
 
-                if (train.hasReachedDestination(time)) {
-                    Logs.s(time, "Vlak " + train.trainID + " je stigao na odredište.");
+                if (train.hasReachedDestination(GlobalClock.getTime())) {
+                    Logs.s(GlobalClock.getTime(), "Vlak " + train.trainID + " je stigao na odredište.");
                     trainsToRemove.add(train);
                 }
             }
@@ -93,14 +92,12 @@ public abstract class GlobalClock {
     }
 
     public static void simulate(TrainComposite train, Weekday day, ScheduleTime startTime, int coefficient) {
-        coefficient *= 3;
         ScheduleTime currentTime = startTime;
         GlobalClock.setTime(currentTime);
         GlobalClock.setState(ClockState.SIMULATING);
 
         Logs.s(currentTime, "Vlak " + train.trainID + " počinje s radom.");
         while (GlobalClock.isSimulating()) {
-            // System.out.println("Trenutno vrijeme: " + currentTime.toString());
             try {
                 if (System.in.available() > 0) {
                     String input = System.console().readLine();

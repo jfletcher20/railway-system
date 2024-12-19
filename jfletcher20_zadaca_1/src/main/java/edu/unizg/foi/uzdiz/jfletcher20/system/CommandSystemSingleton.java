@@ -857,8 +857,6 @@ public class CommandSystemSingleton {
     String trainId = simulateTrainMatcher.group("trainId").trim();
     String dayStr = simulateTrainMatcher.group("day").trim();
     String coefficientStr = simulateTrainMatcher.group("coefficient").trim();
-
-    // Validate inputs
     Weekday day;
     try {
       day = Weekday.dayFromString(dayStr);
@@ -873,7 +871,6 @@ public class CommandSystemSingleton {
       Logs.e("Neispravan koeficijent: " + coefficientStr);
       return;
     }
-
     TrainComposite train = RailwaySingleton.getInstance()
         .getSchedule()
         .getTrainById(trainId);
@@ -881,72 +878,11 @@ public class CommandSystemSingleton {
       Logs.e("Vlak s oznakom ID " + trainId + " ne postoji.");
       return;
     }
-
     ScheduleTime currentTime = train.getDepartureTime(day);
     if (currentTime == null) {
       Logs.e("Vlak ne radi danom " + day);
       return;
     }
-
     GlobalClock.simulate(train, day, currentTime, coefficient);
-
   }
 }
-
-/*
- * 
- * 
- * ● Pregled vlakova (voznog reda) kojima se može putovati od jedne željezničke
- * stanice do
- * druge željezničke stanice na određen dan u tjednu unutar zadanog vremena
- * ○ Sintaksa:
- * ■ IVI2S polaznaStanica - odredišnaStanica - dan - odVr - doVr - prikaz
- * ○ Primjeri:
- * ■ IVI2S Donji Kraljevec - Čakovec - N - 0:00 - 23:59 - SPKV
- * ■ IVI2S Donji Kraljevec - Novi Marof - Pe - 08:00 - 16:00 - KPSV
- * ■ IVI2S Donji Kraljevec - Ludbreg - Su - 5:20 - 20:30 - VSPK
- * ○ Opis primjera:
- * ■ Ispis tablice sa željezničkim stanicama između dviju željezničkih stanica,
- * s
- * brojem kilometara, vremenima polaska vlakova sa željezničkih stanica.
- * Prikazuju se samo oni vlakovi koji prometuju na određeni dan i čije je
- * vrijeme polaska s polazne željezničke stanice nakon odVr vremena i
- * vrijeme dolaska u odredišnu željezničku stanicu prije doVr vremena.
- * Podaci se prikazuju u stupcima čiji redoslijed je proizvoljan i stupcima se
- * mogu ponavljati. S označava naziv željezničke stanice, P označava prugu,
- * K označava broj km od polazne željezničke stanice, V označava vrijeme
- * polaska određenog vlaka sa željezničke stanice. V se odnosi na jedan ili
- * više stupaca. Potrebno je prilagoditi ispis zaglavlja i redova zadanom
- * prikazu. Osim gornjih primjera prikaza mogu biti i drugi prikazi kao npr: SPV
- * (nema prikaza broj kilometara), KPSVK (broj kilometara se prikazuje u
- * prvom i posljednjem stupcu). U stupcu pojedinog vlaka ispisuje se vrijeme
- * polaska sa željezničke stanice. U 1. primjeru su stanice koje su na istoj
- * pruzi, na 2. primjeru su željezničke stanice koje su na dvije pruge, a na 3.
- * primjeru su željezničke stanice koje su na tri pruge. Vlakovi se ispisuju u
- * kronološkom redoslijedu vremena polaska vlaka s njegove polazne
- * željezničke stanice. Slika 1 prikazuje djelomični izvod iz voznog reda od
- * željezničke stanice Zabok do druge željezničke stanice Gornja Stubica za
- * ponedjeljak od vremena 5:00 do vremena 12:00 uz oznake KSV. Na slici
- * treba zanemariti oznake dana u tjednu.
- * 
- * Ispis tablice ima stupce i retke zamijenjeno, npr. (ovo nije primjer ispisa
- * za ovaj zadatak, samo primjer kako izgleda dok su zamijenjeni stupci)
- * 
- *
- * Udaljenost od pocetne stanice | od | 3210 | 3212 | 3214 | 3216 | 3218
- * . ----------------------------- | ---------------- | ---- | ---- | ---- |
- * ---- | -----
- * . 0 | Zabok | 5:10 | 6:10 | 7:46 | 8:47 | 10:51
- * . 2 | Hum Lug | 5:13 | 6:13 | 7:49 | 8:50 | 10:54
- * . 4 | Oroslavje | 5:17 | 6:17 | 7:53 | 8:54 | 10:58
- * . 7 | Stubi?ke Toplice | 5:22 | 6:22 | 7:58 | 8:59 | 11:03
- * . 9 | Donja Stubica | 5:26 | 6:26 | 8:02 | 9:03 | 11:07
- * . 12 | Gornja Stubica | 5:31 | 6:31 | 8:07 | 9:08 | 11:12
- *
- * 
- */
-
-/*
- * IVI2S Mala Subotica - Kotoriba - Pe - 00:00 - 23:59 - SPVK
- * IVI2S Zabok - Zagreb glavni kolodvor - Pe - 06:55 - 07:22 - SPKV
- */
