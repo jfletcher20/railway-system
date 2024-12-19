@@ -92,7 +92,6 @@ public abstract class FilesUtil {
   public static void loadFile(Path path, FileType fileType) {
     try {
       var lines = Files.readAllLines(path);
-      Logs.toggleInfo();
       for (int i = 1; i < lines.size(); i++) {
         String line = lines.get(i);
         if (line.trim().startsWith("#")) {
@@ -109,7 +108,6 @@ public abstract class FilesUtil {
           continue;
         }
       }
-      Logs.toggleInfo();
     } catch (IOException e) {
       e.printStackTrace();
     }

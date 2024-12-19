@@ -12,7 +12,7 @@ public class RailwaySingletonBuilder implements IBuilder {
     if (RailwaySingleton.getInstance().getInitArgs() != null) {
       if (!FilesUtil.loadFiles(RailwaySingleton.getInstance().getInitArgs()))
         return null;
-      RailwaySingleton.getInstance().printStats();
+      // RailwaySingleton.getInstance().printStats();
     } else {
       Logs.e("RailwaySingletonBuilder buildPart: "
           + "RailwaySingleton instance does not have initArgs set!");
@@ -37,7 +37,7 @@ public class RailwaySingletonBuilder implements IBuilder {
 
   @Override
   public RailwaySingleton getResult() {
-    RailwaySingleton.getInstance().printStats();
+    // RailwaySingleton.getInstance().printStats();
     return RailwaySingleton.getInstance();
   }
 

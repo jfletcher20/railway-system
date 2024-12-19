@@ -43,6 +43,8 @@ public enum Weekday {
     }
 
     public static Set<Weekday> daysFromString(String value) {
+        if (stringHasInvalidEntry(value))
+            throw new IllegalArgumentException("Nepoznata oznaka dana u unosu: " + value);
         if (value == null || value.trim().isEmpty())
             return Set.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY);
         Set<Weekday> days = new java.util.HashSet<>();
@@ -63,6 +65,12 @@ public enum Weekday {
         if (value.equals(""))
             days.addAll(Set.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY));
         return days;
+    }
+
+    public static boolean stringHasInvalidEntry(String value) {
+        value = value.replaceAll("Po", "").replaceAll("U", "").replaceAll("Sr", "").replaceAll("Č", "")
+                .replaceAll("Pe", "").replaceAll("Su", "").replaceAll("N", "");
+        return !value.trim().isEmpty();
     }
 
     public List<Weekday> days() {

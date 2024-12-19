@@ -71,7 +71,6 @@ public class RailwaySingleton {
     }
 
     this.initArgs = newArgs.toArray(new String[0]);
-    Logs.toggleInfo();
     Logs.i("RailwaySingleton initArgs set to: " + String.join(" ", this.initArgs));
   }
 
