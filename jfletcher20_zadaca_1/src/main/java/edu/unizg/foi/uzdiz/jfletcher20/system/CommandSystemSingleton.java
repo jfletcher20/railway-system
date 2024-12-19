@@ -705,15 +705,59 @@ public class CommandSystemSingleton {
   }
 
   private void finishIvi2SOutput(List<String> finalHeaders, List<List<String>> tableRows) {
-    Logs.tableHeader(finalHeaders.stream().map(value -> switch (value) {
+    if (tableRows.isEmpty() || finalHeaders.isEmpty()) {
+      return; // Exit early if there are no rows or headers.
+    }
+
+    // Step 1: Extract the map of header-to-ScheduleTime for the first row
+    Map<String, ScheduleTime> headerToTimeMap = new HashMap<>();
+    for (int i = 0; i < finalHeaders.size(); i++) {
+      String header = finalHeaders.get(i);
+      if (header.startsWith("V:")) { // Only consider train headers
+        headerToTimeMap.put(header, new ScheduleTime(tableRows.get(0).get(i)));
+      }
+    }
+
+    // Step 2: Reorder train headers based on their ScheduleTime (earliest to
+    // latest)
+    List<String> reorderedTrainHeaders = headerToTimeMap.entrySet().stream()
+        .sorted(Map.Entry.comparingByValue(ScheduleTime::compareTo))
+        .map(Map.Entry::getKey)
+        .toList();
+
+    // Step 3: Compute the new order of indexes for all headers
+    List<String> reorderedHeaders = new ArrayList<>(finalHeaders);
+    int trainIndex = 0;
+    for (int i = 0; i < finalHeaders.size(); i++) {
+      if (finalHeaders.get(i).startsWith("V:")) {
+        reorderedHeaders.set(i, reorderedTrainHeaders.get(trainIndex++));
+      }
+    }
+
+    // Step 4: Reorder the columns in all rows based on the new header order
+    List<Integer> newIndexOrder = new ArrayList<>();
+    for (String header : reorderedHeaders) {
+      newIndexOrder.add(finalHeaders.indexOf(header));
+    }
+
+    List<List<String>> reorderedTableRows = tableRows.stream()
+        .map(row -> newIndexOrder.stream()
+            .map(row::get)
+            .toList())
+        .toList();
+
+    // Step 5: Set the table header and log rows
+    Logs.tableHeader(reorderedHeaders.stream().map(value -> switch (value) {
       case "S" -> "od";
       case "P" -> "pruga";
       case "K" -> "km";
       case "V" -> "vlak";
       default -> value.startsWith("V:") ? value.substring(2) : value;
     }).toList());
-    for (List<String> row : tableRows)
+
+    for (List<String> row : reorderedTableRows) {
       Logs.tableRow(row);
+    }
   }
 
   private List<String> createHeadersFromFormat(String format) {
