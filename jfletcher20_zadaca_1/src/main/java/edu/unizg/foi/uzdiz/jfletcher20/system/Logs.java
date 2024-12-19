@@ -206,56 +206,69 @@ public abstract class Logs {
       List<String> rows = new ArrayList<>();
       if (tableOutput.isEmpty())
         return rows;
-      int[] columnLengths = new int[tableOutput.get(0).size()];
-      for (List<String> row : tableOutput)
-        for (int i = 0; i < row.size(); i++) {
-          String cell = row.get(i) == null ? "" : row.get(i);
-          if (cell.length() > maxColumnLength)
-            cell = cell.substring(0, maxColumnLength - 3) + "...";
-          try {
-            columnLengths[i] = Math.max(columnLengths[i], cell == null ? 0 : cell.length());
-          } catch (ArrayIndexOutOfBoundsException e) {
-            columnLengths = new int[row.size()];
-            for (int c = 0; c < row.size(); c++) {
-              columnLengths[c] = row.get(c).length();
-            }
-          }
-        }
+
+      int[] columnLengths = calculateColumnLengths();
+
       for (int rowIndex = 0; rowIndex < tableOutput.size(); rowIndex++) {
         List<String> row = tableOutput.get(rowIndex);
-        StringBuilder line = new StringBuilder();
-        for (int i = 0; i < row.size(); i++) {
-          String cell = row.get(i) == null ? "" : row.get(i);
-          if (cell.length() > maxColumnLength)
-            cell = cell.substring(0, maxColumnLength - 3) + "...";
-          if (cell.matches("-?\\d+(\\.\\d+)?")) {
-            line.append(String.format("%" + columnLengths[i] + "s", cell));
-          }
-          // cells that have text that is wrapped in --text-- are centered
-          else if (cell.matches("--.*--")) {
-            String centeredText = cell.substring(2, cell.length() - 2);
-            int padding = Math.abs((columnLengths[i] - centeredText.length()) / 2);
-            line.append(" ".repeat(padding) + centeredText + " ".repeat(padding));
-          } else {
-            line.append(String.format("%-" + columnLengths[i] + "s", cell));
-          }
-          if (i < row.size() - 1)
-            line.append("\t| ");
-        }
+        StringBuilder line = formatRow(row, columnLengths);
         rows.add(line.toString());
+
         if (rowIndex == 0) {
-          StringBuilder divider = new StringBuilder();
-          for (int i = 0; i < columnLengths.length; i++) {
-            divider.append("-".repeat(columnLengths[i]));
-            if (i < columnLengths.length - 1)
-              divider.append("\t| ");
-          }
-          rows.add(divider.toString());
+          rows.add(createDivider(columnLengths));
         }
       }
 
       tableOutput.clear();
       return rows;
+    }
+
+    private int[] calculateColumnLengths() {
+      int[] columnLengths = new int[tableOutput.get(0).size()];
+      for (List<String> row : tableOutput) {
+        for (int i = 0; i < row.size(); i++) {
+          String cell = row.get(i) == null ? "" : row.get(i);
+          if (cell.length() > maxColumnLength)
+            cell = cell.substring(0, maxColumnLength - 3) + "...";
+          columnLengths[i] = Math.max(columnLengths[i], cell.length());
+        }
+      }
+      return columnLengths;
+    }
+
+    private StringBuilder formatRow(List<String> row, int[] columnLengths) {
+      StringBuilder line = new StringBuilder();
+      for (int i = 0; i < row.size(); i++) {
+        String cell = row.get(i) == null ? "" : row.get(i);
+        if (cell.length() > maxColumnLength)
+          cell = cell.substring(0, maxColumnLength - 3) + "...";
+        if (cell.matches("-?\\d+(\\.\\d+)?")) {
+          line.append(String.format("%" + columnLengths[i] + "s", cell));
+        } else if (cell.matches("--.*--")) {
+          line.append(centerText(cell, columnLengths[i]));
+        } else {
+          line.append(String.format("%-" + columnLengths[i] + "s", cell));
+        }
+        if (i < row.size() - 1)
+          line.append("\t| ");
+      }
+      return line;
+    }
+
+    private String centerText(String cell, int columnLength) {
+      String centeredText = cell.substring(2, cell.length() - 2);
+      int padding = Math.abs((columnLength - centeredText.length()) / 2);
+      return " ".repeat(padding) + centeredText + " ".repeat(padding);
+    }
+
+    private String createDivider(int[] columnLengths) {
+      StringBuilder divider = new StringBuilder();
+      for (int i = 0; i < columnLengths.length; i++) {
+        divider.append("-".repeat(columnLengths[i]));
+        if (i < columnLengths.length - 1)
+          divider.append("\t| ");
+      }
+      return divider.toString();
     }
 
     public void printTable(int maxColumnLength) {
@@ -354,13 +367,15 @@ public abstract class Logs {
     }
 
     public void logUserMessage(User user, String trainID, String stationName) {
-      System.out.println("\t\t" + (GlobalClock.isSimulating() || GlobalClock.isPaused() ? GlobalClock.getTime() + "::" : "")
-          + "<" + user + ">: " + trainID + " - " + stationName);
+      System.out
+          .println("\t\t" + (GlobalClock.isSimulating() || GlobalClock.isPaused() ? GlobalClock.getTime() + "::" : "")
+              + "<" + user + ">: " + trainID + " - " + stationName);
     }
 
     public void logUserMessage(User user, String message) {
-      System.out.println("\t\t" + (GlobalClock.isSimulating() || GlobalClock.isPaused() ? GlobalClock.getTime() + "::" : "")
-          + "<" + user + ">: " + message);
+      System.out
+          .println("\t\t" + (GlobalClock.isSimulating() || GlobalClock.isPaused() ? GlobalClock.getTime() + "::" : "")
+              + "<" + user + ">: " + message);
     }
 
     public void logUserWarning(User user, String message) {
@@ -368,8 +383,9 @@ public abstract class Logs {
     }
 
     public void logUserCommunication(User receiver, User sender, String message) {
-      System.out.println("\t\t" + (GlobalClock.isSimulating() || GlobalClock.isPaused() ? GlobalClock.getTime() + "::" : "")
-          + "<" + receiver + "> <--poruka-- <" + sender + ">: " + message);
+      System.out
+          .println("\t\t" + (GlobalClock.isSimulating() || GlobalClock.isPaused() ? GlobalClock.getTime() + "::" : "")
+              + "<" + receiver + "> <--poruka-- <" + sender + ">: " + message);
     }
 
     public void logSimulationMessage(ScheduleTime time, String message) {
