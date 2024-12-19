@@ -5,23 +5,10 @@ import edu.unizg.foi.uzdiz.jfletcher20.system.ChatMediator;
 import edu.unizg.foi.uzdiz.jfletcher20.system.CommandSystemSingleton;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 
-/*
- * 
- *  Dodavanje korisnika u registar korisnika 
-○ Sintaksa:  
-■ DK ime prezime 
-○ Primjer:  
-■ DK Pero Kos 
-○ Opis primjera:  
-■ Dodaje se korisnik 
-● Pregled korisnika iz registra korisnika 
-○ Sintaksa:  
-■ PK  
-○ Primjer:  
-■ PK  
-○ Opis primjera:  
-■ Ispis korisnika
- */
+import java.util.Random;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComplaintHandler;
+import edu.unizg.foi.uzdiz.jfletcher20.handlers.complaints.*;
+
 public record User(
         String name, // Ime korisnika
         String lastName // Prezime korisnika
@@ -44,8 +31,8 @@ public record User(
     public void update(String trainID, String stationName) {
         Logs.voyage(this, trainID, stationName);
         chat().broadcast(trainID, this,
-                "Vlak " + trainID + " je stiglo u stanicu " + stationName, true);
-        // complain(trainID, stationName);
+                "Vlak " + trainID + " stigao je na stanicu " + stationName, true);
+        complain(trainID, stationName);
     }
 
     @Override
@@ -57,8 +44,21 @@ public record User(
         return CommandSystemSingleton.getInstance().getUserChat();
     }
 
-    private void complain() {
-        // random chance between 1-10
+    private void complain(String trainID, String stationName) {
+        int severity = new Random().nextInt(11);
+
+        IComplaintHandler level1 = new Level1ComplaintHandler();
+        IComplaintHandler level2 = new Level2ComplaintHandler();
+        IComplaintHandler level3 = new Level3ComplaintHandler();
+        IComplaintHandler level4 = new Level4ComplaintHandler();
+
+        level1.setNext(level2);
+        level2.setNext(level3);
+        level3.setNext(level4);
+
+        boolean shouldComplain = new Random().nextBoolean();
+        if (shouldComplain)
+            level1.handleComplaint(severity, this, trainID, stationName);
     }
 
 }

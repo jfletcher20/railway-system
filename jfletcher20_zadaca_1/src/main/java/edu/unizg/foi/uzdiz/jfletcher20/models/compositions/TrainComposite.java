@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IObserver;
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComponent;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ISubject;
@@ -443,6 +444,14 @@ public class TrainComposite implements IComponent, ISubject {
             case 2 -> "odredišnoj stanici";
             default -> "stanici";
         };
+    }
+
+    public boolean sameTrainTypeAcrossStages() {
+        if (this.children.isEmpty())
+            return false;
+        Set<TrainType> trainTypes = this.children.stream().map(stage -> stage.schedule.trainType()).collect(HashSet::new,
+                HashSet::add, HashSet::addAll);
+        return trainTypes.size() == 1;
     }
 
 }

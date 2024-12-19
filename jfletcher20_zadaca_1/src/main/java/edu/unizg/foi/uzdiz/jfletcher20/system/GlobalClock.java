@@ -75,7 +75,6 @@ public abstract class GlobalClock {
         ScheduleTime currentTime = startTime;
         GlobalClock.setTime(currentTime);
         GlobalClock.setState(ClockState.SIMULATING);
-
         Logs.s(currentTime, "Vlak " + train.trainID + " počinje s radom.");
         while (GlobalClock.isSimulating()) {
             try {
@@ -89,7 +88,6 @@ public abstract class GlobalClock {
                 }
             } catch (IOException e) {
             }
-
             if (!GlobalClock.trains.contains(train))
                 GlobalClock.trains.add(train);
             currentTime = currentTime.addMinutes(1);
@@ -102,7 +100,6 @@ public abstract class GlobalClock {
                 break;
             }
         }
-
     }
 
     private static void trainSimulation(ScheduleTime time) {

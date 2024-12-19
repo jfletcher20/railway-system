@@ -250,32 +250,32 @@ public class RailwaySingleton {
     return getDistanceBetweenStations(currentTrack.id(), firstStation, currentStation);
   }
 
-    public double getDistanceFromEnd(Station station) {
-      TrainTrack currentTrack = getTrackOfStation(station);
-      List<Station> stationsOnTrack = railroad.get(currentTrack.id());
-  
-      int stationIndex = -1;
-      for (int i = 0; i < stationsOnTrack.size(); i++) {
-          if (stationsOnTrack.get(i).equals(station)) {
-              stationIndex = i;
-              break;
-          }
+  public double getDistanceFromEnd(Station station) {
+    TrainTrack currentTrack = getTrackOfStation(station);
+    List<Station> stationsOnTrack = railroad.get(currentTrack.id());
+
+    int stationIndex = -1;
+    for (int i = 0; i < stationsOnTrack.size(); i++) {
+      if (stationsOnTrack.get(i).equals(station)) {
+        stationIndex = i;
+        break;
       }
-  
-      if (stationIndex == -1) {
-          Logs.e("Station not found on the track.");
-          return 0.0;
-      }
-  
-      double cumulativeDistance = 0.0;
-      for (int i = stationIndex; i < stationsOnTrack.size() - 1; i++) {
-          Station currentStation = stationsOnTrack.get(i);
-          Station nextStation = stationsOnTrack.get(i + 1);
-          double distance = Math.abs(nextStation.getDistanceFromStart() - currentStation.getDistanceFromStart());
-          cumulativeDistance += distance;
-      }
-  
-      return cumulativeDistance;
+    }
+
+    if (stationIndex == -1) {
+      Logs.e("Station not found on the track.");
+      return 0.0;
+    }
+
+    double cumulativeDistance = 0.0;
+    for (int i = stationIndex; i < stationsOnTrack.size() - 1; i++) {
+      Station currentStation = stationsOnTrack.get(i);
+      Station nextStation = stationsOnTrack.get(i + 1);
+      double distance = Math.abs(nextStation.getDistanceFromStart() - currentStation.getDistanceFromStart());
+      cumulativeDistance += distance;
+    }
+
+    return cumulativeDistance;
   }
 
   public double getDistanceFromEnd(Station lastStation, Station firstStation,
@@ -633,17 +633,17 @@ public class RailwaySingleton {
   public void verifyTrains() {
     List<TrainComposite> naughtyTrains = new ArrayList<>();
     for (TrainComposite train : this.scheduleComposite.children) {
-      // compare the train's stages - if a given stage's departure time (fromTime) is
-      // greater (after) than the next stage's departure time, log an error to the
-      // console and add the train to the naughty list
+      boolean trainTypeIsValid = train.sameTrainTypeAcrossStages();
+      if (!trainTypeIsValid) {
+        Logs.e("Vlak " + train.trainID + " ima različiti tip vlakova u različitim etapama.");
+        naughtyTrains.add(train);
+        continue;
+      }
       for (int i = 0; i < train.getChildren().size() - 1; i++) {
         TrainTrackStageComposite currentStage = (TrainTrackStageComposite) train.GetChild(i);
         TrainTrackStageComposite nextStage = (TrainTrackStageComposite) train.GetChild(i + 1);
         if (currentStage.toTime().compareTo(nextStage.fromTime()) > 0) {
-          Logs.e("Vlak " + train.trainID + " ima stanicu " + currentStage.children.getLast().getStation().name()
-              + " koja ima vrijeme dolaska u " + currentStage.toTime() + ", "
-              + "što je nakon vremena početka sljedeće etape "
-              + nextStage.children.getFirst().getStation().name() + " u " + nextStage.fromTime() + ".");
+          wrongStationTiming(train.trainID, currentStage, nextStage);
           naughtyTrains.add(train);
           break;
         }
@@ -660,6 +660,14 @@ public class RailwaySingleton {
     for (TrainComposite naughtyTrain : naughtyTrains) {
       this.scheduleComposite.Remove(naughtyTrain);
     }
+  }
+
+  private void wrongStationTiming(String trainID, TrainTrackStageComposite currentStage,
+      TrainTrackStageComposite nextStage) {
+    Logs.e("Vlak " + trainID + " ima stanicu "
+        + currentStage.children.getLast().getStation().name() + " koja ima vrijeme dolaska u "
+        + currentStage.toTime() + ", " + "što je nakon vremena početka sljedeće etape "
+        + nextStage.children.getFirst().getStation().name() + " u " + nextStage.fromTime() + ".");
   }
 
 }

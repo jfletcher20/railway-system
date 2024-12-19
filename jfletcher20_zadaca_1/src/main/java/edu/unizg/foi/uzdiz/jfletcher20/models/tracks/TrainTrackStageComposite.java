@@ -62,21 +62,25 @@ public class TrainTrackStageComposite implements IComposite {
         Map<ScheduleTime, StationLeaf> stationMap = new HashMap<>();
         // get the compiled schedule
         var compiledSchedule = this.compileRoute(this.schedule);
-        // iterate through the compiled schedule to get the time it takes to get to each station and map out the times
+        // iterate through the compiled schedule to get the time it takes to get to each
+        // station and map out the times
         ScheduleTime time = this.schedule.departureTime();
         for (StationLeaf station : compiledSchedule) {
             if (station.getStation().equals(this.schedule.departure())) {
-                // System.out.println("Departure station: " + station.getStation().name() + " at " + fromTime());
+                // System.out.println("Departure station: " + station.getStation().name() + " at
+                // " + fromTime());
                 stationMap.put(fromTime(), station);
                 continue;
             } else if (station.getStation().equals(this.schedule.destination())) {
-                // System.out.println("Destination station: " + station.getStation().name() + " at " + toTime());
+                // System.out.println("Destination station: " + station.getStation().name() + "
+                // at " + toTime());
                 stationMap.put(toTime(), station);
                 break;
             } else {
                 time = time.addMinutes(station.getStation().timeForTrainType(this.schedule.trainType()));
                 stationMap.put(time, station);
-                // System.out.println("Station: " + station.getStation().name() + " at " + time.toString());
+                // System.out.println("Station: " + station.getStation().name() + " at " +
+                // time.toString());
             }
         }
         return stationMap;
@@ -199,12 +203,14 @@ public class TrainTrackStageComposite implements IComposite {
     }
 
     public ScheduleTime fromTime(String name) {
-        StationLeaf station = this.children.stream().filter(child -> child.getStation().name().equals(name)).findFirst().orElse(null);
+        StationLeaf station = this.children.stream().filter(child -> child.getStation().name().equals(name)).findFirst()
+                .orElse(null);
         if (station == null) {
             Logs.e("Stanica " + name + " nije pronađena u traci " + this.trackID);
             return null;
         }
-        // iterate through the children until we find the station, compiling the time it takes to get there
+        // iterate through the children until we find the station, compiling the time it
+        // takes to get there
         ScheduleTime time = this.schedule.departureTime();
         for (StationLeaf child : this.children) {
             if (child.equals(station)) {
@@ -216,7 +222,8 @@ public class TrainTrackStageComposite implements IComposite {
     }
 
     public ScheduleTime arrivalTime(String name) {
-        StationLeaf station = this.children.stream().filter(child -> child.getStation().name().equals(name)).findFirst().orElse(null);
+        StationLeaf station = this.children.stream().filter(child -> child.getStation().name().equals(name)).findFirst()
+                .orElse(null);
         if (station == null) {
             Logs.e("Stanica " + name + " nije pronađena u traci " + this.trackID);
             return null;
@@ -233,7 +240,8 @@ public class TrainTrackStageComposite implements IComposite {
     }
 
     public double distanceFromStart(String name) {
-        StationLeaf station = this.children.stream().filter(child -> child.getStation().name().equals(name)).findFirst().orElse(null);
+        StationLeaf station = this.children.stream().filter(child -> child.getStation().name().equals(name)).findFirst()
+                .orElse(null);
         if (station == null) {
             Logs.e("Stanica " + name + " nije pronađena u traci " + this.trackID);
             return -1;
@@ -248,8 +256,10 @@ public class TrainTrackStageComposite implements IComposite {
     }
 
     public double distanceBetweenStations(String name1, String name2) {
-        StationLeaf station1 = this.children.stream().filter(child -> child.getStation().name().equals(name1)).findFirst().orElse(null);
-        StationLeaf station2 = this.children.stream().filter(child -> child.getStation().name().equals(name2)).findFirst().orElse(null);
+        StationLeaf station1 = this.children.stream().filter(child -> child.getStation().name().equals(name1))
+                .findFirst().orElse(null);
+        StationLeaf station2 = this.children.stream().filter(child -> child.getStation().name().equals(name2))
+                .findFirst().orElse(null);
         if (station1 == null) {
             Logs.e("Stanica " + name1 + " nije pronađena u traci " + this.trackID);
             return -1;
@@ -266,39 +276,3 @@ public class TrainTrackStageComposite implements IComposite {
     }
 
 }
-
-/*
- * ● Pregled vlakova (voznog reda) kojima se može putovati od jedne željezničke stanice do 
-druge željezničke stanice na određen dan u tjednu unutar zadanog vremena 
-○ Sintaksa:  
-■ IVI2S polaznaStanica - odredišnaStanica - dan - odVr - doVr - prikaz 
-○ Primjeri:  
-■ IVI2S Donji Kraljevec - Čakovec - N - 0:00 - 23:59 - SPKV 
-■ IVI2S Donji Kraljevec - Novi Marof - Pe - 08:00 - 16:00 - KPSV 
-■ IVI2S Donji Kraljevec - Ludbreg - Su - 5:20 - 20:30 - VSPK 
-○ Opis primjera:  
-■ Ispis tablice sa željezničkim stanicama između dviju željezničkih stanica, s 
-brojem kilometara, vremenima polaska vlakova sa željezničkih stanica. 
-Prikazuju se samo oni vlakovi koji prometuju na određeni dan i čije je 
-vrijeme polaska s polazne željezničke stanice nakon odVr vremena i 
-vrijeme dolaska u odredišnu željezničku stanicu prije doVr vremena. 
-Podaci se prikazuju u stupcima čiji redoslijed je proizvoljan i stupcima se 
-mogu ponavljati. S označava naziv željezničke stanice, P označava prugu, 
-K označava broj km od polazne željezničke stanice, V označava vrijeme 
-polaska određenog vlaka sa željezničke stanice. V se odnosi na jedan ili 
-više stupaca. Potrebno je prilagoditi ispis zaglavlja i redova zadanom 
-prikazu. Osim gornjih primjera prikaza mogu biti i drugi prikazi kao npr: SPV 
-(nema prikaza broj kilometara), KPSVK (broj kilometara se prikazuje u 
-prvom i posljednjem stupcu). U stupcu pojedinog vlaka ispisuje se vrijeme 
-9 
-Kolegij: Uzorci dizajna 
-Akademska godina: 2024./2025. 
-polaska sa željezničke stanice. U 1. primjeru su stanice koje su na istoj 
-pruzi, na 2. primjeru su željezničke stanice koje su na dvije pruge, a na 3. 
-primjeru su željezničke stanice koje su na tri pruge. Vlakovi se ispisuju u 
-kronološkom redoslijedu vremena polaska vlaka s njegove polazne 
-željezničke stanice. Slika 1 prikazuje djelomični izvod iz voznog reda od 
-željezničke stanice Zabok do druge željezničke stanice Gornja Stubica za 
-ponedjeljak od vremena 5:00 do vremena 12:00 uz oznake KSV. Na slici 
-treba zanemariti oznake dana u tjednu.
- */
