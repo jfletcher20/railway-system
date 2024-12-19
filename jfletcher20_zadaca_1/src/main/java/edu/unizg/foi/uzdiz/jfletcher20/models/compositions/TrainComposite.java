@@ -153,44 +153,78 @@ public class TrainComposite implements IComponent, ISubject {
         List<List<String>> result = new ArrayList<>();
         double cumulativeDistance = 0.0;
         ScheduleTime departureTime = this.children.get(0).fromTime();
-        var stages = new ArrayList<>(this.children);
+
+        List<TrainTrackStageComposite> stages = sortStagesByDepartureTime(new ArrayList<>(this.children));
+        List<List<StationLeaf>> stationLeaves = getStationLeavesForStages(stages);
+
+        int stageIndex = 0;
+        for (List<StationLeaf> stage : stationLeaves) {
+            TrainTrackStageComposite trainTrackStage = stages.get(stageIndex++);
+            processStations(stage, trainTrackStage, cumulativeDistance, departureTime, result);
+        }
+
+        return result;
+    }
+
+    private List<TrainTrackStageComposite> sortStagesByDepartureTime(List<TrainTrackStageComposite> stages) {
         stages.sort((a, b) -> a.fromTime().compareTo(b.fromTime()));
+        return stages;
+    }
+
+    private List<List<StationLeaf>> getStationLeavesForStages(List<TrainTrackStageComposite> stages) {
         List<List<StationLeaf>> stationLeaves = new ArrayList<>();
         for (TrainTrackStageComposite stage : stages) {
             List<StationLeaf> compatibleLeaves = stage.getCompatibleLeaves();
             stationLeaves.add(compatibleLeaves);
         }
-        int i = 0;
-        for (List<StationLeaf> stage : stationLeaves) {
-            TrainTrackStageComposite trainTrackStage = stages.get(i++);
-            for (Station station : stage.stream().map(StationLeaf::getStation).toList()) {
-                int stationIndex = stage.stream().map(StationLeaf::getStation).toList().indexOf(station);
-                String stationName = station.name();
-                double distance = 0.0;
-                if (stationIndex == 0) {
-                    cumulativeDistance += distance;
-                    departureTime = trainTrackStage.fromTime();
-                } else {
-                    Station prevStation = stage.get(stationIndex - 1).getStation();
-                    distance = RailwaySingleton.getInstance().calculateDistance(prevStation, station);
-                    cumulativeDistance += distance;
-                    var stationMap = trainTrackStage.getInverseStationMap();
-                    var stationLeaf = stage.get(stationIndex);
-                    ScheduleTime arrivalTime = stationMap.get(stationLeaf);
-                    departureTime = arrivalTime;
-                }
-                if (!station.supportsTrainType(trainTrackStage.schedule.trainType()))
-                    continue;
-                List<String> row = Arrays.asList(
-                        this.trainID,
-                        trainTrackStage.trackID,
-                        stationName,
-                        departureTime == null ? "-" : departureTime.toString(),
-                        String.format("%.2f", cumulativeDistance));
-                result.add(row);
+        return stationLeaves;
+    }
+
+    private void processStations(List<StationLeaf> stage, TrainTrackStageComposite trainTrackStage,
+            double cumulativeDistance, ScheduleTime departureTime, List<List<String>> result) {
+        List<Station> stations = stage.stream().map(StationLeaf::getStation).toList();
+
+        for (int i = 0; i < stations.size(); i++) {
+            Station station = stations.get(i);
+            String stationName = station.name();
+            double distance = 0.0;
+
+            if (i == 0) {
+                cumulativeDistance += distance;
+                departureTime = trainTrackStage.fromTime();
+            } else {
+                Station prevStation = stations.get(i - 1);
+                distance = RailwaySingleton.getInstance().calculateDistance(prevStation, station);
+                cumulativeDistance += distance;
+                var stationMap = trainTrackStage.getInverseStationMap();
+                var stationLeaf = stage.get(i);
+                departureTime = calculateArrivalTime(stationMap, stationLeaf, departureTime, station, trainTrackStage);
             }
+
+            if (!station.supportsTrainType(trainTrackStage.schedule.trainType())) {
+                continue;
+            }
+
+            addRowToResult(result, stationName, departureTime, cumulativeDistance, trainTrackStage);
         }
-        return result;
+    }
+
+    private ScheduleTime calculateArrivalTime(Map<StationLeaf, ScheduleTime> stationMap, StationLeaf stationLeaf,
+            ScheduleTime departureTime, Station station, TrainTrackStageComposite trainTrackStage) {
+        return stationMap.get(stationLeaf) == null
+                ? departureTime.addMinutes(station.timeForTrainType(trainTrackStage.schedule.trainType()))
+                : stationMap.get(stationLeaf);
+    }
+
+    private void addRowToResult(List<List<String>> result, String stationName, ScheduleTime departureTime,
+            double cumulativeDistance, TrainTrackStageComposite trainTrackStage) {
+        List<String> row = Arrays.asList(
+                this.trainID,
+                trainTrackStage.trackID,
+                stationName,
+                departureTime == null ? "-" : departureTime.toString(),
+                String.format("%.2f", cumulativeDistance));
+        result.add(row);
     }
 
     @Override
