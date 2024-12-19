@@ -51,7 +51,8 @@ public class CommandSystemSingleton {
   Pattern viewTrainsWithStagesOnPattern = Pattern.compile("^IEVD (?<days>[A-Za-z]+)$");
   Pattern viewTrainTimetablePattern = Pattern.compile("^IVRV (?<trainCode>.+)$");
   Pattern trainScheduleBetweenStationsPattern = Pattern.compile(
-      "^IVI2S\\s+([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)\\s*-\\s*([^-]+)$");
+      "^IVI2S (?<startStation>.+) - (?<endStation>.+) - (?<day>.+)"
+          + " - (?<fromTime>[0-9]{1,2}:[0-9]{2}) - (?<toTime>[0-9]{1,2}:[0-9]{2}) - (?<format>.+)$");
 
   Pattern addUserPattern = Pattern.compile("^DK (?<name>[\\p{L}]+(?: [\\p{L}]+)*) (?<lastName>[\\p{L}]+)$");
   Pattern viewUsersPattern = Pattern.compile("^PK$");
