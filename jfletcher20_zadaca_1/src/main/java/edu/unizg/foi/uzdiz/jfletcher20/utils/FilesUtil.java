@@ -43,18 +43,18 @@ public abstract class FilesUtil {
   private static Pattern zodHeaderPattern = Pattern.compile( //
       "^Oznaka dana;Dani vožnje$");
 
-  public static boolean checkArgs(String[] args) {
-    if (args.length != 10) {
+  public static boolean checkArgs(List<String> args) {
+    if (args.size() != 10) {
       Logs.e("Argumenti nisu ispravno postavljeni. "
-          + "Program očekuje 10 argumenata, a primljeno je: " + args.length);
+          + "Program očekuje 10 argumenata, a primljeno je: " + args.size());
       return false;
     }
-    for (int i = 0; i < args.length; i += 2)
-      for (int j = i + 2; j < args.length; j += 2)
-        if (args[i].equals(args[j])) {
+    for (int i = 0; i < args.size(); i += 2)
+      for (int j = i + 2; j < args.size(); j += 2)
+        if (args.get(i).equals(args.get(j))) {
           Logs.w("Argumenti nisu ispravno postavljeni. "
-              + "Argumenti ne smiju imati duplicirane tipove datoteka:  " + args[i] + " i "
-              + args[j]);
+              + "Argumenti ne smiju imati duplicirane tipove datoteka:  " + args.get(i) + " i "
+              + args.get(j));
           return false;
         }
     String argsString = String.join(" ", args);
@@ -68,18 +68,18 @@ public abstract class FilesUtil {
     return true;
   }
 
-  public static boolean loadFiles(String[] args) {
+  public static boolean loadFiles(List<String> args) {
     Logs.i("Učitavanje datoteka...");
     if (!checkArgs(args)) {
       Logs.e("Neispravni argumenti za pokretanje programa.");
       return false;
     }
-    for (int i = 0; i < args.length; i += 2) {
-      String fileName = args[i + 1];
+    for (int i = 0; i < args.size(); i += 2) {
+      String fileName = args.get(i + 1);
       Path path = Path.of(fileName);
       FileType fileType = getFileType(path);
       Logs.i("Datoteka: " + fileName + " tipa: " + fileType);
-      boolean correctFileType = correctFileType(fileType, args[i]);
+      boolean correctFileType = correctFileType(fileType, args.get(i));
       if (!correctFileType) {
         Logs.e("Datoteka " + fileName + " nije ispravnog tipa: " + fileType);
         continue;

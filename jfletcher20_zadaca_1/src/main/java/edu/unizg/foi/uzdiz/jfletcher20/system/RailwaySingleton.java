@@ -39,7 +39,7 @@ public class RailwaySingleton {
 
   private ScheduleComposite scheduleComposite = new ScheduleComposite();
 
-  private String[] initArgs = null;
+  private List<String> initArgs = new ArrayList<>();
 
   private RailwaySingleton() {
     Logs.i("RailwaySingleton instance created. Values are not initialized.");
@@ -70,11 +70,11 @@ public class RailwaySingleton {
       newArgs.add(zvrValue);
     }
 
-    this.initArgs = newArgs.toArray(new String[0]);
+    this.initArgs = newArgs;
     Logs.i("RailwaySingleton initArgs set to: " + String.join(" ", this.initArgs));
   }
 
-  public String[] getInitArgs() {
+  public List<String> getInitArgs() {
     return this.initArgs;
   }
 
