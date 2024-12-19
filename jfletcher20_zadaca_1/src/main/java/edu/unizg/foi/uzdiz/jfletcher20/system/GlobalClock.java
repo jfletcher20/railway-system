@@ -89,7 +89,7 @@ public abstract class GlobalClock {
                 if (System.in.available() > 0) {
                     String input = System.console().readLine();
                     if ("X".equalsIgnoreCase(input.trim())) {
-                        Logs.s(currentTime, "Simulacija vlaka " + train.trainID + " je prekinuta.");
+                        Logs.s(currentTime, "Simulacija vlaka " + train.trainID + " je prekinuta. Nadajmo se da se naši putnici ne žure na ispit.");
                         GlobalClock.setState(ClockState.STOPPED);
                         break;
                     }
