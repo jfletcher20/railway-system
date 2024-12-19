@@ -46,9 +46,7 @@ public class TrainComposite implements IComponent, ISubject {
 
     @Override
     public void Operation() {
-        // traverse all children and output the operation on each child
         Logs.i("\t" + this.trainID);
-
         for (TrainTrackStageComposite child : this.children) {
             if (this.trainID.equals("2212")) {
                 child.Operation();
@@ -297,7 +295,6 @@ public class TrainComposite implements IComponent, ISubject {
         TrainTrackStageComposite withStation = this.firstWithStation(end.name());
         if (withStation == null)
             return null;
-        // calculate the schedule time of arrival for the station
         ScheduleTime arrivalTime = withStation.arrivalTime(end.name());
         for (StationLeaf leaf : withStation.children) {
             arrivalTime = arrivalTime
@@ -336,7 +333,6 @@ public class TrainComposite implements IComponent, ISubject {
     }
 
     public List<Station> getStationsBetween(String start, String end) {
-        // get the first station called start and the lsat station called end
         Station startStation = null;
         Station endStation = null;
         List<Station> stations = new ArrayList<>();
@@ -413,9 +409,6 @@ public class TrainComposite implements IComponent, ISubject {
             Map<ScheduleTime, StationLeaf> stationMap = stage.getStationMap();
             for (ScheduleTime time : stationMap.keySet()) {
                 if (time.equals(currentTime)) {
-                    // System.out.println(stationMap);
-                    // System.out.println("Current station: " +
-                    // stationMap.get(time).getStation().name());
                     return stationMap.get(time).getStation();
                 }
             }
@@ -435,8 +428,6 @@ public class TrainComposite implements IComponent, ISubject {
     }
 
     public String getTypeOfStation(Station currentStation) {
-        // if type is 0, output "polaznoj", if type is 1, output "međustanici", if type
-        // is 2, output "odredišnoj"
         int type = this.getStationRole(currentStation);
         return switch (type) {
             case 0 -> "polaznoj stanici";
@@ -449,7 +440,8 @@ public class TrainComposite implements IComponent, ISubject {
     public boolean sameTrainTypeAcrossStages() {
         if (this.children.isEmpty())
             return false;
-        Set<TrainType> trainTypes = this.children.stream().map(stage -> stage.schedule.trainType()).collect(HashSet::new,
+        Set<TrainType> trainTypes = this.children.stream().map(stage -> stage.schedule.trainType()).collect(
+                HashSet::new,
                 HashSet::add, HashSet::addAll);
         return trainTypes.size() == 1;
     }

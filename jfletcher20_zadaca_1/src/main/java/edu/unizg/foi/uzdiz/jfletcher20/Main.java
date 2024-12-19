@@ -16,7 +16,7 @@ public class Main {
       System.exit(1);
     }
 
-    // za testiranje s testnim komandnim sustavom
+    // za laku izmjenu drugim komandnim sustavima, koristi se refleksija
     Class<?> type = RailwaySingleton.PREFERRED_COMMAND_SYSTEM;
     try {
       type.getMethod("startCommandSystem").invoke(Class.forName(type.getName()).getMethod("getInstance").invoke(null));

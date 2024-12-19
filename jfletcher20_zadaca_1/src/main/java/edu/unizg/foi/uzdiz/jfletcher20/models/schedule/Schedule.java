@@ -9,22 +9,6 @@ import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 
-/*
-
-    Kod voznog reda obavezna je oznaka pruge, smjer (N ili O), oznaka vlaka, vrijeme 
-polaska. Kada nije upisana polazna željeznička stanica tada se uzima prva stanica pruge s 
-obzirom na smjer. Kada nije odredišna željeznička stanica tada se uzima zadnja željeznička 
-stanica pruge s obzirom na smjer. 
-
-
- * Oznaka pruge;Smjer;Polazna stanica;Odredišna stanica;Oznaka vlaka;Vrsta vlaka;Vrijeme polaska;Trajanje vožnje;Oznaka dana
-M501;N;;Čakovec;3301;;4:11;0:35;4
-M501;N;;Čakovec;3007;;5:43;0:47;
-M501;N;Čakovec;;3901;;6:34;0:12;3
-M501;N;;Čakovec;3303;;6:40;0:48;3
-M501;N;;Čakovec;3305;;8:10;0:54;
- */
-
 public record Schedule(
         String trackID, // Oznaka pruge
         TraversalDirection direction, // Smjer

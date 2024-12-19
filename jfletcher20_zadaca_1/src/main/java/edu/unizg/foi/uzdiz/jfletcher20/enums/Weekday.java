@@ -42,7 +42,6 @@ public enum Weekday {
         }
     }
 
-    // causes an error if the value is "12;" because of second column being empty/null
     public static Set<Weekday> daysFromString(String value) {
         if (value == null || value.trim().isEmpty())
             return Set.of(MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY);
@@ -86,7 +85,6 @@ public enum Weekday {
 
     public static String listToString(Set<Weekday> days) {
         StringBuilder dayString = new StringBuilder();
-        // sort days in order
         var sort = days.stream().sorted((day1, day2) -> day1.ordinal() - day2.ordinal()).toList();
         for (Weekday day : sort) 
             dayString.append(day.toShorthand());

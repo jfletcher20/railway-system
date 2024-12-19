@@ -5,10 +5,6 @@ import java.util.Set;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 
-// implements IProduct
-// is a record
-// has two variables - dayID and Weekday
-
 /**
  * Record for handling the days of the week determined from dayCode in the
  * schedule.

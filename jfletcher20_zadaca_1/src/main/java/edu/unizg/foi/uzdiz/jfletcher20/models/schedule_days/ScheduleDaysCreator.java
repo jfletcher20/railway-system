@@ -11,8 +11,6 @@ public class ScheduleDaysCreator implements ICreator {
     public ScheduleDaysCreator() {
     }
 
-    // causes an error if hte data is "12;" because of second column being
-    // empty/null
     @Override
     public ScheduleDays factoryMethod(String data, int row) {
         if (data == null || data.isEmpty()) {
