@@ -590,9 +590,10 @@ public class CommandSystemSingleton {
     try {
       ivi2sSecondPart(dt, format);
     } catch (Exception e) {
+      System.out.println(e);
       Logs.e("Neispravan format prikaza: " + format);
       Logs.footer(true);
-      return;
+      throw e;
     }
     Logs.printTable();
     Logs.footer(true);
@@ -705,57 +706,114 @@ public class CommandSystemSingleton {
   }
 
   private void finishIvi2SOutput(List<String> finalHeaders, List<List<String>> tableRows) {
-    if (tableRows.isEmpty() || finalHeaders.isEmpty()) {
-      return; // Exit early if there are no rows or headers.
-    }
+    if (tableRows.isEmpty() || finalHeaders.isEmpty())
+      return;
 
-    // Step 1: Extract the map of header-to-ScheduleTime for the first row
-    Map<String, ScheduleTime> headerToTimeMap = new HashMap<>();
+    List<List<Integer>> vColumnGroups = identifyColumnGroups(finalHeaders);
+    for (List<Integer> group : vColumnGroups) {
+      sortAndReorderGroup(group, finalHeaders, tableRows);
+    }
+    printTable(finalHeaders, tableRows);
+  }
+
+  private List<List<Integer>> identifyColumnGroups(List<String> finalHeaders) {
+    List<List<Integer>> vColumnGroups = new ArrayList<>();
+    List<Integer> currentGroupIndices = new ArrayList<>();
+    List<String> currentGroupHeaders = new ArrayList<>();
+    Map<String, Integer> headerIndexMap = new HashMap<>();
+
     for (int i = 0; i < finalHeaders.size(); i++) {
       String header = finalHeaders.get(i);
-      if (header.startsWith("V:")) { // Only consider train headers
-        headerToTimeMap.put(header, new ScheduleTime(tableRows.get(0).get(i)));
+      if (header.startsWith("V:")) {
+        processVColumnHeader(vColumnGroups, currentGroupIndices, currentGroupHeaders, headerIndexMap, i, header);
+      } else {
+        finalizeGroupIfNotEmpty(vColumnGroups, currentGroupIndices, currentGroupHeaders, headerIndexMap);
       }
     }
+    finalizeGroupIfNotEmpty(vColumnGroups, currentGroupIndices, currentGroupHeaders, headerIndexMap);
+    return vColumnGroups;
+  }
 
-    // Step 2: Reorder train headers based on their ScheduleTime (earliest to
-    // latest)
-    List<String> reorderedTrainHeaders = headerToTimeMap.entrySet().stream()
-        .sorted(Map.Entry.comparingByValue(ScheduleTime::compareTo))
-        .map(Map.Entry::getKey)
-        .toList();
+  private void processVColumnHeader(List<List<Integer>> vColumnGroups, List<Integer> currentGroupIndices,
+      List<String> currentGroupHeaders, Map<String, Integer> headerIndexMap, int index, String header) {
+    String trainId = header;
+    if (headerIndexMap.containsKey(trainId) && headerIndexMap.get(trainId) == currentGroupHeaders.size()) {
+      vColumnGroups.add(new ArrayList<>(currentGroupIndices));
+      currentGroupIndices.clear();
+      currentGroupHeaders.clear();
+      headerIndexMap.clear();
+    }
+    currentGroupIndices.add(index);
+    currentGroupHeaders.add(trainId);
+    headerIndexMap.put(trainId, currentGroupHeaders.size() - 1);
+  }
 
-    // Step 3: Compute the new order of indexes for all headers
-    List<String> reorderedHeaders = new ArrayList<>(finalHeaders);
-    int trainIndex = 0;
-    for (int i = 0; i < finalHeaders.size(); i++) {
-      if (finalHeaders.get(i).startsWith("V:")) {
-        reorderedHeaders.set(i, reorderedTrainHeaders.get(trainIndex++));
+  private void finalizeGroupIfNotEmpty(List<List<Integer>> vColumnGroups, List<Integer> currentGroupIndices,
+      List<String> currentGroupHeaders, Map<String, Integer> headerIndexMap) {
+    if (!currentGroupIndices.isEmpty()) {
+      vColumnGroups.add(new ArrayList<>(currentGroupIndices));
+      currentGroupIndices.clear();
+      currentGroupHeaders.clear();
+      headerIndexMap.clear();
+    }
+  }
+
+  private void sortAndReorderGroup(List<Integer> group, List<String> finalHeaders, List<List<String>> tableRows) {
+    List<String> groupHeaders = new ArrayList<>();
+    List<ScheduleTime> groupTimes = new ArrayList<>();
+
+    for (int index : group) {
+      groupHeaders.add(finalHeaders.get(index));
+      groupTimes.add(new ScheduleTime(tableRows.get(0).get(index)));
+    }
+
+    List<Integer> sortedIndices = getSortedIndices(groupHeaders, groupTimes);
+    reorderHeadersAndRows(group, finalHeaders, tableRows, groupHeaders, sortedIndices);
+  }
+
+  private List<Integer> getSortedIndices(List<String> groupHeaders, List<ScheduleTime> groupTimes) {
+    List<Integer> sortedIndices = new ArrayList<>();
+    for (int i = 0; i < groupHeaders.size(); i++) {
+      int minIndex = -1;
+      ScheduleTime minTime = null;
+      for (int j = 0; j < groupHeaders.size(); j++) {
+        if (sortedIndices.contains(j)) {
+          continue;
+        }
+        if (minTime == null || groupTimes.get(j).compareTo(minTime) < 0) {
+          minTime = groupTimes.get(j);
+          minIndex = j;
+        }
+      }
+      sortedIndices.add(minIndex);
+    }
+    return sortedIndices;
+  }
+
+  private void reorderHeadersAndRows(List<Integer> group, List<String> finalHeaders, List<List<String>> tableRows,
+      List<String> groupHeaders, List<Integer> sortedIndices) {
+    for (int j = 0; j < group.size(); j++) {
+      finalHeaders.set(group.get(j), groupHeaders.get(sortedIndices.get(j)));
+    }
+
+    for (List<String> row : tableRows) {
+      List<String> groupValues = group.stream().map(row::get).collect(Collectors.toList());
+      List<String> sortedGroupValues = sortedIndices.stream().map(groupValues::get).collect(Collectors.toList());
+      for (int j = 0; j < group.size(); j++) {
+        row.set(group.get(j), sortedGroupValues.get(j));
       }
     }
+  }
 
-    // Step 4: Reorder the columns in all rows based on the new header order
-    List<Integer> newIndexOrder = new ArrayList<>();
-    for (String header : reorderedHeaders) {
-      newIndexOrder.add(finalHeaders.indexOf(header));
-    }
-
-    List<List<String>> reorderedTableRows = tableRows.stream()
-        .map(row -> newIndexOrder.stream()
-            .map(row::get)
-            .toList())
-        .toList();
-
-    // Step 5: Set the table header and log rows
-    Logs.tableHeader(reorderedHeaders.stream().map(value -> switch (value) {
+  private void printTable(List<String> finalHeaders, List<List<String>> tableRows) {
+    Logs.tableHeader(finalHeaders.stream().map(value -> switch (value) {
       case "S" -> "od";
       case "P" -> "pruga";
       case "K" -> "km";
       case "V" -> "vlak";
       default -> value.startsWith("V:") ? value.substring(2) : value;
     }).toList());
-
-    for (List<String> row : reorderedTableRows) {
+    for (List<String> row : tableRows) {
       Logs.tableRow(row);
     }
   }
