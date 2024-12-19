@@ -11,7 +11,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import edu.unizg.foi.uzdiz.jfletcher20.Main;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
@@ -90,132 +89,13 @@ public class CommandSystemSingleton {
         Logs.c("Prekidanje programa...");
         break;
       }
-      if (Main.debugMode)
-        runDebugTests(command);
-      else
-        identifyCommand(command);
+      identifyCommand(command);
     }
     Logs.footer(true);
   }
 
   public void runCommand(String command) {
     identifyCommand(command);
-  }
-
-  private void runDebugTests(String command) {
-    if (command.trim().equalsIgnoreCase("All")) {
-      String[] commands = new String[] {
-          "IP", "ISP M501 N", "ISP M501 O",
-          "ISI2S Kotoriba - Ludbreg",
-          "ISI2S Ludbreg - Kotoriba",
-          "ISI2S Kotoriba - Macinec",
-          "ISI2S Macinec - Kotoriba",
-          "IK 8001",
-          "IK 1",
-          "IV",
-          "IEV 3609",
-          "IEV 0",
-          "IEV 3301",
-          "IEVD PoSrPeN",
-          "IEVD Po",
-          "IEVD PoUSrČPeSuN",
-          "IVRV 3609",
-          "IVRV 0",
-          "IVRV 3301",
-          "IVRV 3302",
-          "IVRV 991",
-          "IVRV B 791",
-          "IVI2S Kotoriba - Ludbreg - Po - 00:00 - 23:59 - SPKVK",
-          "IVI2S Kotoriba - Ludbreg - PoA - 00:00 - 23:59 - SPKVK",
-          "DK Pero Kos",
-          "DK Joshua Lee Fletcher",
-          "PK",
-          "DPK Pero Kos - 3301",
-          "DPK Pero Kos - 3301 - Mala Subotica",
-          "DPK Pero Kos - 3301 - asdf",
-          "DPK Pero Kos - asdf",
-          "LINK Pero Kos - 3301 - Z",
-          "LINK Pero Kos - 3301 - O",
-          "LINK Pero Kos - 3301 - Z",
-          "LINK Joshua Lee Fletcher - 3301 - O",
-          "LINK Pero Kos - 3301 - Hello world",
-          "LINK Misteriozna Osoba - Chat1 - O",
-          "LINK PREGLED",
-          "IVI2S Donji Kraljevec - Čakovec - N - 0:00 - 23:59 - SPKV",
-      };
-      for (String c : commands) {
-        Logs.c("Izvršavanje komande: " + c);
-        identifyCommand(c);
-      }
-    } else if (command.trim().equalsIgnoreCase("simulate")) {
-      String[] commands = new String[] {
-          "DK Joshua Lee Fletcher", "DPK Joshua Lee Fletcher - 3301", "SVV 3301 - Po - 600",
-      };
-      for (String c : commands) {
-        Logs.c("Izvršavanje komande: " + c);
-        identifyCommand(c);
-      }
-    } else if (command.trim().equalsIgnoreCase("simulate2")) {
-      String[] commands = new String[] {
-          "DK Joshua Lee Fletcher", "DPK Joshua Lee Fletcher - 3301 - Varaždin", "SVV 3301 - Po - 600",
-      };
-      for (String c : commands) {
-        Logs.c("Izvršavanje komande: " + c);
-        identifyCommand(c);
-      }
-    } else if (command.trim().equalsIgnoreCase("testivi")) {
-      identifyCommand("IVI2S Donji Kraljevec - Čakovec - N - 0:00 - 23:59 - SPKV");
-    } else if (command.trim().equalsIgnoreCase("All1")) {
-      String[] commands = new String[] {
-          "IP", "ISP M501 N",
-          "ISI2S Kotoriba - Ludbreg",
-          "IK 8001",
-          "IV",
-          "IEV 3301",
-          "IEVD PoSrPeN",
-          "IVRV 3302",
-          "IVI2S Kotoriba - Ludbreg - Po - 00:00 - 23:59 - SPKVK",
-          "DK Pero Kos",
-          "PK",
-          "DPK Joshua Lee Fletcher - 3301",
-      };
-      for (String c : commands) {
-        Logs.c("Izvršavanje komande: " + c);
-        identifyCommand(c);
-      }
-    } else {
-      identifyCommand(debugCommands(command));
-    }
-  }
-
-  private String debugCommands(String command) {
-    return switch (command.trim().toLowerCase()) {
-      case "a" -> "IP";
-      case "b" -> "ISP M501 N";
-      case "b2" -> "ISP M501 O";
-      case "c" -> "ISI2S Kotoriba - Ludbreg";
-      case "c2" -> "ISI2S Ludbreg - Kotoriba";
-      case "c3" -> "ISI2S Kotoriba - Macinec";
-      case "c4" -> "ISI2S Macinec - Kotoriba";
-      case "d" -> "IK 8001";
-      case "d2" -> "IK 1";
-      case "e" -> "IV";
-      case "f" -> "IEV 3609";
-      case "f2" -> "IEV 0";
-      case "g" -> "IEVD PoSrPeN";
-      case "g2" -> "IEVD Po";
-      case "g3" -> "IEVD PoUSrPeSuN";
-      case "h" -> "IVRV 3609";
-      case "h2" -> "IVRV 0";
-      case "h3" -> "IVRV 3301";
-      case "h4" -> "IVRV 3302";
-      case "h5" -> "IVRV 991";
-      case "h6" -> "IVRV B 791";
-      case "i" -> "DK Pero Kos";
-      case "i2" -> "DK Joshua Lee Fletcher";
-      case "j" -> "PK";
-      default -> command;
-    };
   }
 
   private boolean identifyCommand(String command) {
@@ -233,6 +113,34 @@ public class CommandSystemSingleton {
     Matcher addTrainObserverPatternMatcher = addTrainObserverPattern.matcher(command);
     Matcher trainScheduleBetweenStationsMatcher = trainScheduleBetweenStationsPattern.matcher(command);
     Matcher simulateTrainMatcher = simulateTrainPattern.matcher(command);
+    if (matchBaseCommands(command, vtMatcher, vsMatcher, vsbMatcher, addUserMatcher, viewUsersMatcher,
+        viewTrainsMatcher, viewTrainStagesMatcher, ivrvMatcher, linkMatcher, addTrainObserverPatternMatcher,
+        trainScheduleBetweenStationsMatcher, simulateTrainMatcher)) {
+      return true;
+    } else if (viewTrainsWithStagesOnMatcher.matches()) {
+      try {
+        viewTrainsWithStagesOnDays(Weekday.daysFromString(viewTrainsWithStagesOnMatcher.group("days")));
+      } catch (IllegalArgumentException e) {
+        Logs.e(e.getMessage() + " - Nepoznata oznaka dana: " + viewTrainsWithStagesOnMatcher.group("days"));
+      }
+    } else if (vcMatcher.matches()) {
+      try {
+        viewComposition(ParsingUtil.i(vcMatcher.group("compositionCode")));
+      } catch (NumberFormatException e) {
+        Logs.e("Neispravna oznaka kompozicije: " + vcMatcher.group("compositionCode"));
+      }
+    } else {
+      Logs.c("Nepoznata komanda.");
+      outputMenu();
+      return false;
+    }
+    return true;
+  }
+
+  private boolean matchBaseCommands(String command, Matcher vtMatcher, Matcher vsMatcher, Matcher vsbMatcher,
+      Matcher addUserMatcher, Matcher viewUsersMatcher, Matcher viewTrainsMatcher, Matcher viewTrainStagesMatcher,
+      Matcher ivrvMatcher, Matcher linkMatcher, Matcher addTrainObserverPatternMatcher,
+      Matcher trainScheduleBetweenStationsMatcher, Matcher simulateTrainMatcher) {
     if (vtMatcher.matches()) {
       viewTracks();
     } else if (vsMatcher.matches()) {
@@ -257,29 +165,28 @@ public class CommandSystemSingleton {
       viewTrainScheduleBetweenStations(trainScheduleBetweenStationsMatcher);
     } else if (simulateTrainMatcher.matches()) {
       simulateTrain(simulateTrainMatcher);
-    } else if (viewTrainsWithStagesOnMatcher.matches()) {
-      try {
-        viewTrainsWithStagesOnDays(Weekday.daysFromString(viewTrainsWithStagesOnMatcher.group("days")));
-      } catch (IllegalArgumentException e) {
-        Logs.e(e.getMessage() + " - Nepoznata oznaka dana: " + viewTrainsWithStagesOnMatcher.group("days"));
-      }
-    } else if (vcMatcher.matches()) {
-      try {
-        viewComposition(ParsingUtil.i(vcMatcher.group("compositionCode")));
-      } catch (NumberFormatException e) {
-        Logs.e("Neispravna oznaka kompozicije: " + vcMatcher.group("compositionCode"));
-      }
-    } else {
-      Logs.c("Nepoznata komanda.");
-      outputMenu();
+    } else
       return false;
-    }
     return true;
   }
 
   private void outputMenu() {
     Logs.header("JLF Željeznica: Interaktivni način rada", true);
     Logs.withPadding(() -> Logs.o("Validne komande:"), false, true);
+
+    dz1CommandsMenu();
+
+    trainCommandsMenu();
+
+    userCommandsMenu();
+
+    customCommandsMenu();
+
+    Logs.withPadding(() -> Logs.o("Q - Izlaz iz programa", false), true, true);
+    Logs.o("Uzorci dizajna, 2024. - Joshua Lee Fletcher");
+  }
+
+  private void dz1CommandsMenu() {
     Logs.o("IP\t\t\t\t\t- Pregled pruga", false);
     Logs.o(
         "ISP [oznakaPruge] [N|O]\t\t\t- Pregled stanica uz prugu u normalnom ili obrnutom redoslijedu",
@@ -287,6 +194,9 @@ public class CommandSystemSingleton {
     Logs.o("ISI2S [nazivStanice1] - [nazivStanice2]\t- Pregled stanica između dvije stanice",
         false);
     Logs.o("IK [oznakaKompozicije]\t\t\t- Pregled kompozicija", false);
+  }
+
+  private void trainCommandsMenu() {
     Logs.o("IV\t\t\t\t\t- Pregled vlakova", false);
     Logs.o("IEV [oznakaVlaka]\t\t\t\t- Pregled etapa vlaka", false);
     Logs.o("IEVD [dani]\t\t\t\t- Pregled vlakova koji voze sve etape na određene dane u tjednu",
@@ -295,25 +205,26 @@ public class CommandSystemSingleton {
     Logs.o("IVI2S [polaznaStanica] - [odredišnaStanica] - [dan] - [odVr] - [doVr] - [prikaz]", false);
     Logs.o("\t\t\t\t\t\t- Pregled vlakova između dvije stanice na "
         + "određeni dan u tjednu unutar zadanog vremena", false);
+  }
 
+  private void userCommandsMenu() {
     Logs.o("DK [ime] [prezime]\t\t\t- Dodavanje korisnika", false);
     Logs.o("PK\t\t\t\t\t- Pregled korisnika", false);
     Logs.withPadding(() -> Logs.o(
         "DPK [ime] [prz] - [oznVlaka] [- stanica]  "
             + "- Dodavanje korisnika za praćenje putovanja vlaka ili dolaska u određenu željezničku stanicu",
         false), true, false);
-    // SVV instructions
     Logs.o(
         "SVV [oznakaVlaka] - [dan] - [koeficijent]\t- Simulacija vožnje vlaka na dan u tjednu u koeficijentu vremena",
         false);
+  }
 
+  private void customCommandsMenu() {
     Logs.withPadding(() -> Logs.o(
         "LINK [ime] [prz] - [grupa] - [O|Z|poruka] "
             + "- Otvori/zatvori vezu između korisnika i grupe ili pošalji obavijest u grupu",
         false), true, false);
     Logs.o("LINK PREGLED\t\t\t\t- Pregled svih grupa", false);
-    Logs.withPadding(() -> Logs.o("Q - Izlaz iz programa", false), true, true);
-    Logs.o("Uzorci dizajna, 2024. - Joshua Lee Fletcher");
   }
 
   private void viewTracks() {
@@ -579,29 +490,17 @@ public class CommandSystemSingleton {
    */
   private void processLinkCommand(String command) {
     var matcher = linkPattern.matcher(command);
-
-    // Validate the match first
-    if (!matcher.matches()) {
-      Logs.e("Neispravan format naredbe LINK.");
-      return;
-    }
-
-    // Check for LINK PREGLED
+    matcher.matches();
     if (matcher.group("name") == null) {
       viewGroupChatListWithMembers();
     } else {
-      // Extract the parameters safely
-      String name = matcher.group("name");
-      String lastName = matcher.group("lastName");
-      String groupId = matcher.group("groupId");
-      String action = matcher.group("action");
-
+      String name = matcher.group("name"), lastName = matcher.group("lastName");
+      String groupId = matcher.group("groupId"), action = matcher.group("action");
       var user = RailwaySingleton.getInstance().getUserByName(name, lastName, true);
       if (user == null) {
         Logs.e("Korisnik nije pronađen: " + name + " " + lastName);
         return;
       }
-
       switch (action) {
         case "O":
           userChat.linkUser(groupId, user);
