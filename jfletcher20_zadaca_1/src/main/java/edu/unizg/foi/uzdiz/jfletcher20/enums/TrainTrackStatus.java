@@ -2,7 +2,8 @@ package edu.unizg.foi.uzdiz.jfletcher20.enums;
 
 public enum TrainTrackStatus {
   FUNCTIONAL, // ispravna
-  DAMAGED, // u kvaru
+  FAULTY, // u kvaru
+  TESTING, // u testiranju
   CLOSED; // zatvorena
 
   public static TrainTrackStatus fromCSV(String value) {
@@ -10,7 +11,9 @@ public enum TrainTrackStatus {
       case "I":
         return FUNCTIONAL;
       case "U":
-        return DAMAGED;
+        return FAULTY;
+      case "T":
+        return TESTING;
       case "Z":
         return CLOSED;
       default:

@@ -1,18 +1,23 @@
 package edu.unizg.foi.uzdiz.jfletcher20.enums;
 
-//public enum StationStatus {
-//  OPEN, CLOSED;
-//  
-//  public static StationStatus fromCSV(String value) {
-//    switch (value) {
-//      case "I":
-//        return OPEN;
-//      case "Z":
-//        return CLOSED;
-//      default:
-//        System.out.println("Error: Nepoznat status stanice" + value);
-//        break;
-//    }
-//    return null;
-//  }
-//}
+// ispravna I, zatvorena Z, testiranje T i u kvaru K
+public enum StationStatus {
+    FUNCTIONAL, CLOSED, TESTING, FAULTY;
+
+    public static StationStatus fromCSV(String value) {
+        switch (value) {
+            case "I":
+                return FUNCTIONAL;
+            case "Z":
+                return CLOSED;
+            case "T":
+                return TESTING;
+            case "K":
+                return FAULTY;
+            default:
+                System.out.println("Error: Nepoznat status stanice" + value);
+                break;
+        }
+        return null;
+    }
+}
