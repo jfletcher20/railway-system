@@ -1,5 +1,6 @@
 package edu.unizg.foi.uzdiz.jfletcher20;
 
+import edu.unizg.foi.uzdiz.jfletcher20.system.GlobalClock;
 import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingletonBuilder;
 import edu.unizg.foi.uzdiz.jfletcher20.system.SystemInitializationDirector;
@@ -10,6 +11,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.system.SystemInitializationDirector;
 public class Main {
   public static boolean debugMode = true;
   public static void main(String[] args) {
+    GlobalClock.initStates();
     RailwaySingleton.getInstance().setInitArgs(args);
     var initDirector = new SystemInitializationDirector(new RailwaySingletonBuilder());
     if (initDirector.construct() == null) {

@@ -368,33 +368,41 @@ public abstract class Logs {
 
     public void logUserMessage(User user, String trainID, String stationName) {
       System.out
-          .println("\t\t" + (GlobalClock.isSimulating() || GlobalClock.isPaused() ? GlobalClock.getTime() + "::" : "")
+          .println("\t\t" + GlobalClock.getTimeOutputBasedOnState()
               + "<" + user + ">: " + trainID + " - " + stationName);
     }
 
     public void logUserMessage(User user, String message) {
       System.out
-          .println("\t\t" + (GlobalClock.isSimulating() || GlobalClock.isPaused() ? GlobalClock.getTime() + "::" : "")
+          .println("\t\t" + GlobalClock.getTimeOutputBasedOnState()
               + "<" + user + ">: " + message);
     }
 
     public void logUserWarning(User user, String message) {
-      System.out.println("\t\t[LINK-OBAVIJEST] <" + user + "> " + message);
+      System.out.println("\t\t[" + "\u001B[36m" + "LINK-OBAVIJEST" + "\u001B[0m" + "] <" + user + "> " + message);
     }
 
     public void logUserCommunication(User receiver, User sender, String message) {
       System.out
-          .println("\t\t" + (GlobalClock.isSimulating() || GlobalClock.isPaused() ? GlobalClock.getTime() + "::" : "")
-              + "<" + receiver + "> <--poruka-- <" + sender + ">: " + message);
+          .println("\t\t" + GlobalClock.getTimeOutputBasedOnState()
+              + " <" + receiver + "> " + /* unicode for cyan */ "\u001B[36m"
+              + "<--poruka-- " + /* unicode for reset */ "\u001B[0m" +
+              "<" + sender + ">: " + message);
     }
 
     public void logSimulationMessage(ScheduleTime time, String message) {
       System.out.println("\t" + time + " >> " + message);
     }
 
+    public void logSimulationMessage(String message) {
+      System.out.println("\t" + GlobalClock.getTimeOutputBasedOnState() + " >> " + message);
+    }
+
     public void logVoyage(User user, String trainID, String stationName) {
       System.out.println(
-          "\t [" + trainID + "] --obavijest--> <" + user + "> ima svijest o dolasku vlaka na stanicu " + stationName);
+          "\t " + GlobalClock.getTimeOutputBasedOnState()
+              + " [" + trainID + "] \u001B[36m --obavijest--> \u001B[0m <" + user
+              + "> ima svijest o dolasku vlaka na stanicu " + stationName);
     }
 
   }
@@ -424,7 +432,7 @@ public abstract class Logs {
   }
 
   public static void s(String message) {
-    LogsSingleton.getInstance().logSimulationMessage(GlobalClock.getTime(), message);
+    LogsSingleton.getInstance().logSimulationMessage(message);
   }
 
 }
