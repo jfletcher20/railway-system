@@ -14,10 +14,101 @@ import java.util.stream.Collectors;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tickets.Ticket;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
 import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
+
+/*
+ * Potrebno je dodati funkcionalnost za kupovinu karata za vožnju putnika. Određivanje 
+cijene vožnje putnika vlakom temelji se na €/km za pojedinu vrstu vlaka (normalni, ubrzani, brzi). 
+Osnovna cijena karte vrijedi za kupovinu na blagajni. Tvrtka daje % popusta na cijenu ako se vozi 
+vlakom u subotu i/ili nedjelju. Tvrtka želi promovirati kupovinu karte putem web/mobilne aplikacije 
+za što daje određeni % popusta na cijenu. S druge strane tvrtka za kupovinu karte u vlaku 
+određuje % uvećanja cijene. Izračun cijene karte s obzirom na način kupovine (blagajna, 
+web/mobilna aplikacija, u vlaku) treba se temeljiti na uzorku dizajna Strategy.  
+Svaku kupovinu karte potrebno je pohraniti kako bi se moglo do nje kasnije pristupiti, a 
+treba se temeljiti na uzorku dizajna Memento.
+SUma sumarum:
+  % popusta za subotu i nedjelju, % popusta za kupovinu karte putem web/mobilne
+  % uvećanja za kupovinu karte u vlaku
+
+● Određivanje cijene vožnje putnika vlakom €/km, popust za subotu i nedjelju, % popusta 
+za kupovinu karte putem web/mobilne aplikacije i % uvećanja za kupovinu karte u vlaku 
+○ Sintaksa:  
+■ CVP cijenaNormalni cijenaUbrzani cijenaBrzi popustSuN popustWebMob 
+uvecanjeVlak 
+○ Primjer:  
+■ CVP 0,10 0,12 0,15 20,0 10,0 10,0 
+○ Opis primjera:  
+■ Cijena karte za vožnju normalnim vlakom je 0,10 €/km, za ubrzanim vlakom 
+je 0,12 €/km, za brzim vlakom je 0,15 €/km, popust za vožnju vlakom 
+subotom i nedjeljom je 20,0%, popust za kupovinu karte putem 
+web/mobilne aplikacije je 10,0% i uvećanje za kupovinu karte u vlaku je 
+10,0% 
+
+
+
+
+● Kupovina karte za putovanje između dviju stanica određenim vlakom na određeni datum 
+s odabranim načinom kupovanja karte 
+○ Sintaksa:  
+■ KKPV2S oznaka - polaznaStanica - odredišnaStanica - datum - 
+načinKupovine 
+○ Primjer:  
+■ KKPV2S 3609 - Donji Kraljevec - Čakovec - 10.01.2025. - WM 
+○ Opis primjera:  
+■ Kupovina karte za putovanje vlakom s oznakom 3609 na relaciji Donji 
+Kraljevec - Čakovec, za 10.01.2025., a karta se kupuje putem web/mobilne aplikacije. Ostali načini kupovine su: B – blagajna i V – vlak. Na karti moraju 
+pisati podaci o vlaku, relaciji, datumu, vremenu kretanja s polazne stanice  
+i vremenu dolaska u odredišnu stanicu, izvorna cijena, popusti i konačna 
+cijena, način kupovanja karte, datum i vrijeme kupovine karte.
+
+
+● Ispit kupljenih karata za putovanje vlakom 
+○ Sintaksa:  
+■ IKKPV [n] 
+○ Primjer:  
+■ IKKPV 
+○ Opis primjera:  
+■ Ispit svih kupljenih karata za putovanja vlakom 
+○ Primjer:  
+■ IKKPV 3 
+○ Opis primjera:  
+■ Ispit 3. kupljene karte za putovanje vlakom 
+
+
+● Usporedba karata za putovanje između dviju stanica na određeni datum unutar zadanog 
+vremena s odabranim načinom kupovanja karte 
+○ Sintaksa:  
+■ UKP2S polaznaStanica - odredišnaStanica - datum - odVr - doVr 
+načinKupovine 
+○ Primjer:  
+■ UKP2S Donji Kraljevec - Čakovec - 10.01.2025. - 0:00 - 23:59 - WM 
+○ Opis primjera:  
+■ Usporedba karata za putovanje vlakom na relaciji Donji Kraljevec – 
+Čakovec, za 10.01.2025., s kretanjem s polazne stanice nakon 0:00 i 
+dolaskom u odredišnu stanicu prije 23:59, a karta se kupuje putem 
+web/mobilne aplikacije. Na svakoj karti moraju pisati podaci o svim 
+vlakovima kojima se treba voziti, relaciji pojedinog vlaka, datumu, vremenu 
+kretanja s polazne stanice  i vremenu dolaska u odredišnu stanicu pojedine 
+relacije, izvorna cijena, popusti i konačna cijena, način kupovanja karte. 
+○ Primjeri:  
+■ UKP2S Donji Kraljevec - Novi Marof - 10.01.2025. - 08:00 - 16:00 - B 
+○ Opis primjera:  
+■ Usporedba cijena karti za putovanje vlakom na relaciji Donji Kraljevec – 
+Novi Marof, za 10.01.2025., s kretanjem s polazne stanice nakon 8:00 i 
+dolaskom u odredišnu stanicu prije 16:00, a karta se kupuje na blagajni.  
+○ Primjeri:  
+■ UKP2S Donji Kraljevec - Ludbreg - 10.01.2025. - 5:20 - 20:30 - V 
+○ Opis primjera:  
+■ Usporedba cijena karti za putovanje vlakom na relaciji Donji Kraljevec – 
+Ludbreg, za 10.01.2025., s kretanjem s polazne stanice nakon 5:20 i 
+dolaskom u odredišnu stanicu prije 20:30, a karta se kupuje u vlaku.
+
+
+ */
 
 /**
  * The CommandSystem class is responsible for handling the command system of the
@@ -61,6 +152,18 @@ public class CommandSystemSingleton {
 
   Pattern simulateTrainPattern = Pattern
       .compile("^SVV (?<trainId>[^-]+?) - (?<day>[\\p{L}]+) - (?<coefficient>[0-9]+)$");
+
+  Pattern ticketPricePattern = Pattern.compile(
+      "^CVP (?<normalPrice>[0-9]+,[0-9]+) (?<fastPrice>[0-9]+,[0-9]+) (?<expressPrice>[0-9]+,[0-9]+)"
+          + " (?<discountWeekend>[0-9]+,[0-9]+) (?<discountWebMobile>[0-9]+,[0-9]+) (?<trainIncrease>[0-9]+,[0-9]+)$");
+
+  Pattern buyTicketPattern = Pattern.compile(
+      "^KKPV2S (?<trainId>[^-]+?) - (?<startStation>.+) - (?<endStation>.+) - (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}) - (?<purchaseMethod>.+)$");
+
+  Pattern viewBoughtTicketsPattern = Pattern.compile("^IKKPV( (?<n>[0-9]+))?$");
+
+  Pattern compareTicketsPattern = Pattern.compile(
+      "^UKP2S (?<startStation>.+) - (?<endStation>.+) - (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}) - (?<fromTime>[0-9]{1,2}:[0-9]{2}) - (?<toTime>[0-9]{1,2}:[0-9]{2}) - (?<purchaseMethod>.+)$");
 
   Pattern linkPattern = Pattern.compile("^LINK (?<name>[\\p{L}]+(?: [\\p{L}]+)*) (?<lastName>[\\p{L}]+) -"
       + " (?<groupId>.+) - (?<action>.+)$|^LINK PREGLED$");
@@ -110,13 +213,20 @@ public class CommandSystemSingleton {
     Matcher viewTrainStagesMatcher = viewTrainStagesPattern.matcher(command);
     Matcher viewTrainsWithStagesOnMatcher = viewTrainsWithStagesOnPattern.matcher(command);
     Matcher ivrvMatcher = viewTrainTimetablePattern.matcher(command);
-    Matcher linkMatcher = linkPattern.matcher(command);
     Matcher addTrainObserverPatternMatcher = addTrainObserverPattern.matcher(command);
     Matcher trainScheduleBetweenStationsMatcher = trainScheduleBetweenStationsPattern.matcher(command);
     Matcher simulateTrainMatcher = simulateTrainPattern.matcher(command);
+    Matcher ticketPriceMatcher = ticketPricePattern.matcher(command);
+    Matcher ticketPurchaseMatcher = buyTicketPattern.matcher(command);
+    Matcher ticketsViewMatcher = viewBoughtTicketsPattern.matcher(command);
+    Matcher ticketsCompareMatcher = compareTicketsPattern.matcher(command);
+    Matcher linkMatcher = linkPattern.matcher(command);
     if (matchBaseCommands(command, vtMatcher, vsMatcher, vsbMatcher, addUserMatcher, viewUsersMatcher,
         viewTrainsMatcher, viewTrainStagesMatcher, ivrvMatcher, linkMatcher, addTrainObserverPatternMatcher,
         trainScheduleBetweenStationsMatcher, simulateTrainMatcher)) {
+      return true;
+    } else if (matchTicketCommands(command, ticketPriceMatcher, ticketPurchaseMatcher, ticketsViewMatcher,
+        ticketsCompareMatcher)) {
       return true;
     } else if (viewTrainsWithStagesOnMatcher.matches()) {
       try {
@@ -166,6 +276,21 @@ public class CommandSystemSingleton {
       viewTrainScheduleBetweenStations(trainScheduleBetweenStationsMatcher);
     } else if (simulateTrainMatcher.matches()) {
       simulateTrain(simulateTrainMatcher);
+    } else
+      return false;
+    return true;
+  }
+
+  private boolean matchTicketCommands(String command, Matcher ticketPriceMatcher, Matcher ticketPurchaseMatcher,
+      Matcher ticketsViewMatcher, Matcher ticketsCompareMatcher) {
+    if (ticketPriceMatcher.matches()) {
+      setTicketPrices(ticketPriceMatcher);
+    } else if (ticketPurchaseMatcher.matches()) {
+      buyTicket(ticketPurchaseMatcher);
+    } else if (ticketsViewMatcher.matches()) {
+      viewBoughtTickets(ticketsViewMatcher);
+    } else if (ticketsCompareMatcher.matches()) {
+      compareTickets(ticketsCompareMatcher);
     } else
       return false;
     return true;
@@ -864,5 +989,65 @@ public class CommandSystemSingleton {
       return;
     }
     GlobalClock.simulate(train, day, currentTime, coefficient);
+  }
+
+  private void setTicketPrices(Matcher ticketPriceMatcher) {
+    String normalPriceStr = ticketPriceMatcher.group("normalPrice");
+    String fastPriceStr = ticketPriceMatcher.group("fastPrice");
+    String expressPriceStr = ticketPriceMatcher.group("expressPrice");
+    try {
+      double normalPrice = ParsingUtil.d(normalPriceStr);
+      double fastPrice = ParsingUtil.d(fastPriceStr);
+      double expressPrice = ParsingUtil.d(expressPriceStr);
+      RailwaySingleton.getInstance().setTicketPrices(normalPrice, fastPrice, expressPrice);
+    } catch (NumberFormatException e) {
+      Logs.e("Neispravna cijena: " + e.getMessage());
+      return;
+    }
+  }
+
+  private void buyTicket(Matcher ticketPurchaseMatcher) {
+  }
+
+  // implement just like before
+  private void viewBoughtTickets(Matcher ticketsViewMatcher) {
+    Logs.header("Pregled kupljenih karata", true);
+    String nStr = ticketsViewMatcher.group("n");
+    int n = nStr != null ? Integer.parseInt(nStr) : -1;
+    Logs.tableHeader(Arrays.asList("Oznaka", "Vlak", "Polazna stanica", "Odredišna stanica", "Vrijeme polaska",
+        "Vrijeme dolaska", "Klasa", "Cijena"));
+    List<Ticket> tickets = RailwaySingleton.getInstance().getTickets();
+    if (tickets.isEmpty()) {
+      Logs.e("Nema kupljenih karata.");
+      Logs.footer(true);
+      return;
+    }
+    if (n > 0 && n <= tickets.size()) {
+      displayTicket(tickets.get(n - 1));
+    } else if (n == -1) {
+      for (Ticket ticket : tickets) {
+        displayTicket(ticket);
+      }
+    } else {
+      Logs.e("Neispravan broj karte: " + n);
+    }
+    Logs.footer(true);
+  }
+
+  private void displayTicket(Ticket ticket) {
+    List<String> row = new ArrayList<>();
+    // List<String> row = Arrays.asList(
+    //     ticket.id(),
+    //     ticket.trainID(),
+    //     ticket.startStation(),
+    //     ticket.endStation(),
+    //     ticket.departureTime(),
+    //     ticket.arrivalTime(),
+    //     ticket.ticketClass().toString(),
+    //     String.valueOf(ticket.price()));
+    Logs.tableRow(row);
+  }
+
+  private void compareTickets(Matcher ticketsCompareMatcher) {
   }
 }

@@ -17,6 +17,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.Schedule;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule_days.ScheduleDays;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tickets.Ticket;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackStageComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
@@ -667,6 +668,16 @@ public class RailwaySingleton {
         + currentStage.children.getLast().getStation().name() + " koja ima vrijeme dolaska u "
         + currentStage.toTime() + ", " + "što je nakon vremena početka sljedeće etape "
         + nextStage.children.getFirst().getStation().name() + " u " + nextStage.fromTime() + ".");
+  }
+
+  public List<Ticket> getTickets() {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'getTickets'");
+  }
+
+  public void setTicketPrices(double normalPrice, double fastPrice, double expressPrice) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'setTicketPrices'");
   }
 
 }
