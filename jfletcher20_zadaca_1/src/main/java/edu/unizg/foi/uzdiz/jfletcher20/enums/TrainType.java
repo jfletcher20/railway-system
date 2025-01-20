@@ -31,4 +31,12 @@ public enum TrainType {
             case EXPRESS -> "B";
         };
     }
+
+    public String displayName() {
+        return switch (this) {
+            case NORMAL -> "Normalni";
+            case FAST -> "Ubrzani";
+            case EXPRESS -> "Brzi";
+        };
+    }
 }

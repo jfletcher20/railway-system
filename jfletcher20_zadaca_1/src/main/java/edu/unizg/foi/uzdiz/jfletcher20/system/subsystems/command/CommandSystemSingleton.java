@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TicketPurchaseMethod;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
@@ -1088,10 +1089,15 @@ public class CommandSystemSingleton {
     LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     DayOfWeek dayOfWeek = localDate.getDayOfWeek();
     boolean isWeekend = dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY;
+    TicketPurchaseMethod purchaseMethod = TicketPurchaseMethod.fromString(purchaseMethodString);
 
-    // print all the information to the console
-    System.out.println("Kupljena karta za vlak " + trainIdString + " od " + startStationString + " do "
-        + endStationString + " za " + dateString + " (" + (isWeekend ? "vikend" : "radni dan") + ")");
+    // Ticket ticket = RailwaySingleton.getInstance().purchaseTicket(train, startStationString, endStationString, date,
+        // isWeekend, purchaseMethod);
+    Ticket ticket = new Ticket(trainIdString, startStationString, endStationString, localDate, new Date(), purchaseMethod);
+
+    System.out.println(ticket.getTicketData());
+    System.out.println(ticket.getTicketPurchaseData());
+    System.out.println("Karta je uspješno kupljena.");
   }
 
   // implement just like before

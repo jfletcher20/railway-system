@@ -194,7 +194,7 @@ public class TrainComposite implements IComponent, ISubject {
         return result;
     }
 
-    TrainType getTrainType() {
+    public TrainType getTrainType() {
         return this.children.get(0).schedule.trainType();
     }
 
@@ -277,38 +277,11 @@ public class TrainComposite implements IComponent, ISubject {
     }
 
     public ScheduleTime getDepartureTimeAtStation(Station start) {
-        if (this.children.isEmpty() || !this.hasStation(start.name()))
-            return null;
-        TrainTrackStageComposite withStation = this.firstWithStation(start.name());
-        if (withStation == null)
-            return null;
-        // calculate the schedule time of departure for the station
-        ScheduleTime departureTime = withStation.fromTime(start.name());
-        for (StationLeaf leaf : withStation.children) {
-            if (leaf.getStation().name().equals(start.name())) {
-                break;
-            }
-            departureTime = departureTime
-                    .addMinutes(leaf.getStation().timeForTrainType(withStation.schedule.trainType()));
-        }
-        return departureTime;
+        return this.getDepartureTimeAtStation(start.name());
     }
 
     public ScheduleTime getArrivalTimeAtStation(Station end) {
-        if (this.children.isEmpty() || !this.hasStation(end.name()))
-            return null;
-        TrainTrackStageComposite withStation = this.firstWithStation(end.name());
-        if (withStation == null)
-            return null;
-        ScheduleTime arrivalTime = withStation.arrivalTime(end.name());
-        for (StationLeaf leaf : withStation.children) {
-            arrivalTime = arrivalTime
-                    .addMinutes(leaf.getStation().timeForTrainType(withStation.schedule.trainType()));
-            if (leaf.getStation().name().equals(end.name())) {
-                break;
-            }
-        }
-        return arrivalTime;
+        return this.getArrivalTimeAtStation(end.name());
     }
 
     public List<Map<String, String>> commandIVI2S(String displayFormat) {
@@ -449,6 +422,44 @@ public class TrainComposite implements IComponent, ISubject {
                 HashSet::new,
                 HashSet::add, HashSet::addAll);
         return trainTypes.size() == 1;
+    }
+
+
+    public ScheduleTime getDepartureTimeAtStation(String start) {
+        if (this.children.isEmpty() || !this.hasStation(start))
+            return null;
+        TrainTrackStageComposite withStation = this.firstWithStation(start);
+        if (withStation == null)
+            return null;
+        // calculate the schedule time of departure for the station
+        ScheduleTime departureTime = withStation.fromTime(start);
+        for (StationLeaf leaf : withStation.children) {
+            if (leaf.getStation().name().equals(start)) {
+                break;
+            }
+            departureTime = departureTime
+                    .addMinutes(leaf.getStation().timeForTrainType(withStation.schedule.trainType()));
+        }
+        return departureTime;
+    }
+
+    
+
+    public ScheduleTime getArrivalTimeAtStation(String end) {
+        if (this.children.isEmpty() || !this.hasStation(end))
+            return null;
+        TrainTrackStageComposite withStation = this.firstWithStation(end);
+        if (withStation == null)
+            return null;
+        ScheduleTime arrivalTime = withStation.arrivalTime(end);
+        for (StationLeaf leaf : withStation.children) {
+            arrivalTime = arrivalTime
+                    .addMinutes(leaf.getStation().timeForTrainType(withStation.schedule.trainType()));
+            if (leaf.getStation().name().equals(end)) {
+                break;
+            }
+        }
+        return arrivalTime;
     }
 
 }
