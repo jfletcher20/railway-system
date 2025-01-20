@@ -4,7 +4,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.enums.ClockState;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
-import edu.unizg.foi.uzdiz.jfletcher20.system.GlobalClock;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.link.GlobalClock;
 
 public abstract class IClockState {
     public ClockState internalState;

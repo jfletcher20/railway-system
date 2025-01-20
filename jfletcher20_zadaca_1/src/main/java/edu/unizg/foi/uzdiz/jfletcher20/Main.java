@@ -1,9 +1,9 @@
 package edu.unizg.foi.uzdiz.jfletcher20;
 
-import edu.unizg.foi.uzdiz.jfletcher20.system.GlobalClock;
-import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
-import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingletonBuilder;
-import edu.unizg.foi.uzdiz.jfletcher20.system.SystemInitializationDirector;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.link.GlobalClock;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleton;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingletonBuilder;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.SystemInitializationDirector;
 
 /**
  * Main class

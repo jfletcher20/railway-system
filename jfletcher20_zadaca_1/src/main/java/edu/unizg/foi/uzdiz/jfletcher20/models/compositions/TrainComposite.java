@@ -21,7 +21,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.stations.StationLeaf;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackStageComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
-import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleton;
 
 public class TrainComposite implements IComponent, ISubject {
 

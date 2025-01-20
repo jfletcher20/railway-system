@@ -1,6 +1,7 @@
-package edu.unizg.foi.uzdiz.jfletcher20.system;
+package edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway;
 
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IBuilder;
+import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.FilesUtil;
 
 public class RailwaySingletonBuilder implements IBuilder {

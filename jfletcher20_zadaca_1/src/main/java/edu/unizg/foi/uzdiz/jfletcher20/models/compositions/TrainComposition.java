@@ -4,7 +4,7 @@ import java.util.List;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.Wagon;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
-import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleton;
 
 public record TrainComposition( //
     int trainId, // Oznaka

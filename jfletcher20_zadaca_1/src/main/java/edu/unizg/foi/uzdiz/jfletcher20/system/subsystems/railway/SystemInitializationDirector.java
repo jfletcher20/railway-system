@@ -1,4 +1,6 @@
-package edu.unizg.foi.uzdiz.jfletcher20.system;
+package edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway;
+
+import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 
 public class SystemInitializationDirector {
   private RailwaySingletonBuilder builder;

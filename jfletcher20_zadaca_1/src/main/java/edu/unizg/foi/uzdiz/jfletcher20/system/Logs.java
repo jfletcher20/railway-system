@@ -7,6 +7,7 @@ import java.util.Map;
 
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.link.GlobalClock;
 
 import java.util.AbstractMap;
 

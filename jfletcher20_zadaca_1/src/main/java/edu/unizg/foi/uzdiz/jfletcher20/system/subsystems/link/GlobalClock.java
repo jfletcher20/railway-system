@@ -1,4 +1,4 @@
-package edu.unizg.foi.uzdiz.jfletcher20.system;
+package edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.link;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +11,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.clock_states.ClockStateSimulating;
 import edu.unizg.foi.uzdiz.jfletcher20.models.clock_states.ClockStateStopped;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
+import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 
 public abstract class GlobalClock {
     public static int time = 0;

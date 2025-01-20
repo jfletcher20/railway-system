@@ -1,9 +1,9 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.users;
 
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IObserver;
-import edu.unizg.foi.uzdiz.jfletcher20.system.ChatMediator;
-import edu.unizg.foi.uzdiz.jfletcher20.system.CommandSystemSingleton;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.command.CommandSystemSingleton;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.link.ChatMediator;
 
 import java.util.Random;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComplaintHandler;

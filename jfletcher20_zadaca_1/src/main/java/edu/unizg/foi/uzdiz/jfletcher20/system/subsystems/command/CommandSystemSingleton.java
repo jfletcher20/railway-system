@@ -1,4 +1,4 @@
-package edu.unizg.foi.uzdiz.jfletcher20.system;
+package edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.command;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +17,10 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tickets.Ticket;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
 import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
+import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.link.ChatMediator;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.link.GlobalClock;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleton;
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 

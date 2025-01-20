@@ -1,4 +1,4 @@
-package edu.unizg.foi.uzdiz.jfletcher20.system;
+package edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.link;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
+import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 
 public class ChatMediator {
     private final Map<String, Set<User>> groupUsers = new HashMap<String, Set<User>>();

@@ -2,7 +2,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.handlers.complaints;
 
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComplaintHandler;
 import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
-import edu.unizg.foi.uzdiz.jfletcher20.system.CommandSystemSingleton;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.command.CommandSystemSingleton;
 
 public abstract class AbstractComplaintHandler implements IComplaintHandler {
     protected IComplaintHandler next;

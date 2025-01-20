@@ -7,7 +7,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
-import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleton;
 
 public record Schedule(
         String trackID, // Oznaka pruge

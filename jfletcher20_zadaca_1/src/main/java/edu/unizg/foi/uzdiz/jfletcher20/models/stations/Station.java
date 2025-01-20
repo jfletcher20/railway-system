@@ -5,7 +5,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.enums.StationType;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
-import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleton;
 
 /**
  * Station object represents a single train station.

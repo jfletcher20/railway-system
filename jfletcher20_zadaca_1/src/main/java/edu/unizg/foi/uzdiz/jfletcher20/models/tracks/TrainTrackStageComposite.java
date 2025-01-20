@@ -15,7 +15,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.StationLeaf;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
-import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleton;
 
 public class TrainTrackStageComposite implements IComposite {
 

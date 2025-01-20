@@ -1,10 +1,10 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.schedule;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
-import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ICreator;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleton;
 
 public class ScheduleCreator implements ICreator {
 

@@ -16,7 +16,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackCreator;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.StationCreator;
 import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.WagonCreator;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
-import edu.unizg.foi.uzdiz.jfletcher20.system.RailwaySingleton;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleton;
 
 /**
  * FilesUtil class
