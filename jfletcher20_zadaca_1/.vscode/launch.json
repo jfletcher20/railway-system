@@ -16,7 +16,6 @@
             "request": "launch",
             "mainClass": "edu.unizg.foi.uzdiz.jfletcher20.Main",
             "projectName": "jfletcher20_zadaca_1",
-            // need to add arguments to the run command: --zs DZ_1_stanice.csv --zps DZ_1_vozila.csv --zk DZ_1_kompozicije.csv
             "vmArgs": "-Dfile.encoding=UTF-8",
             "args": [
                 "--zs",
@@ -33,7 +32,6 @@
             "request": "launch",
             "mainClass": "edu.unizg.foi.uzdiz.jfletcher20.Main",
             "projectName": "jfletcher20_zadaca_1",
-            // need to add arguments to the run command: --zs DZ_1_stanice.csv --zps DZ_1_vozila.csv --zk DZ_1_kompozicije.csv
             "vmArgs": "-Dfile.encoding=UTF-8",
             "args": [
                 "--zs",
@@ -46,6 +44,26 @@
                 "DZ_2_vozni_red.csv",
                 "--zod",
                 "DZ_2_oznake_dana.csv"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "DZ-3",
+            "request": "launch",
+            "mainClass": "edu.unizg.foi.uzdiz.jfletcher20.Main",
+            "projectName": "jfletcher20_zadaca_1",
+            "vmArgs": "-Dfile.encoding=UTF-8",
+            "args": [
+                "--zs",
+                "DZ_3_stanice.csv",
+                "--zps",
+                "DZ_3_vozila.csv",
+                "--zk",
+                "DZ_3_kompozicije.csv",
+                "--zvr",
+                "DZ_3_vozni_red.csv",
+                "--zod",
+                "DZ_3_oznake_dana.csv"
             ]
         }
     ]

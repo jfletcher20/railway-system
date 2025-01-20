@@ -24,11 +24,15 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.Wagon;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.command.CommandSystemSingleton;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketSystemCaretaker;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketSystemMemento;
 
 public class RailwaySingleton {
 
   static private volatile RailwaySingleton instance = new RailwaySingleton();
   static public final Class<?> PREFERRED_COMMAND_SYSTEM = CommandSystemSingleton.class;
+
+  private final TicketSystemCaretaker ticketSystemCaretaker = new TicketSystemCaretaker();
 
   private List<TrainTrack> tracks = new ArrayList<>();
   private List<Wagon> wagons = new ArrayList<>();
@@ -79,6 +83,14 @@ public class RailwaySingleton {
 
   public List<String> getInitArgs() {
     return this.initArgs;
+  }
+
+  public TicketSystemCaretaker ticketSystemCaretaker() {
+    return this.ticketSystemCaretaker;
+  }
+
+  public TicketSystemMemento ticketSystem() {
+    return this.ticketSystemCaretaker.getLastMemento();
   }
 
   public double calculateDistance(Station a, Station b) {

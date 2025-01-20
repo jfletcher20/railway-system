@@ -126,4 +126,8 @@ public enum Weekday {
         };
     }
 
+    public static List<Weekday> getWeekend() {
+        return List.of(SATURDAY, SUNDAY);
+    }
+
 }
