@@ -194,6 +194,10 @@ public class TrainComposite implements IComponent, ISubject {
         return result;
     }
 
+    TrainType getTrainType() {
+        return this.children.get(0).schedule.trainType();
+    }
+
     @Override
     public void registerObserver(IObserver observer) {
         if (observers.containsKey(trainID)) {

@@ -26,19 +26,9 @@ treba se temeljiti na uzorku dizajna Memento. */
  * 3. Train ticket price increase
  */
 
-/**
- * Singleton class for handling ticket purchases and discounts.
- */
 public class TicketSystem {
-    private static volatile TicketSystem instance = new TicketSystem();
 
-    private TicketSystem() {
-    }
-
-    public static TicketSystem getInstance() {
-        if (instance == null)
-            instance = new TicketSystem();
-        return instance;
+    public TicketSystem() {
     }
 
     final List<Weekday> discounts = Weekday.getWeekend();
@@ -67,6 +57,14 @@ public class TicketSystem {
 
     public void setPriceExpress(double priceExpress) {
         this.priceExpress = priceExpress;
+    }
+
+    private double discount(double modifier) {
+        return 1 - modifier;
+    }
+
+    private double increase(double modifier) {
+        return 1 + modifier;
     }
 
 }

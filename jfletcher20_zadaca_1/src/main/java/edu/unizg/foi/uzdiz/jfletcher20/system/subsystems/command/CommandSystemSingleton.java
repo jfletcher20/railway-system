@@ -1,8 +1,12 @@
 package edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.command;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +33,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 cijene vožnje putnika vlakom temelji se na €/km za pojedinu vrstu vlaka (normalni, ubrzani, brzi). 
 Osnovna cijena karte vrijedi za kupovinu na blagajni. Tvrtka daje % popusta na cijenu ako se vozi 
 vlakom u subotu i/ili nedjelju. Tvrtka želi promovirati kupovinu karte putem web/mobilne aplikacije 
-za što daje određeni % popusta na cijenu. S druge strane tvrtka za kupovinu karte u vlaku 
+za što daje određeni % popusta na cijenu. (enum TicketPurchaseMethod) S druge strane tvrtka za kupovinu karte u vlaku 
 određuje % uvećanja cijene. Izračun cijene karte s obzirom na način kupovine (blagajna, 
 web/mobilna aplikacija, u vlaku) treba se temeljiti na uzorku dizajna Strategy.  
 Svaku kupovinu karte potrebno je pohraniti kako bi se moglo do nje kasnije pristupiti, a 
@@ -51,8 +55,6 @@ je 0,12 €/km, za brzim vlakom je 0,15 €/km, popust za vožnju vlakom
 subotom i nedjeljom je 20,0%, popust za kupovinu karte putem 
 web/mobilne aplikacije je 10,0% i uvećanje za kupovinu karte u vlaku je 
 10,0% 
-
-
 
 
 ● Kupovina karte za putovanje između dviju stanica određenim vlakom na određeni datum 
@@ -161,8 +163,8 @@ public class CommandSystemSingleton {
       "^CVP (?<normalPrice>[0-9]+,[0-9]+) (?<fastPrice>[0-9]+,[0-9]+) (?<expressPrice>[0-9]+,[0-9]+)"
           + " (?<discountWeekend>[0-9]+,[0-9]+) (?<discountWebMobile>[0-9]+,[0-9]+) (?<trainIncrease>[0-9]+,[0-9]+)$");
 
-  Pattern buyTicketPattern = Pattern.compile(
-      "^KKPV2S (?<trainId>[^-]+?) - (?<startStation>.+) - (?<endStation>.+) - (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}) - (?<purchaseMethod>.+)$");
+  Pattern purchaseTicketPattern = Pattern.compile(
+      "^KKPV2S (?<trainId>[^-]+?) - (?<startStation>.+) - (?<endStation>.+) - (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}\\.) - (?<purchaseMethod>.+)$");
 
   Pattern viewBoughtTicketsPattern = Pattern.compile("^IKKPV( (?<n>[0-9]+))?$");
 
@@ -221,7 +223,7 @@ public class CommandSystemSingleton {
     Matcher trainScheduleBetweenStationsMatcher = trainScheduleBetweenStationsPattern.matcher(command);
     Matcher simulateTrainMatcher = simulateTrainPattern.matcher(command);
     Matcher ticketPriceMatcher = ticketPricePattern.matcher(command);
-    Matcher ticketPurchaseMatcher = buyTicketPattern.matcher(command);
+    Matcher ticketPurchaseMatcher = purchaseTicketPattern.matcher(command);
     Matcher ticketsViewMatcher = viewBoughtTicketsPattern.matcher(command);
     Matcher ticketsCompareMatcher = compareTicketsPattern.matcher(command);
     Matcher linkMatcher = linkPattern.matcher(command);
@@ -229,10 +231,12 @@ public class CommandSystemSingleton {
         viewTrainsMatcher, viewTrainStagesMatcher, ivrvMatcher, linkMatcher, addTrainObserverPatternMatcher,
         trainScheduleBetweenStationsMatcher, simulateTrainMatcher)) {
       return true;
-    } else if (matchTicketCommands(command, ticketPriceMatcher, ticketPurchaseMatcher, ticketsViewMatcher,
+    }
+    if (matchTicketCommands(command, ticketPriceMatcher, ticketPurchaseMatcher, ticketsViewMatcher,
         ticketsCompareMatcher)) {
       return true;
-    } else if (viewTrainsWithStagesOnMatcher.matches()) {
+    }
+    if (viewTrainsWithStagesOnMatcher.matches()) {
       try {
         viewTrainsWithStagesOnDays(Weekday.daysFromString(viewTrainsWithStagesOnMatcher.group("days")));
       } catch (IllegalArgumentException e) {
@@ -290,7 +294,7 @@ public class CommandSystemSingleton {
     if (ticketPriceMatcher.matches()) {
       setTicketPrices(ticketPriceMatcher);
     } else if (ticketPurchaseMatcher.matches()) {
-      buyTicket(ticketPurchaseMatcher);
+      purchaseTicket(ticketPurchaseMatcher);
     } else if (ticketsViewMatcher.matches()) {
       viewBoughtTickets(ticketsViewMatcher);
     } else if (ticketsCompareMatcher.matches()) {
@@ -305,56 +309,87 @@ public class CommandSystemSingleton {
     Logs.withPadding(() -> Logs.o("Validne komande:"), false, true);
 
     dz1CommandsMenu();
-
     trainCommandsMenu();
 
     userCommandsMenu();
 
+    ticketCommandsMenu();
+
     customCommandsMenu();
 
-    Logs.withPadding(() -> Logs.o("Q - Izlaz iz programa", false), true, true);
+    Logs.withPadding(() -> Logs.o("\u001B[93m" + "Q\t\t\t\t\t\t" + "\u001B[0m" + "- Izlaz iz programa", false), true, true);
+
     Logs.o("Uzorci dizajna, 2024. - Joshua Lee Fletcher");
   }
 
   private void dz1CommandsMenu() {
-    Logs.o("IP\t\t\t\t\t- Pregled pruga", false);
+    Logs.o("\u001B[93m" + "IP\t\t\t\t\t" + "\u001B[0m" + "- Pregled pruga", false);
+    Logs.o("\u001B[93m" +
+        "ISP [oznakaPruge] [N|O]\t\t\t" + "\u001B[0m"
+        + "- Pregled stanica uz prugu u normalnom ili obrnutom redoslijedu",
+        false);
     Logs.o(
-        "ISP [oznakaPruge] [N|O]\t\t\t- Pregled stanica uz prugu u normalnom ili obrnutom redoslijedu",
+        "\u001B[93m" + "ISI2S [nazivStanice1] - [nazivStanice2]\t" + "\u001B[0m"
+            + "- Pregled stanica između dvije stanice",
         false);
-    Logs.o("ISI2S [nazivStanice1] - [nazivStanice2]\t- Pregled stanica između dvije stanice",
-        false);
-    Logs.o("IK [oznakaKompozicije]\t\t\t- Pregled kompozicija", false);
+    Logs.o("\u001B[93m" + "IK [oznakaKompozicije]\t\t\t" + "\u001B[0m" + "- Pregled kompozicija", false);
   }
 
   private void trainCommandsMenu() {
-    Logs.o("IV\t\t\t\t\t- Pregled vlakova", false);
-    Logs.o("IEV [oznakaVlaka]\t\t\t\t- Pregled etapa vlaka", false);
-    Logs.o("IEVD [dani]\t\t\t\t- Pregled vlakova koji voze sve etape na određene dane u tjednu",
+    Logs.o("\u001B[93m" + "IV\t\t\t\t\t" + "\u001B[0m" + "- Pregled vlakova", false);
+    Logs.o("\u001B[93m" + "IEV [oznakaVlaka]\t\t\t\t" + "\u001B[0m" + "- Pregled etapa vlaka", false);
+    Logs.o(
+        "\u001B[93m" + "IEVD [dani]\t\t\t\t" + "\u001B[0m"
+            + "- Pregled vlakova koji voze sve etape na određene dane u tjednu",
         false);
-    Logs.o("IVRV [oznakaVlaka]\t\t\t- Pregled vlakova i njihovih etapa", false);
-    Logs.o("IVI2S [polaznaStanica] - [odredišnaStanica] - [dan] - [odVr] - [doVr] - [prikaz]", false);
-    Logs.o("\t\t\t\t\t\t- Pregled vlakova između dvije stanice na "
+    Logs.o("\u001B[93m" + "IVRV [oznakaVlaka]\t\t\t" + "\u001B[0m" + "- Pregled vlakova i njihovih etapa", false);
+    Logs.o("\u001B[93m" + "IVI2S [polaznaStanica] - [odredišnaStanica] - [dan] - [odVr] - [doVr] - [prikaz]", false);
+    Logs.o("\t\t\t\t\t\t" + "\u001B[0m" + "- Pregled vlakova između dvije stanice na "
         + "određeni dan u tjednu unutar zadanog vremena", false);
   }
 
   private void userCommandsMenu() {
-    Logs.o("DK [ime] [prezime]\t\t\t- Dodavanje korisnika", false);
-    Logs.o("PK\t\t\t\t\t- Pregled korisnika", false);
-    Logs.withPadding(() -> Logs.o(
-        "DPK [ime] [prz] - [oznVlaka] [- stanica]  "
-            + "- Dodavanje korisnika za praćenje putovanja vlaka ili dolaska u određenu željezničku stanicu",
-        false), true, false);
+    Logs.withPadding(() -> Logs.o("\u001B[93m" + "DK [ime] [prezime]\t\t\t" + "\u001B[0m" + "- Dodavanje korisnika", false), true, false);
+    Logs.o("\u001B[93m" + "PK\t\t\t\t\t" + "\u001B[0m" + "- Pregled korisnika", false);
+    Logs.o("\u001B[93m" +
+        "DPK [ime] [prz] - [oznVlaka] [- stanica]  " + "\u001B[0m"
+        + "- Dodavanje korisnika za praćenje putovanja vlaka ili dolaska u određenu željezničku stanicu",
+        false);
+    Logs.o("\u001B[93m" +
+        "SVV [oznakaVlaka] - [dan] - [koeficijent]\t" + "\u001B[0m"
+        + "- Simulacija vožnje vlaka na dan u tjednu u koeficijentu vremena",
+        false);
+  }
+
+  private void ticketCommandsMenu() {
+    Logs.withPadding(
+        () -> Logs.o(
+            "\u001B[93m"
+                + "CVP [cijenaNormalni] [cijenaUbrzani] [cijenaBrzi] [popustSuN] [popustWebMob] [uvecanjeVlak]",
+            false),
+        true, false);
+    Logs.o("\t\t\t\t\t\t" + "\u001B[0m" + "- Postavljanje cijena karata", false);
+    Logs.o("\u001B[93m" + "KKPV2S [oznaka] - [polaznaStanica] - [odredišnaStanica] - [datum] - [načinKupovine]", false);
     Logs.o(
-        "SVV [oznakaVlaka] - [dan] - [koeficijent]\t- Simulacija vožnje vlaka na dan u tjednu u koeficijentu vremena",
+        "\t\t\t\t\t\t" + "\u001B[0m"
+            + "- Kupovina karte za putovanje između dviju stanica određenim vlakom na određeni datum s odabranim načinom kupovanja karte",
+        false);
+    Logs.o("\u001B[93m" + "IKKPV [n]\t\t\t\t\t" + "\u001B[0m" + "- Ispit kupljenih karata za putovanje vlakom", false);
+    Logs.o("\t\t\t\t\t\t" + "\u001B[0m" + "- Ispit svih kupljenih karata za putovanja vlakom", false);
+    Logs.o("\u001B[93m" + "UKP2S [polaznaStanica] - [odredišnaStanica] - [datum] - [odVr] - [doVr] - [načinKupovine]",
+        false);
+    Logs.o(
+        "\t\t\t\t\t\t" + "\u001B[0m"
+            + "- Usporedba karata za putovanje između dviju stanica na određeni datum unutar zadanog vremena s odabranim načinom kupovanja karte",
         false);
   }
 
   private void customCommandsMenu() {
-    Logs.withPadding(() -> Logs.o(
+    Logs.withPadding(() -> Logs.o("\u001B[93m" +
         "LINK [ime] [prz] - [grupa] - [O|Z|poruka] "
             + "- Otvori/zatvori vezu između korisnika i grupe ili pošalji obavijest u grupu",
         false), true, false);
-    Logs.o("LINK PREGLED\t\t\t\t- Pregled svih grupa", false);
+    Logs.o("\u001B[93m" + "LINK PREGLED\t\t\t\t" + "\u001B[0m" + "- Pregled svih grupa", false);
   }
 
   private void viewTracks() {
@@ -1010,7 +1045,53 @@ public class CommandSystemSingleton {
     }
   }
 
-  private void buyTicket(Matcher ticketPurchaseMatcher) {
+  private void purchaseTicket(Matcher ticketPurchaseMatcher) {
+    String trainIdString = ticketPurchaseMatcher.group("trainId");
+    String startStationString = ticketPurchaseMatcher.group("startStation");
+    String endStationString = ticketPurchaseMatcher.group("endStation");
+    String dateString = ticketPurchaseMatcher.group("date");
+    String purchaseMethodString = ticketPurchaseMatcher.group("purchaseMethod");
+    if (trainIdString == null || startStationString == null || endStationString == null || dateString == null
+        || purchaseMethodString == null) {
+      Logs.e("Nedostaje obavezni parametar: " + (trainIdString == null ? "trainID" : "")
+          + (startStationString == null ? "startStation" : "") + (endStationString == null ? "endStation" : "")
+          + (dateString == null ? "date" : "") + (purchaseMethodString == null ? "purchaseMethod" : ""));
+      return;
+    }
+    // parse parameters for date and purchasemethod
+    TrainComposite train = RailwaySingleton.getInstance().getSchedule().getTrainById(trainIdString);
+    if (train == null) {
+      Logs.e("Vlak s oznakom " + trainIdString + " ne postoji.");
+      return;
+    }
+    if (!train.hasStation(startStationString)) {
+      Logs.e("Vlak " + trainIdString + " ne prolazi kroz stanicu " + startStationString);
+      return;
+    }
+    if (!train.hasStation(endStationString)) {
+      Logs.e("Vlak " + trainIdString + " ne prolazi kroz stanicu " + endStationString);
+      return;
+    }
+    Date date = new Date();
+    try {
+      date = ParsingUtil.dt(dateString);
+      if (date == null) {
+        Logs.e("Neispravan format datuma: " + dateString);
+        return;
+      }
+    } catch (Exception e) {
+      Logs.e("Greška " + e.getClass().getSimpleName() + "::" + e.getMessage() + " prilikom parsiranja datuma: "
+          + dateString);
+      return;
+    }
+
+    LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    DayOfWeek dayOfWeek = localDate.getDayOfWeek();
+    boolean isWeekend = dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY;
+
+    // print all the information to the console
+    System.out.println("Kupljena karta za vlak " + trainIdString + " od " + startStationString + " do "
+        + endStationString + " za " + dateString + " (" + (isWeekend ? "vikend" : "radni dan") + ")");
   }
 
   // implement just like before
@@ -1041,14 +1122,14 @@ public class CommandSystemSingleton {
   private void displayTicket(Ticket ticket) {
     List<String> row = new ArrayList<>();
     // List<String> row = Arrays.asList(
-    //     ticket.id(),
-    //     ticket.trainID(),
-    //     ticket.startStation(),
-    //     ticket.endStation(),
-    //     ticket.departureTime(),
-    //     ticket.arrivalTime(),
-    //     ticket.ticketClass().toString(),
-    //     String.valueOf(ticket.price()));
+    // ticket.id(),
+    // ticket.trainID(),
+    // ticket.startStation(),
+    // ticket.endStation(),
+    // ticket.departureTime(),
+    // ticket.arrivalTime(),
+    // ticket.ticketClass().toString(),
+    // String.valueOf(ticket.price()));
     Logs.tableRow(row);
   }
 

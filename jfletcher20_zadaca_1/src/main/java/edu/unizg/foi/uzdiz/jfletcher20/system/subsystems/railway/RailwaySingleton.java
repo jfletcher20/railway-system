@@ -26,6 +26,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.command.CommandSystemSingleton;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketSystemCaretaker;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketSystemMemento;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketSystemOriginator;
 
 public class RailwaySingleton {
 
@@ -33,6 +34,7 @@ public class RailwaySingleton {
   static public final Class<?> PREFERRED_COMMAND_SYSTEM = CommandSystemSingleton.class;
 
   private final TicketSystemCaretaker ticketSystemCaretaker = new TicketSystemCaretaker();
+  private final TicketSystemOriginator ticketSystemOriginator = new TicketSystemOriginator();
 
   private List<TrainTrack> tracks = new ArrayList<>();
   private List<Wagon> wagons = new ArrayList<>();
@@ -87,6 +89,10 @@ public class RailwaySingleton {
 
   public TicketSystemCaretaker ticketSystemCaretaker() {
     return this.ticketSystemCaretaker;
+  }
+
+  public TicketSystemOriginator ticketSystemOriginator() {
+    return this.ticketSystemOriginator;
   }
 
   public TicketSystemMemento ticketSystem() {
