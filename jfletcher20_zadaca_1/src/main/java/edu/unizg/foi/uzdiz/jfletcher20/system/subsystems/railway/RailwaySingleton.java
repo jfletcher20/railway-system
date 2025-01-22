@@ -24,6 +24,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.Wagon;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.command.CommandSystemSingleton;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketSystem;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketSystemCaretaker;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketSystemMemento;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketSystemOriginator;
@@ -695,9 +696,12 @@ public class RailwaySingleton {
     throw new UnsupportedOperationException("Unimplemented method 'getTickets'");
   }
 
-  public void setTicketPrices(double normalPrice, double fastPrice, double expressPrice) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'setTicketPrices'");
+  public void setTicketPrices(double normalPrice, double fastPrice, double expressPrice, double discountWeekend,
+      double discountWebMobile, double trainPriceIncrease) {
+    ticketSystemOriginator
+        .setState(new TicketSystem(discountWeekend, discountWebMobile, trainPriceIncrease, normalPrice, fastPrice,
+            expressPrice));
+    ticketSystemCaretaker.addMemento(ticketSystemOriginator.saveState());
   }
 
 }

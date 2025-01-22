@@ -16,7 +16,11 @@ public class TicketSystemCaretaker {
     }
 
     public TicketSystemMemento getLastMemento() {
-        return mementos.get(mementos.size() - 1);
+        return mementos.isEmpty() ? null : mementos.getLast();
+    }
+
+    public int getMementoCount() {
+        return mementos.size();
     }
     
 }

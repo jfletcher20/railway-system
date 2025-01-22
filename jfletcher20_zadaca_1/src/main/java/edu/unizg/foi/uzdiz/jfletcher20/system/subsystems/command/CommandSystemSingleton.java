@@ -162,7 +162,7 @@ public class CommandSystemSingleton {
 
   Pattern ticketPricePattern = Pattern.compile(
       "^CVP (?<normalPrice>[0-9]+,[0-9]+) (?<fastPrice>[0-9]+,[0-9]+) (?<expressPrice>[0-9]+,[0-9]+)"
-          + " (?<discountWeekend>[0-9]+,[0-9]+) (?<discountWebMobile>[0-9]+,[0-9]+) (?<trainIncrease>[0-9]+,[0-9]+)$");
+          + " (?<discountWeekend>[0-9]+,[0-9]+) (?<discountWebMobile>[0-9]+,[0-9]+) (?<trainPriceIncrease>[0-9]+,[0-9]+)$");
 
   Pattern purchaseTicketPattern = Pattern.compile(
       "^KKPV2S (?<trainId>[^-]+?) - (?<startStation>.+) - (?<endStation>.+) - (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}\\.) - (?<purchaseMethod>.+)$");
@@ -318,7 +318,8 @@ public class CommandSystemSingleton {
 
     customCommandsMenu();
 
-    Logs.withPadding(() -> Logs.o("\u001B[93m" + "Q\t\t\t\t\t\t" + "\u001B[0m" + "- Izlaz iz programa", false), true, true);
+    Logs.withPadding(() -> Logs.o("\u001B[93m" + "Q\t\t\t\t\t\t" + "\u001B[0m" + "- Izlaz iz programa", false), true,
+        true);
 
     Logs.o("Uzorci dizajna, 2024. - Joshua Lee Fletcher");
   }
@@ -350,7 +351,9 @@ public class CommandSystemSingleton {
   }
 
   private void userCommandsMenu() {
-    Logs.withPadding(() -> Logs.o("\u001B[93m" + "DK [ime] [prezime]\t\t\t" + "\u001B[0m" + "- Dodavanje korisnika", false), true, false);
+    Logs.withPadding(
+        () -> Logs.o("\u001B[93m" + "DK [ime] [prezime]\t\t\t" + "\u001B[0m" + "- Dodavanje korisnika", false), true,
+        false);
     Logs.o("\u001B[93m" + "PK\t\t\t\t\t" + "\u001B[0m" + "- Pregled korisnika", false);
     Logs.o("\u001B[93m" +
         "DPK [ime] [prz] - [oznVlaka] [- stanica]  " + "\u001B[0m"
@@ -388,7 +391,7 @@ public class CommandSystemSingleton {
   private void customCommandsMenu() {
     Logs.withPadding(() -> Logs.o("\u001B[93m" +
         "LINK [ime] [prz] - [grupa] - [O|Z|poruka] "
-            + "- Otvori/zatvori vezu između korisnika i grupe ili pošalji obavijest u grupu",
+        + "- Otvori/zatvori vezu između korisnika i grupe ili pošalji obavijest u grupu",
         false), true, false);
     Logs.o("\u001B[93m" + "LINK PREGLED\t\t\t\t" + "\u001B[0m" + "- Pregled svih grupa", false);
   }
@@ -1035,15 +1038,30 @@ public class CommandSystemSingleton {
     String normalPriceStr = ticketPriceMatcher.group("normalPrice");
     String fastPriceStr = ticketPriceMatcher.group("fastPrice");
     String expressPriceStr = ticketPriceMatcher.group("expressPrice");
+    String discountWeekendStr = ticketPriceMatcher.group("discountWeekend");
+    String discountWebMobileStr = ticketPriceMatcher.group("discountWebMobile");
+    String trainPriceIncreaseStr = ticketPriceMatcher.group("trainPriceIncrease");
     try {
-      double normalPrice = ParsingUtil.d(normalPriceStr);
-      double fastPrice = ParsingUtil.d(fastPriceStr);
-      double expressPrice = ParsingUtil.d(expressPriceStr);
-      RailwaySingleton.getInstance().setTicketPrices(normalPrice, fastPrice, expressPrice);
-    } catch (NumberFormatException e) {
+      double normalPrice = ParsingUtil.d(normalPriceStr), fastPrice = ParsingUtil.d(fastPriceStr),
+          expressPrice = ParsingUtil.d(expressPriceStr);
+      double discountWeekend = ParsingUtil.d(discountWeekendStr),
+          discountWebMobile = ParsingUtil.d(discountWebMobileStr),
+          trainPriceIncrease = ParsingUtil.d(trainPriceIncreaseStr);
+      RailwaySingleton.getInstance().setTicketPrices(normalPrice, fastPrice, expressPrice, discountWeekend,
+          discountWebMobile, trainPriceIncrease);
+    } catch (Exception e) {
       Logs.e("Neispravna cijena: " + e.getMessage());
       return;
     }
+    System.out.println("Cijene karata su postavljene na: ");
+    System.out.println("Normalna karta: " + normalPriceStr + " €");
+    System.out.println("Ubrzana karta: " + fastPriceStr + " €");
+    System.out.println("Brza karta: " + expressPriceStr + " €");
+    System.out.println("Popust za vikend: " + discountWeekendStr + " %");
+    System.out.println("Popust za web i mobilne aplikacije: " + discountWebMobileStr + " %");
+    System.out.println("Povećanje cijene karte za svaki vlak: " + trainPriceIncreaseStr + " %");
+    System.out.println("Cijene karata su uspješno postavljene.");
+    System.out.println(RailwaySingleton.getInstance().ticketSystemCaretaker().getLastMemento().toString());
   }
 
   private void purchaseTicket(Matcher ticketPurchaseMatcher) {
@@ -1091,9 +1109,11 @@ public class CommandSystemSingleton {
     boolean isWeekend = dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY;
     TicketPurchaseMethod purchaseMethod = TicketPurchaseMethod.fromString(purchaseMethodString);
 
-    // Ticket ticket = RailwaySingleton.getInstance().purchaseTicket(train, startStationString, endStationString, date,
-        // isWeekend, purchaseMethod);
-    Ticket ticket = new Ticket(trainIdString, startStationString, endStationString, localDate, new Date(), purchaseMethod);
+    // Ticket ticket = RailwaySingleton.getInstance().purchaseTicket(train,
+    // startStationString, endStationString, date,
+    // isWeekend, purchaseMethod);
+    Ticket ticket = new Ticket(trainIdString, startStationString, endStationString, localDate, new Date(),
+        purchaseMethod);
 
     System.out.println(ticket.getTicketData());
     System.out.println(ticket.getTicketPurchaseData());

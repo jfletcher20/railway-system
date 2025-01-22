@@ -11,7 +11,7 @@ public class TicketSystemOriginator {
         return state;
     }
 
-    public TicketSystemMemento saveStateToMemento() {
+    public TicketSystemMemento saveState() {
         return new TicketSystemMemento(state);
     }
 

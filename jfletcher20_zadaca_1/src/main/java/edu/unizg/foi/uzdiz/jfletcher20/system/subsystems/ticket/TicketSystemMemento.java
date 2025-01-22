@@ -10,5 +10,12 @@ public class TicketSystemMemento {
     public TicketSystem getState() {
         return state;
     }
+
+    @Override
+    public String toString() {
+        return "TicketSystemMemento{" +
+                "state=" + state +
+                '}';
+    }
     
 }

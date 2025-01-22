@@ -28,7 +28,22 @@ treba se temeljiti na uzorku dizajna Memento. */
 
 public class TicketSystem {
 
-    public TicketSystem() {
+    public TicketSystem(double weekendTicketDiscount, double webOrMobileTicketDiscount, double trainTicketPriceIncrease,
+            double priceNormal, double priceFast, double priceExpress) {
+        if (weekendTicketDiscount < 0 || webOrMobileTicketDiscount < 0 || trainTicketPriceIncrease < 0 || priceNormal < 0
+                || priceFast < 0 || priceExpress < 0) {
+            throw new IllegalArgumentException("TicketSystem::Vrijednosti cijena i popusta ne smiju biti negativne.");
+        }
+        // if any discount is greater than 100%, throw exception
+        if (weekendTicketDiscount > 100 || webOrMobileTicketDiscount > 100) {
+            throw new IllegalArgumentException("TicketSystem::Popusti ne smiju biti veći od 100%.");
+        }
+        this.weekendTicketDiscount = weekendTicketDiscount * 0.01;
+        this.webOrMobileTicketDiscount = webOrMobileTicketDiscount * 0.01;
+        this.trainTicketPriceIncrease = trainTicketPriceIncrease * 0.01;
+        this.priceNormal = priceNormal;
+        this.priceFast = priceFast;
+        this.priceExpress = priceExpress;
     }
 
     final List<Weekday> discounts = Weekday.getWeekend();
@@ -65,6 +80,14 @@ public class TicketSystem {
 
     private double increase(double modifier) {
         return 1 + modifier;
+    }
+
+    // toString() should show all the ticket system data with newlines
+    @Override
+    public String toString() {
+        return "TicketSystem{" + "weekendTicketDiscount=" + weekendTicketDiscount + "\n, webOrMobileTicketDiscount="
+                + webOrMobileTicketDiscount + "\n, trainTicketPriceIncrease=" + trainTicketPriceIncrease + "\n, priceNormal="
+                + priceNormal + "\n, priceFast=" + priceFast + ", priceExpress=" + priceExpress + '}';
     }
 
 }
