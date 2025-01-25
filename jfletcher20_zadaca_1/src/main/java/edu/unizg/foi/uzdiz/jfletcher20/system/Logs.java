@@ -199,6 +199,12 @@ public abstract class Logs {
       tableOutput.add(row);
     }
 
+    public void createTable(Map<String, String> data) {
+      // add the keys as the header, the values as the row
+      addHeader(data.keySet().stream().toList());
+      addRow(data.values().stream().toList());
+    }
+
     public void setMaxColumnLength(int length) {
       maxColumnLength = length;
     }
@@ -434,6 +440,10 @@ public abstract class Logs {
 
   public static void s(String message) {
     LogsSingleton.getInstance().logSimulationMessage(message);
+  }
+
+  public static void table(Map<String, String> data) {
+    LogsSingleton.getInstance().createTable(data);
   }
 
 }

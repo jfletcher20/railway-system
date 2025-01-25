@@ -194,6 +194,38 @@ public class TrainComposite implements IComponent, ISubject {
         return result;
     }
 
+    public double calculateCumulativeDistance(String startStationName, String endStationName) {
+        double cumulativeDistance = 0.0;
+        boolean startFound = false, endFound = false;
+        var stages = new ArrayList<>(this.children);
+        stages.sort((a, b) -> a.fromTime().compareTo(b.fromTime()));
+        for (TrainTrackStageComposite stage : stages) {
+            List<Station> stations = stage.getCompatibleLeaves().stream().map(StationLeaf::getStation).toList();
+            for (int i = 0; i < stations.size(); i++) {
+                Station station = stations.get(i);
+                if (station.name().equals(startStationName)) {
+                    startFound = true;
+                    continue;
+                }
+                if (startFound && !endFound)
+                    if (i > 0) {
+                        Station prevStation = stations.get(i - 1);
+                        cumulativeDistance += RailwaySingleton.getInstance().calculateDistance(prevStation, station);
+                    }
+
+                if (station.name().equals(endStationName)) {
+                    endFound = true;
+                    break;
+                }
+            }
+            if (endFound)
+                break;
+        }
+        if (!startFound || !endFound)
+            throw new IllegalArgumentException("Ne postoji takva relacija za taj vlak");
+        return cumulativeDistance;
+    }
+
     public TrainType getTrainType() {
         return this.children.get(0).schedule.trainType();
     }
@@ -251,6 +283,17 @@ public class TrainComposite implements IComponent, ISubject {
             }
         }
         return false;
+    }
+
+    public StationLeaf getStationLeaf(String station) {
+        for (TrainTrackStageComposite stage : this.children) {
+            for (StationLeaf leaf : stage.children) {
+                if (leaf.getStation().name().equals(station)) {
+                    return leaf;
+                }
+            }
+        }
+        return null;
     }
 
     public TrainTrackStageComposite firstWithStation(String station) {
@@ -424,7 +467,6 @@ public class TrainComposite implements IComponent, ISubject {
         return trainTypes.size() == 1;
     }
 
-
     public ScheduleTime getDepartureTimeAtStation(String start) {
         if (this.children.isEmpty() || !this.hasStation(start))
             return null;
@@ -442,8 +484,6 @@ public class TrainComposite implements IComponent, ISubject {
         }
         return departureTime;
     }
-
-    
 
     public ScheduleTime getArrivalTimeAtStation(String end) {
         if (this.children.isEmpty() || !this.hasStation(end))
@@ -463,12 +503,11 @@ public class TrainComposite implements IComponent, ISubject {
     }
 
     public double getDistanceBetweenStations(String departureStation, String arrivalStation) {
-        if (this.children.isEmpty())
+        StationLeaf departureLeaf = this.getStationLeaf(departureStation);
+        StationLeaf arrivalLeaf = this.getStationLeaf(arrivalStation);
+        if (departureLeaf == null || arrivalLeaf == null)
             return 0.0;
-        List<Station> stations = this.getStationsBetween(departureStation, arrivalStation);
-        if (stations.isEmpty())
-            return 0.0;
-        return stations.getFirst().getDistanceTo(stations.getLast());
+        return this.calculateCumulativeDistance(departureStation, arrivalStation);
     }
 
 }

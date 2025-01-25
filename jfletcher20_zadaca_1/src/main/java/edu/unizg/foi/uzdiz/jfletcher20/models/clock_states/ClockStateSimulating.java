@@ -72,7 +72,7 @@ public class ClockStateSimulating extends IClockState {
             }
 
             if (train.hasReachedDestination(GlobalClock.getTime())) {
-                Logs.s("Vlak " + train.trainID + " je stigao na odredište.");
+                Logs.s("Vlak " + train.trainID + " je stiglo na odredište.");
                 trainsToRemove.add(train);
             }
         }

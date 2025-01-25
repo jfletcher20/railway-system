@@ -31,9 +31,11 @@ treba se temeljiti na uzorku dizajna Memento. */
 
 public class TicketCostParameters implements IPrototype {
 
-    public TicketCostParameters(double weekendTicketDiscount, double webOrMobileTicketDiscount, double trainTicketPriceIncrease,
+    public TicketCostParameters(double weekendTicketDiscount, double webOrMobileTicketDiscount,
+            double trainTicketPriceIncrease,
             double priceNormal, double priceFast, double priceExpress) {
-        if (weekendTicketDiscount < 0 || webOrMobileTicketDiscount < 0 || trainTicketPriceIncrease < 0 || priceNormal < 0
+        if (weekendTicketDiscount < 0 || webOrMobileTicketDiscount < 0 || trainTicketPriceIncrease < 0
+                || priceNormal < 0
                 || priceFast < 0 || priceExpress < 0) {
             throw new IllegalArgumentException("TicketSystem::Vrijednosti cijena i popusta ne smiju biti negativne.");
         }
@@ -51,7 +53,8 @@ public class TicketCostParameters implements IPrototype {
 
     @Override
     public TicketCostParameters clone() {
-        return new TicketCostParameters(weekendTicketDiscount, webOrMobileTicketDiscount, trainTicketPriceIncrease, priceNormal,
+        return new TicketCostParameters(weekendTicketDiscount, webOrMobileTicketDiscount, trainTicketPriceIncrease,
+                priceNormal,
                 priceFast, priceExpress);
     }
 
@@ -118,26 +121,23 @@ public class TicketCostParameters implements IPrototype {
     @Override
     public String toString() {
         return "TicketSystem{" + "weekendTicketDiscount=" + weekendTicketDiscount + "\n, webOrMobileTicketDiscount="
-                + webOrMobileTicketDiscount + "\n, trainTicketPriceIncrease=" + trainTicketPriceIncrease + "\n, priceNormal="
+                + webOrMobileTicketDiscount + "\n, trainTicketPriceIncrease=" + trainTicketPriceIncrease
+                + "\n, priceNormal="
                 + priceNormal + "\n, priceFast=" + priceFast + ", priceExpress=" + priceExpress + '}';
     }
 
     public String getDiscounts(Ticket ticket) {
-        // return "Vikend popust: -" + (weekendTicketDiscount) + "%, Web/Mobilni popust: -" + webOrMobileTicketDiscount
-        //         + "%, Povećanje cijene u vlaku: +" + trainTicketPriceIncrease + "%";
-
-        // should output the discounts in red if they do not apply based on the ticket
         boolean isOnWeekend = ticket.isOnWeekend();
         boolean isWebOrMobile = ticket.purchaseMethod() == TicketPurchaseMethod.WEB_MOBILE;
         boolean isInTrain = ticket.purchaseMethod() == TicketPurchaseMethod.TRAIN;
-        String codeForRed = "\u001B[31m";
-        String resetCode = "\u001B[0m";
+        // color codes mess up the table display since it counts the color codes as extra symbols
+        String codeForIrrelevant = /* "\u001B[90m" */ "(nije aplikabilan)";
+        String resetCode = /* "\u001B[0m" */ "";
 
-        return (isOnWeekend ? "" : codeForRed) + "Vikend popust: -" + weekendTicketDiscount + "%" + resetCode + ", " +
-            (isWebOrMobile ? "" : codeForRed) + "Web/Mobilni popust: -" + webOrMobileTicketDiscount + "%" + resetCode + ", " +
-            (isInTrain ? "" : codeForRed) + "Povećanje cijene u vlaku: +" + trainTicketPriceIncrease + "%" + resetCode;
-            
+        return (isOnWeekend ? "" : codeForIrrelevant) + "Vikendom -" + weekendTicketDiscount + "%" + resetCode + ", " +
+                (isWebOrMobile ? "" : codeForIrrelevant) + "Web/Mob -" + webOrMobileTicketDiscount + "%" + resetCode + ", " +
+                (isInTrain ? "" : codeForIrrelevant) + "U vlaku +" + trainTicketPriceIncrease + "%" + resetCode;
+
     }
-
 
 }

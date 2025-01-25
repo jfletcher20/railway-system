@@ -9,6 +9,7 @@ import java.util.Map;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TicketPurchaseMethod;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
+import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ITicketPriceStrategy;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
@@ -60,10 +61,26 @@ public record Ticket(
             throw new IllegalArgumentException("Parametri cijene karte moraju biti definirani.");
         } else if (priceCalculationStrategy == null) {
             throw new IllegalArgumentException("Strategija izračuna cijene karte mora biti definirana.");
+        } else if (trainId == null || trainId.isBlank()) {
+            throw new IllegalArgumentException("Oznaka vlaka mora biti definirana.");
+        } else if (departureStation == null || departureStation.isBlank()) {
+            throw new IllegalArgumentException("Polazna stanica mora biti definirana.");
+        } else if (arrivalStation == null || arrivalStation.isBlank()) {
+            throw new IllegalArgumentException("Odredišna stanica mora biti definirana.");
+        } else if (departureDate == null) {
+            throw new IllegalArgumentException("Datum polaska mora biti definiran.");
+        } else if (purchaseDate == null) {
+            throw new IllegalArgumentException("Datum kupovine mora biti definiran.");
+        }
+        
+        TrainComposite train = RailwaySingleton.getInstance().getSchedule().getTrainById(trainId);
+        Weekday weekday = Weekday.getWeekday(departureDate.getDayOfWeek());
+        if (!train.operatesOnDay(weekday)) {
+            throw new IllegalArgumentException("Vlak ne vozi na danu tjedna " + weekday);
         }
     }
 
-    // return the ticket data as a list of strings of the eticket data
+    // return the ticket data as a list of strings of the ticket data
     public List<String> getTicketData() {
         return List.of(
                 trainDisplayData(),
@@ -74,7 +91,8 @@ public record Ticket(
     }
 
     public double distance() {
-        return RailwaySingleton.getInstance().getSchedule().getTrainById(trainId).getDistanceBetweenStations(departureStation, arrivalStation);
+        var train = RailwaySingleton.getInstance().getSchedule().getTrainById(trainId);
+        return train.getDistanceBetweenStations(departureStation, arrivalStation);
     }
 
     public String trainDisplayData() {
@@ -102,8 +120,11 @@ public record Ticket(
     }
 
     private String wrap(ScheduleTime time) {
-        return time == null ? "" : // colorize the time in green and reset after
-                "\u001B[0m" + "[" + "\u001B[32m" + time.toString() + "\u001B[0m" + "] ";
+        // had to remove colorizing time because it caused problems when displaying in table
+        // since each of the characters counting towards colorization would be counted as a length-significant character
+        // return time == null ? "" : // colorize the time in green and reset after
+        //         "\u001B[0m" + "[" + "\u001B[32m" + time.toString() + "\u001B[0m" + "] ";
+        return time == null ? "" : "[" + time.toString() + "] ";
     }
 
     double pricePerKm(TrainType trainType) {
@@ -117,10 +138,9 @@ public record Ticket(
 
     public Map<String, String> getTicketPurchaseData() {
         return Map.of(
-                "Metoda izračuna cijene", priceCalculationStrategy.getClass().getSimpleName(),
-                "Ukupna udaljenost", "" + distance(),
-                "Originalna cijena", "" + (this.getOriginalPrice()),
-                "Popusti", ticketCostParameters.getDiscounts(this).toString(),
+                // "Ukupna udaljenost", "" + distance(),
+                "Izvorna cijena", "" + (this.getOriginalPrice()),
+                "Popusti i dodatak na cijenu u vlaku", ticketCostParameters.getDiscounts(this).toString(),
                 "Konačna cijena", this.getPrice() + "",
                 "Datum kupovine", this.purchaseDateDisplay() //
         );

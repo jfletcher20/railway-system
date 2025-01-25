@@ -707,7 +707,7 @@ public class RailwaySingleton {
   }
 
   public void buyTicket() {
-    var costParameters = this.ticketCostParameters.clone();
+    // var costParameters = this.ticketCostParameters.clone();
   }
 
   public TicketCostParameters getTicketCostParameters() {

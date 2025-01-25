@@ -1,6 +1,5 @@
 package edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.command;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -161,7 +160,7 @@ public class CommandSystemSingleton {
       .compile("^SVV (?<trainId>[^-]+?) - (?<day>[\\p{L}]+) - (?<coefficient>[0-9]+)$");
 
   Pattern ticketPricePattern = Pattern.compile(
-    "^CVP (?<normalPrice>[0-9]+(?:,[0-9]+)?) (?<fastPrice>[0-9]+(?:,[0-9]+)?) (?<expressPrice>[0-9]+(?:,[0-9]+)?)"
+      "^CVP (?<normalPrice>[0-9]+(?:,[0-9]+)?) (?<fastPrice>[0-9]+(?:,[0-9]+)?) (?<expressPrice>[0-9]+(?:,[0-9]+)?)"
           + " (?<discountWeekend>[0-9]+(?:,[0-9]+)?) (?<discountWebMobile>[0-9]+(?:,[0-9]+)?) (?<trainPriceIncrease>[0-9]+(?:,[0-9]+)?)$");
 
   Pattern purchaseTicketPattern = Pattern.compile(
@@ -1035,9 +1034,7 @@ public class CommandSystemSingleton {
   }
 
   private void setTicketPrices(Matcher ticketPriceMatcher) {
-
     Logs.header("Postavljanje cijena karata", true);
-
     String normalPriceStr = ticketPriceMatcher.group("normalPrice");
     String fastPriceStr = ticketPriceMatcher.group("fastPrice");
     String expressPriceStr = ticketPriceMatcher.group("expressPrice");
@@ -1050,14 +1047,13 @@ public class CommandSystemSingleton {
       double discountWeekend = ParsingUtil.d(discountWeekendStr),
           discountWebMobile = ParsingUtil.d(discountWebMobileStr),
           trainPriceIncrease = ParsingUtil.d(trainPriceIncreaseStr);
-      RailwaySingleton.getInstance().setTicketPrices(normalPrice, fastPrice, expressPrice, discountWeekend,
-          discountWebMobile, trainPriceIncrease);
+      RailwaySingleton.getInstance().setTicketPrices(
+          normalPrice, fastPrice, expressPrice, discountWeekend, discountWebMobile, trainPriceIncrease);
     } catch (Exception e) {
       Logs.e("Neispravna cijena: " + e.getMessage());
       Logs.footer();
       return;
     }
-
     Logs.withPadding(() -> Logs.o("Cijene karata su postavljene na: ", false), false, true);
     Logs.tableHeader(List.of("Parametar", "Vrijednost"));
     Logs.tableRow(List.of("Normalni vlak", normalPriceStr + " €/km"));
@@ -1066,10 +1062,8 @@ public class CommandSystemSingleton {
     Logs.tableRow(List.of("Popust za vikend", "-" + discountWeekendStr + " %"));
     Logs.tableRow(List.of("Popust web/mobilna kupnja", "-" + discountWebMobileStr + " %"));
     Logs.tableRow(List.of("Viša cijena za kupnju u vlaku", "+" + trainPriceIncreaseStr + " %"));
-    Logs.printTable();
-
+    Logs.printTable(64);
     Logs.footer(true);
-
   }
 
   private void purchaseTicket(Matcher ticketPurchaseMatcher) {
@@ -1078,55 +1072,86 @@ public class CommandSystemSingleton {
     String endStationString = ticketPurchaseMatcher.group("endStation");
     String dateString = ticketPurchaseMatcher.group("date");
     String purchaseMethodString = ticketPurchaseMatcher.group("purchaseMethod");
+    Logs.header("Kupovina karte", true);
     if (trainIdString == null || startStationString == null || endStationString == null || dateString == null
         || purchaseMethodString == null) {
       Logs.e("Nedostaje obavezni parametar: " + (trainIdString == null ? "trainID" : "")
           + (startStationString == null ? "startStation" : "") + (endStationString == null ? "endStation" : "")
           + (dateString == null ? "date" : "") + (purchaseMethodString == null ? "purchaseMethod" : ""));
+      Logs.footer(true);
       return;
     }
-    // parse parameters for date and purchasemethod
     TrainComposite train = RailwaySingleton.getInstance().getSchedule().getTrainById(trainIdString);
     if (train == null) {
       Logs.e("Vlak s oznakom " + trainIdString + " ne postoji.");
+      Logs.footer(true);
       return;
     }
     if (!train.hasStation(startStationString)) {
       Logs.e("Vlak " + trainIdString + " ne prolazi kroz stanicu " + startStationString);
+      Logs.footer(true);
       return;
     }
     if (!train.hasStation(endStationString)) {
       Logs.e("Vlak " + trainIdString + " ne prolazi kroz stanicu " + endStationString);
+      Logs.footer(true);
       return;
     }
+    purchaseTicketPhase2(train, startStationString, endStationString, dateString, purchaseMethodString);
+  }
+
+  private void purchaseTicketPhase2(
+      TrainComposite train, String startStationString, String endStationString, String dateString,
+      String purchaseMethodString) {
     Date date = new Date();
     try {
       date = ParsingUtil.dt(dateString);
       if (date == null) {
         Logs.e("Neispravan format datuma: " + dateString);
+        Logs.footer(true);
         return;
       }
     } catch (Exception e) {
       Logs.e("Greška " + e.getClass().getSimpleName() + "::" + e.getMessage() + " prilikom parsiranja datuma: "
           + dateString);
+      Logs.footer(true);
       return;
     }
-
     LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     TicketPurchaseMethod purchaseMethod = null;
     try {
       purchaseMethod = TicketPurchaseMethod.fromString(purchaseMethodString);
     } catch (IllegalArgumentException e) {
       Logs.e("Nepoznat način kupovine: " + purchaseMethodString);
+      Logs.footer(true);
       return;
     }
+    try {
+      Ticket ticket = new Ticket(train.trainID, startStationString, endStationString, localDate, new Date(),
+          purchaseMethod, RailwaySingleton.getInstance().getTicketCostParameters().clone(), purchaseMethod.getStrategy());
+      purchaseTicketPhase3(ticket);
+    } catch (Exception e) {
+      Logs.e("Greška prilikom kupovine karte: " + e.getMessage());
+      Logs.footer(true);
+    }
+  }
 
-    Ticket ticket = new Ticket(trainIdString, startStationString, endStationString, localDate, new Date(),
-        purchaseMethod, RailwaySingleton.getInstance().getTicketCostParameters().clone(), purchaseMethod.getStrategy());
-
-    System.out.println(ticket.getTicketData());
-    System.out.println(ticket.getTicketPurchaseData());
-    System.out.println("Karta je uspješno kupljena.");
+  private void purchaseTicketPhase3(Ticket ticket) {
+    Map<String, String> purchaseData = null;
+    try {
+      purchaseData = ticket.getTicketPurchaseData();
+    } catch (Exception e) {
+      Logs.e("Greška prilikom kupovine karte: " + e.getMessage());
+      Logs.footer(true);
+      return;
+    }
+    Logs.withPadding(() -> Logs.o("Kupljena karta:"));
+    Logs.tableHeader(List.of("Vlak", "Relacija", "Polazak", "Kupljeno"));
+    Logs.tableRow(ticket.getTicketData());
+    Logs.printTable(64);
+    Logs.table(purchaseData);
+    Logs.withPadding(() -> Logs.printTable(120), true, false);
+    Logs.footer(true);
   }
 
   // implement just like before
