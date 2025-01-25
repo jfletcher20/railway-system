@@ -3,6 +3,7 @@ package edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket;
 import java.util.List;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IPrototype;
 
 /*
 
@@ -26,7 +27,7 @@ treba se temeljiti na uzorku dizajna Memento. */
  * 3. Train ticket price increase
  */
 
-public class TicketSystem {
+public class TicketSystem implements IPrototype {
 
     public TicketSystem(double weekendTicketDiscount, double webOrMobileTicketDiscount, double trainTicketPriceIncrease,
             double priceNormal, double priceFast, double priceExpress) {
@@ -44,6 +45,12 @@ public class TicketSystem {
         this.priceNormal = priceNormal;
         this.priceFast = priceFast;
         this.priceExpress = priceExpress;
+    }
+
+    @Override
+    public TicketSystem clone() {
+        return new TicketSystem(weekendTicketDiscount, webOrMobileTicketDiscount, trainTicketPriceIncrease, priceNormal,
+                priceFast, priceExpress);
     }
 
     final List<Weekday> discounts = Weekday.getWeekend();
