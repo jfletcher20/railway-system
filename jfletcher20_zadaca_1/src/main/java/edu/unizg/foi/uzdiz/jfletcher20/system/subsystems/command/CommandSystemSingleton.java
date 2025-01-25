@@ -1129,6 +1129,7 @@ public class CommandSystemSingleton {
     try {
       Ticket ticket = new Ticket(train.trainID, startStationString, endStationString, localDate, new Date(),
           purchaseMethod, RailwaySingleton.getInstance().getTicketCostParameters().clone(), purchaseMethod.getStrategy());
+      RailwaySingleton.getInstance().buyTicket(ticket);
       purchaseTicketPhase3(ticket);
     } catch (Exception e) {
       Logs.e("Greška prilikom kupovine karte: " + e.getMessage());
@@ -1154,16 +1155,17 @@ public class CommandSystemSingleton {
     Logs.footer(true);
   }
 
-  // implement just like before
   private void viewBoughtTickets(Matcher ticketsViewMatcher) {
     Logs.header("Pregled kupljenih karata", true);
     String nStr = ticketsViewMatcher.group("n");
     int n = nStr != null ? Integer.parseInt(nStr) : -1;
-    Logs.tableHeader(Arrays.asList("Oznaka", "Vlak", "Polazna stanica", "Odredišna stanica", "Vrijeme polaska",
-        "Vrijeme dolaska", "Klasa", "Cijena"));
     List<Ticket> tickets = RailwaySingleton.getInstance().getTickets();
     if (tickets.isEmpty()) {
       Logs.e("Nema kupljenih karata.");
+      Logs.footer(true);
+      return;
+    } else if (n > tickets.size()) {
+      Logs.e("Odabrana karta ne postoji (" + n + " > " + tickets.size() + ").");
       Logs.footer(true);
       return;
     }
@@ -1171,6 +1173,7 @@ public class CommandSystemSingleton {
       displayTicket(tickets.get(n - 1));
     } else if (n == -1) {
       for (Ticket ticket : tickets) {
+        Logs.o("Karta " + (tickets.indexOf(ticket) + 1) + "", false);
         displayTicket(ticket);
       }
     } else {
@@ -1180,17 +1183,11 @@ public class CommandSystemSingleton {
   }
 
   private void displayTicket(Ticket ticket) {
-    List<String> row = new ArrayList<>();
-    // List<String> row = Arrays.asList(
-    // ticket.id(),
-    // ticket.trainID(),
-    // ticket.startStation(),
-    // ticket.endStation(),
-    // ticket.departureTime(),
-    // ticket.arrivalTime(),
-    // ticket.ticketClass().toString(),
-    // String.valueOf(ticket.price()));
-    Logs.tableRow(row);
+    Logs.tableHeader(List.of("Vlak", "Relacija", "Polazak", "Kupljeno"));
+    Logs.tableRow(ticket.getTicketData());
+    Logs.printTable(64);
+    Logs.table(ticket.getTicketPurchaseData());
+    Logs.withPadding(() -> Logs.printTable(120));
   }
 
   private void compareTickets(Matcher ticketsCompareMatcher) {

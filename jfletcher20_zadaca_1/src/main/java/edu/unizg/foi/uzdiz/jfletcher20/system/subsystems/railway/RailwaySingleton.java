@@ -97,10 +97,6 @@ public class RailwaySingleton {
     return this.ticketSystemOriginator;
   }
 
-  public TicketMemento ticketSystem() {
-    return this.ticketSystemCaretaker.getLastMemento();
-  }
-
   public double calculateDistance(Station a, Station b) {
     return Math.abs(a.getDistanceFromStart() - b.getDistanceFromStart());
   }
@@ -693,8 +689,18 @@ public class RailwaySingleton {
   }
 
   public List<Ticket> getTickets() {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'getTickets'");
+    // brute force method of getting all tickets from the memento, by forcing the
+    // catch statement to detect end of list
+    List<Ticket> tickets = new ArrayList<>();
+    try {
+      for (int i = 0;; i++) {
+        TicketMemento memento = this.ticketSystemCaretaker.getMemento(i);
+        Ticket ticket = memento.getState();
+        tickets.add(ticket);
+      }
+    } catch (IndexOutOfBoundsException e) {
+      return tickets;
+    }
   }
 
   public void setTicketPrices(double normalPrice, double fastPrice, double expressPrice, double discountWeekend,
@@ -706,8 +712,9 @@ public class RailwaySingleton {
     ticketCostParameters = newCostParameters;
   }
 
-  public void buyTicket() {
-    // var costParameters = this.ticketCostParameters.clone();
+  public void buyTicket(Ticket ticket) {
+    ticketSystemOriginator.setState(ticket);
+    this.ticketSystemCaretaker.addMemento(ticketSystemOriginator.saveState());
   }
 
   public TicketCostParameters getTicketCostParameters() {

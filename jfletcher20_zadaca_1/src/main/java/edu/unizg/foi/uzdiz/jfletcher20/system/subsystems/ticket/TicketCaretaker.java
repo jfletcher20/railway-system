@@ -14,13 +14,5 @@ public class TicketCaretaker {
     public TicketMemento getMemento(int index) {
         return mementos.get(index);
     }
-
-    public TicketMemento getLastMemento() {
-        return mementos.isEmpty() ? null : mementos.getLast();
-    }
-
-    public int getMementoCount() {
-        return mementos.size();
-    }
     
 }
