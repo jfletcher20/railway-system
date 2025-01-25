@@ -8,9 +8,12 @@ import java.util.List;
 import java.util.Map;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TicketPurchaseMethod;
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ITicketPriceStrategy;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleton;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketCostParameters;
 
 /*
  * ● Kupovina karte za putovanje između dviju stanica određenim vlakom na određeni datum 
@@ -45,12 +48,18 @@ public record Ticket(
         String arrivalStation, // odredišna stanica
         LocalDate departureDate, // datum polaska
         Date purchaseDate, // datum kupovine
-        TicketPurchaseMethod purchaseMethod // B - blagajna, WM - web/mobilna aplikacija, V - vlak
+        TicketPurchaseMethod purchaseMethod, // B - blagajna, WM - web/mobilna aplikacija, V - vlak
+        TicketCostParameters ticketCostParameters, // cijene i popusti u trenutku kupovine
+        ITicketPriceStrategy priceCalculationStrategy // strategija izračuna cijene
 ) {
 
     public Ticket {
         if (purchaseMethod == null) {
             throw new IllegalArgumentException("Metoda kupnje karte mora biti definirana.");
+        } else if (ticketCostParameters == null) {
+            throw new IllegalArgumentException("Parametri cijene karte moraju biti definirani.");
+        } else if (priceCalculationStrategy == null) {
+            throw new IllegalArgumentException("Strategija izračuna cijene karte mora biti definirana.");
         }
     }
 
@@ -64,18 +73,20 @@ public record Ticket(
         );
     }
 
+    public double distance() {
+        return RailwaySingleton.getInstance().getSchedule().getTrainById(trainId).getDistanceBetweenStations(departureStation, arrivalStation);
+    }
+
     public String trainDisplayData() {
         TrainComposite train = RailwaySingleton.getInstance().getSchedule().getTrainById(trainId);
         return trainId + "::" + train.getTrainType().displayName() + " vlak";
     }
 
     public String departureDateDisplay() {
-        // format as dd.MM.yyyy.
         return departureDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy."));
     }
 
     public String purchaseDateDisplay() {
-        // format as dd.MM.yyyy. HH:mm:ss
         return purchaseDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
                 .format(DateTimeFormatter.ofPattern("dd.MM.yyyy. HH:mm:ss"));
     }
@@ -95,13 +106,40 @@ public record Ticket(
                 "\u001B[0m" + "[" + "\u001B[32m" + time.toString() + "\u001B[0m" + "] ";
     }
 
+    double pricePerKm(TrainType trainType) {
+        switch (trainType) {
+            case TrainType.NORMAL: return ticketCostParameters.getPriceNormal();
+            case TrainType.FAST: return ticketCostParameters.getPriceFast();
+            case TrainType.EXPRESS: return ticketCostParameters.getPriceExpress();
+            default: throw new IllegalArgumentException("Nepoznat tip vlaka: " + trainType);
+        }
+    }
+
     public Map<String, String> getTicketPurchaseData() {
         return Map.of(
-                "Originalna cijena", "neodredeno",
-                "Popusti", "neodredeno,neodredeno,...",
-                "Konačna cijena", "neodredeno",
-                "Datum kupovine", purchaseDateDisplay() //
+                "Metoda izračuna cijene", priceCalculationStrategy.getClass().getSimpleName(),
+                "Ukupna udaljenost", "" + distance(),
+                "Originalna cijena", "" + (this.getOriginalPrice()),
+                "Popusti", ticketCostParameters.getDiscounts(this).toString(),
+                "Konačna cijena", this.getPrice() + "",
+                "Datum kupovine", this.purchaseDateDisplay() //
         );
+    }
+
+    private double getOriginalPrice() {
+        return priceCalculationStrategy.calculateOriginalTicketPrice(this);
+    }
+
+    private double getPrice() {
+        return priceCalculationStrategy.calculateTicketPrice(this);
+    }
+
+    public TrainComposite getTrain() {
+        return RailwaySingleton.getInstance().getSchedule().getTrainById(trainId);
+    }
+
+    public boolean isOnWeekend() {
+        return departureDate.getDayOfWeek().getValue() >= 6;
     }
 
 }

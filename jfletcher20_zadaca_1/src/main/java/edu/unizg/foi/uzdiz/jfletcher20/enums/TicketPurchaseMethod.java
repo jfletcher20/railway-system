@@ -1,5 +1,12 @@
 package edu.unizg.foi.uzdiz.jfletcher20.enums;
 
+import java.util.Map;
+
+import edu.unizg.foi.uzdiz.jfletcher20.interfaces.ITicketPriceStrategy;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tickets.InTrainPriceStrategy;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tickets.TicketBoothPriceStrategy;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tickets.WebMobilePriceStrategy;
+
 /*
  * ● Kupovina karte za putovanje između dviju stanica određenim vlakom na određeni datum 
 s odabranim načinom kupovanja karte 
@@ -47,5 +54,15 @@ public enum TicketPurchaseMethod {
             default:
                 throw new IllegalArgumentException("Nepoznat način kupovine karte: " + this);
         }
+    }
+
+    public static Map<TicketPurchaseMethod, ITicketPriceStrategy> strats = Map.of(
+        TICKET_BOOTH, new TicketBoothPriceStrategy(),
+        WEB_MOBILE, new WebMobilePriceStrategy(),
+        TRAIN, new InTrainPriceStrategy()
+    );
+
+    public ITicketPriceStrategy getStrategy() {
+        return strats.get(this);
     }
 }

@@ -161,8 +161,8 @@ public class CommandSystemSingleton {
       .compile("^SVV (?<trainId>[^-]+?) - (?<day>[\\p{L}]+) - (?<coefficient>[0-9]+)$");
 
   Pattern ticketPricePattern = Pattern.compile(
-      "^CVP (?<normalPrice>[0-9]+,[0-9]+) (?<fastPrice>[0-9]+,[0-9]+) (?<expressPrice>[0-9]+,[0-9]+)"
-          + " (?<discountWeekend>[0-9]+,[0-9]+) (?<discountWebMobile>[0-9]+,[0-9]+) (?<trainPriceIncrease>[0-9]+,[0-9]+)$");
+    "^CVP (?<normalPrice>[0-9]+(?:,[0-9]+)?) (?<fastPrice>[0-9]+(?:,[0-9]+)?) (?<expressPrice>[0-9]+(?:,[0-9]+)?)"
+          + " (?<discountWeekend>[0-9]+(?:,[0-9]+)?) (?<discountWebMobile>[0-9]+(?:,[0-9]+)?) (?<trainPriceIncrease>[0-9]+(?:,[0-9]+)?)$");
 
   Pattern purchaseTicketPattern = Pattern.compile(
       "^KKPV2S (?<trainId>[^-]+?) - (?<startStation>.+) - (?<endStation>.+) - (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}\\.) - (?<purchaseMethod>.+)$");
@@ -1035,6 +1035,9 @@ public class CommandSystemSingleton {
   }
 
   private void setTicketPrices(Matcher ticketPriceMatcher) {
+
+    Logs.header("Postavljanje cijena karata", true);
+
     String normalPriceStr = ticketPriceMatcher.group("normalPrice");
     String fastPriceStr = ticketPriceMatcher.group("fastPrice");
     String expressPriceStr = ticketPriceMatcher.group("expressPrice");
@@ -1051,17 +1054,22 @@ public class CommandSystemSingleton {
           discountWebMobile, trainPriceIncrease);
     } catch (Exception e) {
       Logs.e("Neispravna cijena: " + e.getMessage());
+      Logs.footer();
       return;
     }
-    System.out.println("Cijene karata su postavljene na: ");
-    System.out.println("Normalna karta: " + normalPriceStr + " €");
-    System.out.println("Ubrzana karta: " + fastPriceStr + " €");
-    System.out.println("Brza karta: " + expressPriceStr + " €");
-    System.out.println("Popust za vikend: " + discountWeekendStr + " %");
-    System.out.println("Popust za web i mobilne aplikacije: " + discountWebMobileStr + " %");
-    System.out.println("Povećanje cijene karte za svaki vlak: " + trainPriceIncreaseStr + " %");
-    System.out.println("Cijene karata su uspješno postavljene.");
-    System.out.println(RailwaySingleton.getInstance().ticketSystemCaretaker().getLastMemento().toString());
+
+    Logs.withPadding(() -> Logs.o("Cijene karata su postavljene na: ", false), false, true);
+    Logs.tableHeader(List.of("Parametar", "Vrijednost"));
+    Logs.tableRow(List.of("Normalni vlak", normalPriceStr + " €/km"));
+    Logs.tableRow(List.of("Ubrzani vlak", fastPriceStr + " €/km"));
+    Logs.tableRow(List.of("Brzi vlak", expressPriceStr + " €/km"));
+    Logs.tableRow(List.of("Popust za vikend", "-" + discountWeekendStr + " %"));
+    Logs.tableRow(List.of("Popust web/mobilna kupnja", "-" + discountWebMobileStr + " %"));
+    Logs.tableRow(List.of("Viša cijena za kupnju u vlaku", "+" + trainPriceIncreaseStr + " %"));
+    Logs.printTable();
+
+    Logs.footer(true);
+
   }
 
   private void purchaseTicket(Matcher ticketPurchaseMatcher) {
@@ -1105,15 +1113,16 @@ public class CommandSystemSingleton {
     }
 
     LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-    DayOfWeek dayOfWeek = localDate.getDayOfWeek();
-    boolean isWeekend = dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY;
-    TicketPurchaseMethod purchaseMethod = TicketPurchaseMethod.fromString(purchaseMethodString);
+    TicketPurchaseMethod purchaseMethod = null;
+    try {
+      purchaseMethod = TicketPurchaseMethod.fromString(purchaseMethodString);
+    } catch (IllegalArgumentException e) {
+      Logs.e("Nepoznat način kupovine: " + purchaseMethodString);
+      return;
+    }
 
-    // Ticket ticket = RailwaySingleton.getInstance().purchaseTicket(train,
-    // startStationString, endStationString, date,
-    // isWeekend, purchaseMethod);
     Ticket ticket = new Ticket(trainIdString, startStationString, endStationString, localDate, new Date(),
-        purchaseMethod);
+        purchaseMethod, RailwaySingleton.getInstance().getTicketCostParameters().clone(), purchaseMethod.getStrategy());
 
     System.out.println(ticket.getTicketData());
     System.out.println(ticket.getTicketPurchaseData());

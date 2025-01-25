@@ -3,19 +3,19 @@ package edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TicketSystemCaretaker {
+public class TicketCaretaker {
 
-    private List<TicketSystemMemento> mementos = new ArrayList<>();
+    private List<TicketMemento> mementos = new ArrayList<>();
 
-    public void addMemento(TicketSystemMemento memento) {
+    public void addMemento(TicketMemento memento) {
         mementos.add(memento);
     }
 
-    public TicketSystemMemento getMemento(int index) {
+    public TicketMemento getMemento(int index) {
         return mementos.get(index);
     }
 
-    public TicketSystemMemento getLastMemento() {
+    public TicketMemento getLastMemento() {
         return mementos.isEmpty() ? null : mementos.getLast();
     }
 

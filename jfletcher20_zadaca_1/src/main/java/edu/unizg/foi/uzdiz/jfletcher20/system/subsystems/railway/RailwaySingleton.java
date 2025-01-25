@@ -24,9 +24,9 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.Wagon;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.command.CommandSystemSingleton;
-import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketSystem;
-import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketSystemCaretaker;
-import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketSystemMemento;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketCostParameters;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketCaretaker;
+import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketMemento;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketSystemOriginator;
 
 public class RailwaySingleton {
@@ -34,8 +34,9 @@ public class RailwaySingleton {
   static private volatile RailwaySingleton instance = new RailwaySingleton();
   static public final Class<?> PREFERRED_COMMAND_SYSTEM = CommandSystemSingleton.class;
 
-  private final TicketSystemCaretaker ticketSystemCaretaker = new TicketSystemCaretaker();
+  private final TicketCaretaker ticketSystemCaretaker = new TicketCaretaker();
   private final TicketSystemOriginator ticketSystemOriginator = new TicketSystemOriginator();
+  private TicketCostParameters ticketCostParameters = new TicketCostParameters(0, 0, 0, 0, 0, 0);
 
   private List<TrainTrack> tracks = new ArrayList<>();
   private List<Wagon> wagons = new ArrayList<>();
@@ -88,7 +89,7 @@ public class RailwaySingleton {
     return this.initArgs;
   }
 
-  public TicketSystemCaretaker ticketSystemCaretaker() {
+  public TicketCaretaker ticketSystemCaretaker() {
     return this.ticketSystemCaretaker;
   }
 
@@ -96,7 +97,7 @@ public class RailwaySingleton {
     return this.ticketSystemOriginator;
   }
 
-  public TicketSystemMemento ticketSystem() {
+  public TicketMemento ticketSystem() {
     return this.ticketSystemCaretaker.getLastMemento();
   }
 
@@ -698,10 +699,19 @@ public class RailwaySingleton {
 
   public void setTicketPrices(double normalPrice, double fastPrice, double expressPrice, double discountWeekend,
       double discountWebMobile, double trainPriceIncrease) {
-    ticketSystemOriginator
-        .setState(new TicketSystem(discountWeekend, discountWebMobile, trainPriceIncrease, normalPrice, fastPrice,
-            expressPrice));
-    ticketSystemCaretaker.addMemento(ticketSystemOriginator.saveState());
+    var newCostParameters = new TicketCostParameters(discountWeekend, discountWebMobile, trainPriceIncrease,
+        normalPrice,
+        fastPrice,
+        expressPrice);
+    ticketCostParameters = newCostParameters;
+  }
+
+  public void buyTicket() {
+    var costParameters = this.ticketCostParameters.clone();
+  }
+
+  public TicketCostParameters getTicketCostParameters() {
+    return this.ticketCostParameters;
   }
 
 }

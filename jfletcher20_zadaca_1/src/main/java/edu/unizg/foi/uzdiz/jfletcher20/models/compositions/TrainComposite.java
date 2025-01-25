@@ -462,4 +462,13 @@ public class TrainComposite implements IComponent, ISubject {
         return arrivalTime;
     }
 
+    public double getDistanceBetweenStations(String departureStation, String arrivalStation) {
+        if (this.children.isEmpty())
+            return 0.0;
+        List<Station> stations = this.getStationsBetween(departureStation, arrivalStation);
+        if (stations.isEmpty())
+            return 0.0;
+        return stations.getFirst().getDistanceTo(stations.getLast());
+    }
+
 }

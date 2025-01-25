@@ -2,8 +2,10 @@ package edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket;
 
 import java.util.List;
 
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TicketPurchaseMethod;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IPrototype;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tickets.Ticket;
 
 /*
 
@@ -27,9 +29,9 @@ treba se temeljiti na uzorku dizajna Memento. */
  * 3. Train ticket price increase
  */
 
-public class TicketSystem implements IPrototype {
+public class TicketCostParameters implements IPrototype {
 
-    public TicketSystem(double weekendTicketDiscount, double webOrMobileTicketDiscount, double trainTicketPriceIncrease,
+    public TicketCostParameters(double weekendTicketDiscount, double webOrMobileTicketDiscount, double trainTicketPriceIncrease,
             double priceNormal, double priceFast, double priceExpress) {
         if (weekendTicketDiscount < 0 || webOrMobileTicketDiscount < 0 || trainTicketPriceIncrease < 0 || priceNormal < 0
                 || priceFast < 0 || priceExpress < 0) {
@@ -39,17 +41,17 @@ public class TicketSystem implements IPrototype {
         if (weekendTicketDiscount > 100 || webOrMobileTicketDiscount > 100) {
             throw new IllegalArgumentException("TicketSystem::Popusti ne smiju biti veći od 100%.");
         }
-        this.weekendTicketDiscount = weekendTicketDiscount * 0.01;
-        this.webOrMobileTicketDiscount = webOrMobileTicketDiscount * 0.01;
-        this.trainTicketPriceIncrease = trainTicketPriceIncrease * 0.01;
+        this.weekendTicketDiscount = weekendTicketDiscount;
+        this.webOrMobileTicketDiscount = webOrMobileTicketDiscount;
+        this.trainTicketPriceIncrease = trainTicketPriceIncrease;
         this.priceNormal = priceNormal;
         this.priceFast = priceFast;
         this.priceExpress = priceExpress;
     }
 
     @Override
-    public TicketSystem clone() {
-        return new TicketSystem(weekendTicketDiscount, webOrMobileTicketDiscount, trainTicketPriceIncrease, priceNormal,
+    public TicketCostParameters clone() {
+        return new TicketCostParameters(weekendTicketDiscount, webOrMobileTicketDiscount, trainTicketPriceIncrease, priceNormal,
                 priceFast, priceExpress);
     }
 
@@ -81,20 +83,61 @@ public class TicketSystem implements IPrototype {
         this.priceExpress = priceExpress;
     }
 
-    private double discount(double modifier) {
-        return 1 - modifier;
+    public double discount(double modifier) {
+        return 1 - modifier / 100;
     }
 
-    private double increase(double modifier) {
-        return 1 + modifier;
+    public double increase(double modifier) {
+        return 1 + modifier / 100;
     }
 
-    // toString() should show all the ticket system data with newlines
+    public double getPriceNormal() {
+        return priceNormal;
+    }
+
+    public double getPriceFast() {
+        return priceFast;
+    }
+
+    public double getPriceExpress() {
+        return priceExpress;
+    }
+
+    public double getWeekendTicketDiscount() {
+        return weekendTicketDiscount;
+    }
+
+    public double getWebOrMobileTicketDiscount() {
+        return webOrMobileTicketDiscount;
+    }
+
+    public double getTrainTicketPriceIncrease() {
+        return trainTicketPriceIncrease;
+    }
+
     @Override
     public String toString() {
         return "TicketSystem{" + "weekendTicketDiscount=" + weekendTicketDiscount + "\n, webOrMobileTicketDiscount="
                 + webOrMobileTicketDiscount + "\n, trainTicketPriceIncrease=" + trainTicketPriceIncrease + "\n, priceNormal="
                 + priceNormal + "\n, priceFast=" + priceFast + ", priceExpress=" + priceExpress + '}';
     }
+
+    public String getDiscounts(Ticket ticket) {
+        // return "Vikend popust: -" + (weekendTicketDiscount) + "%, Web/Mobilni popust: -" + webOrMobileTicketDiscount
+        //         + "%, Povećanje cijene u vlaku: +" + trainTicketPriceIncrease + "%";
+
+        // should output the discounts in red if they do not apply based on the ticket
+        boolean isOnWeekend = ticket.isOnWeekend();
+        boolean isWebOrMobile = ticket.purchaseMethod() == TicketPurchaseMethod.WEB_MOBILE;
+        boolean isInTrain = ticket.purchaseMethod() == TicketPurchaseMethod.TRAIN;
+        String codeForRed = "\u001B[31m";
+        String resetCode = "\u001B[0m";
+
+        return (isOnWeekend ? "" : codeForRed) + "Vikend popust: -" + weekendTicketDiscount + "%" + resetCode + ", " +
+            (isWebOrMobile ? "" : codeForRed) + "Web/Mobilni popust: -" + webOrMobileTicketDiscount + "%" + resetCode + ", " +
+            (isInTrain ? "" : codeForRed) + "Povećanje cijene u vlaku: +" + trainTicketPriceIncrease + "%" + resetCode;
+            
+    }
+
 
 }

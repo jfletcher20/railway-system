@@ -1,13 +1,15 @@
 package edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket;
 
-public class TicketSystemMemento {
-    private TicketSystem state;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tickets.Ticket;
 
-    public TicketSystemMemento(TicketSystem state) {
-        this.state = state;
+public class TicketMemento {
+    private Ticket state;
+
+    public TicketMemento(Ticket state2) {
+        this.state = state2;
     }
 
-    public TicketSystem getState() {
+    public Ticket getState() {
         return state;
     }
 
