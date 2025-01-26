@@ -217,6 +217,10 @@ public class RailwaySingleton {
     return this.tracks;
   }
 
+  public List<TrainTrackSegment> getSegments() {
+    return this.railroad2.values().stream().flatMap(List::stream).toList();
+  }
+
   public TrainTrack getTrackById(String trackID) {
     return this.tracks.stream().filter(t -> t.id().equals(trackID)).findFirst().orElse(null);
   }
@@ -744,6 +748,25 @@ public class RailwaySingleton {
 
   public List<TrainTrack> getTrackSegmentsByStatus(TrainTrackStatus status2) {
     return this.tracks.stream().filter(t -> t.status() == status2).toList();
+  }
+
+  public void constructTrainTrackSegments() {
+    // for each track, create a list of segments of <station1-station2> with the
+    // appropriate state from track
+    for (var track : this.tracks) {
+      List<Station> stations = this.railroad.get(track.id());
+      List<TrainTrackSegment> segments = new ArrayList<>();
+      List<TrainTrack> applicableTracks = tracks.stream().filter(t -> t.id().equals(track.id())).toList();
+      for (int i = 0; i < stations.size() - 1; i++) {
+        Station station1 = stations.get(i);
+        Station station2 = stations.get(i + 1);
+        System.out.println(applicableTracks.get(i));
+        TrainTrackSegment segment = new TrainTrackSegment(
+            applicableTracks.get(i), station1, station2, applicableTracks.get(i).status().toState());
+        segments.add(segment);
+      }
+      this.railroad2.put(track.id(), segments);
+    }
   }
 
 }

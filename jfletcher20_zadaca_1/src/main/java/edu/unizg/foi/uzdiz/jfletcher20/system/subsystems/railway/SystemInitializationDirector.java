@@ -17,6 +17,7 @@ public class SystemInitializationDirector {
     this.builder.verifyTrainTracks();
     this.builder.verifyCompositions();
     this.builder.verifyTrains();
+    this.builder.constructTrainTrackSegments();
 
     return this.builder.getResult();
   }

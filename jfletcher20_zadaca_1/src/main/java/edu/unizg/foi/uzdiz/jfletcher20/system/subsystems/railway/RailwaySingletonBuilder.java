@@ -36,6 +36,11 @@ public class RailwaySingletonBuilder implements IBuilder {
     return this;
   }
 
+  public RailwaySingletonBuilder constructTrainTrackSegments() {
+    RailwaySingleton.getInstance().constructTrainTrackSegments();
+    return this;
+  }
+
   @Override
   public RailwaySingleton getResult() {
     // RailwaySingleton.getInstance().printStats();

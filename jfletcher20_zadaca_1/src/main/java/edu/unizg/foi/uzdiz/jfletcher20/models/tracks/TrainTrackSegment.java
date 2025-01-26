@@ -10,6 +10,18 @@ public class TrainTrackSegment {
     public Station endStation;
     public ITrainTrackSegmentState state;
 
+    public TrainTrackSegment(
+            TrainTrack mainTrack,
+            Station startStation,
+            Station endStation,
+            ITrainTrackSegmentState state //
+    ) {
+        this.mainTrack = mainTrack;
+        this.startStation = startStation;
+        this.endStation = endStation;
+        this.state = state;
+    }
+
     public boolean isBidirectional() {
         return this.mainTrack.trackCount() == 1;
     }

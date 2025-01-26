@@ -21,6 +21,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tickets.Ticket;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackSegment;
 import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.link.ChatMediator;
@@ -183,6 +184,22 @@ public class CommandSystemSingleton {
         break;
       } else if (command.contains("tracks")) {
         System.out.println(RailwaySingleton.getInstance().getTracks().toString().replaceAll(",", "\n\t"));
+      } else if (command.contains("lengths")) {
+        System.out.println(RailwaySingleton.getInstance().getTracks().size() + " tracks and "
+            + RailwaySingleton.getInstance().getStations().size() + " stations");
+      } else if (command.contains("segments")) {
+        String lastTrackId = "";
+        for (TrainTrackSegment segment : RailwaySingleton.getInstance().getSegments()) {
+          if (!lastTrackId.equals(segment.mainTrack.id())) {
+            if (lastTrackId != "") {
+              System.out.println("Total segments: " + RailwaySingleton.getInstance().getSegmentsOnTrack(lastTrackId).size());
+            }
+            lastTrackId = segment.mainTrack.id();
+          }
+          System.out.println(segment.mainTrack.id() + "\t" + segment.mainTrack.trackLength() + "\t"
+              + segment.startStation.name() + " - " + segment.endStation.name() + " "
+              + segment.state.internalState());
+        }
       } else {
         identifyCommand(command);
       }
@@ -374,7 +391,7 @@ public class CommandSystemSingleton {
         false);
     Logs.o("\u001B[93m" + "IRPS [status] [oznakaPruge]" +
         "\t\t" + "\u001B[0m"
-            + "- Pregled svih pruga s određenim statusom ili određenih pruga s određenim statusom",
+        + "- Pregled svih pruga s određenim statusom ili određenih pruga s određenim statusom",
         false);
   }
 
