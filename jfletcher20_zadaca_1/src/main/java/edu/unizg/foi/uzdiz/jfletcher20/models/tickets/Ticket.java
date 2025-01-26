@@ -77,6 +77,8 @@ public record Ticket(
         Weekday weekday = Weekday.getWeekday(departureDate.getDayOfWeek());
         if (!train.operatesOnDay(weekday)) {
             throw new IllegalArgumentException("Vlak ne vozi na danu tjedna " + weekday);
+        } else if (!train.hasStationsOnDday(weekday, List.of(departureStation, arrivalStation))) {
+            throw new IllegalArgumentException("Vlak ne vozi tom relacijom na danu tjedna " + weekday);
         }
     }
 

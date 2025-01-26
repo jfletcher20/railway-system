@@ -510,4 +510,29 @@ public class TrainComposite implements IComponent, ISubject {
         return this.calculateCumulativeDistance(departureStation, arrivalStation);
     }
 
+    public boolean hasStationsOnDday(Weekday weekday, List<String> of) {
+        if (!hasStations(of) || !operatesOnDay(weekday))
+            return false;
+        // get all stages with that weekday
+        List<TrainTrackStageComposite> stages = new ArrayList<>();
+        for (TrainTrackStageComposite stage : this.children) {
+            if (stage.schedule.days().contains(weekday)) {
+                stages.add(stage);
+            }
+        }
+        // iterate through the stages and check if a match for the name in of is found
+        // for all elements from of
+        int found = 0;
+        for (String stationName : of) {
+            for (TrainTrackStageComposite stage : stages) {
+                for (StationLeaf leaf : stage.children) {
+                    if (leaf.getStation().name().equals(stationName)) {
+                        found++;
+                    }
+                }
+            }
+        }
+        return found == of.size();
+    }
+
 }

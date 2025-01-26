@@ -130,14 +130,10 @@ public class TicketCostParameters implements IPrototype {
         boolean isOnWeekend = ticket.isOnWeekend();
         boolean isWebOrMobile = ticket.purchaseMethod() == TicketPurchaseMethod.WEB_MOBILE;
         boolean isInTrain = ticket.purchaseMethod() == TicketPurchaseMethod.TRAIN;
-        // color codes mess up the table display since it counts the color codes as extra symbols
-        String codeForIrrelevant = /* "\u001B[90m" */ "(nije aplikabilan)";
-        String resetCode = /* "\u001B[0m" */ "";
-
-        return (isOnWeekend ? "" : codeForIrrelevant) + "Vikendom -" + weekendTicketDiscount + "%" + resetCode + ", " +
-                (isWebOrMobile ? "" : codeForIrrelevant) + "Web/Mob -" + webOrMobileTicketDiscount + "%" + resetCode + ", " +
-                (isInTrain ? "" : codeForIrrelevant) + "U vlaku +" + trainTicketPriceIncrease + "%" + resetCode;
-
+        var discounts = List.of((isOnWeekend ? "Vikendom -" + weekendTicketDiscount + "%" : ""), (isWebOrMobile ? "Web/Mob -" + webOrMobileTicketDiscount + "%" : ""), (isInTrain ? "U vlaku +" + trainTicketPriceIncrease + "%" : ""));
+        if (!isOnWeekend && !isWebOrMobile && !isInTrain)
+            return "Nema popusta ili uvećanja cijene";
+        return String.join(", ", discounts.stream().filter(d -> d != null && !d.isBlank()).toList());
     }
 
 }
