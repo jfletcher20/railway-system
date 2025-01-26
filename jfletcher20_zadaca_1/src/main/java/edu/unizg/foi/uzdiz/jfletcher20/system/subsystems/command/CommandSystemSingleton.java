@@ -192,13 +192,14 @@ public class CommandSystemSingleton {
         for (TrainTrackSegment segment : RailwaySingleton.getInstance().getSegments()) {
           if (!lastTrackId.equals(segment.mainTrack.id())) {
             if (lastTrackId != "") {
-              System.out.println("Total segments: " + RailwaySingleton.getInstance().getSegmentsOnTrack(lastTrackId).size());
+              System.out
+                  .println("Total segments: " + RailwaySingleton.getInstance().getSegmentsOnTrack(lastTrackId).size());
             }
             lastTrackId = segment.mainTrack.id();
           }
           System.out.println(segment.mainTrack.id() + "\t" + segment.mainTrack.trackLength() + "\t"
               + segment.startStation.name() + " - " + segment.endStation.name() + " "
-              + segment.state.internalState());
+              + segment.getState().internalState());
         }
       } else {
         identifyCommand(command);
@@ -1219,31 +1220,30 @@ public class CommandSystemSingleton {
       Logs.footer(true);
       return;
     }
-    var findTrack = RailwaySingleton.getInstance().getTrackById(trackCode);
-    if (findTrack == null) {
+    TrainTrack track = RailwaySingleton.getInstance().getTrackById(trackCode);
+    if (track == null) {
       Logs.e("Nepostojeća pruga s oznakom: " + trackCode);
       Logs.footer(true);
       return;
     }
-    List<TrainTrack> tracks = findTrack.getTrackSegmentsByStatusAndCode(status);
-    if (tracks.isEmpty()) {
-      Logs.e("Nema relacija sa statusom " + status + " za prugu " + trackCode);
+    displaySegmentsOfTrackWithStatusPhase2(track, status);
+  }
+
+  private void displaySegmentsOfTrackWithStatusPhase2(TrainTrack track, TrainTrackStatus status) {
+    List<TrainTrackSegment> segments = track.getTrackSegmentsByStatus(status);
+    if (segments.isEmpty()) {
+      Logs.e("Nema relacija sa statusom " + status + " za prugu " + track.id());
       Logs.footer(true);
       return;
     }
-    displaySegmentsOfTrackWithStatusPhase2(trackCode, status, findTrack, tracks);
-  }
-
-  private void displaySegmentsOfTrackWithStatusPhase2(String trackId, TrainTrackStatus status,
-      TrainTrack findTrack, List<TrainTrack> tracks) {
     List<String> header = Arrays.asList("Oznaka pruge", "Početna stanica", "Završna stanica", "Status");
     Logs.tableHeader(header);
-    for (TrainTrack track : tracks) {
+    for (TrainTrackSegment segment : segments) {
       List<String> row = Arrays.asList(
-          track.id(),
-          track.getStartStation().name(),
-          track.getEndStation().name(),
-          track.status().toString() //
+          segment.mainTrack.id(),
+          segment.startStation.name(),
+          segment.endStation.name(),
+          segment.getState().internalState().toString() //
       );
       Logs.tableRow(row);
     }
@@ -1256,29 +1256,29 @@ public class CommandSystemSingleton {
     TrainTrackStatus status2 = null;
     try {
       status2 = TrainTrackStatus.fromCSV(status2String);
+      System.out.println("Searching for " + status2);
     } catch (IllegalArgumentException e) {
       Logs.e("Nepoznat status pruge: " + status2String);
       Logs.footer(true);
       return;
     }
-    Logs.header("Ispis relacija pruge sa zadanim statusom", true);
-    List<TrainTrack> tracks = RailwaySingleton.getInstance().getTrackSegmentsByStatus(status2);
-    if (tracks.isEmpty()) {
-      Logs.e("Nema relacija sa statusom " + status2);
-      Logs.footer(true);
-      return;
-    }
+    Logs.header("Ispis relacija pruga sa zadanim statusom", true);
     List<String> header = Arrays.asList("Oznaka pruge", "Početna stanica", "Završna stanica", "Status");
     Logs.tableHeader(header);
-    for (TrainTrack track : tracks) {
-      List<String> row = Arrays.asList(
-          track.id(),
-          track.getStartStation().name(),
-          track.getEndStation().name(),
-          track.status().toString() //
-      );
-      Logs.tableRow(row);
+    for (var entry : RailwaySingleton.getInstance().getSegmentsRailroad().entrySet()) {
+      for (var segment : entry.getValue()) {
+        if (segment.getState().internalState().equals(status2)) {
+          List<String> row = Arrays.asList(
+              segment.mainTrack.id(),
+              segment.startStation.name(),
+              segment.endStation.name(),
+              segment.getState().internalState().toString() //
+          );
+          Logs.tableRow(row);
+        }
+      }
     }
+    Logs.printTable();
     Logs.footer();
   }
 

@@ -253,6 +253,10 @@ public class RailwaySingleton {
     return this.railroad2.get(trackID);
   }
 
+  public List<TrainTrackSegment> getSegmentsOnTrackByStatus(String trackID, TrainTrackStatus status) {
+    return this.railroad2.get(trackID).stream().filter(s -> s.getState().internalState() == status).toList();
+  }
+
   public TrainTrackSegment getSegmentOfStation(String trackID, Station station) {
     return this.railroad2.get(trackID).stream().filter(s -> s.startStation.equals(station)).findFirst()
         .orElse(null);
@@ -769,4 +773,15 @@ public class RailwaySingleton {
     }
   }
 
+  public List<TrainTrackSegment> getSegmentsByStatus(TrainTrackStatus status2) {
+    // return all segments with that status
+    return this.railroad2.values().stream().flatMap(List::stream).filter(s -> s.getState().internalState() == status2)
+        .toList();
+  }
+
+  public Map<String, List<TrainTrackSegment>> getSegmentsRailroad() {
+    return this.railroad2;
+  }
+
 }
+

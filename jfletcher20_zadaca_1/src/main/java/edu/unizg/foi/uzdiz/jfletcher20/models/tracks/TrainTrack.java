@@ -65,8 +65,16 @@ public record TrainTrack(String id, // oznaka pruge
     return RailwaySingleton.getInstance().getEndStation(this.id, trainType);
   }
 
-  public List<TrainTrack> getTrackSegmentsByStatusAndCode(TrainTrackStatus status) {
+  public List<TrainTrack> getTracksByStatusAndCode(TrainTrackStatus status) {
     return RailwaySingleton.getInstance().getTrackSegmentsByStatusAndCode(this, status);
+  }
+
+  public List<TrainTrackSegment> getTrackSegments() {
+    return RailwaySingleton.getInstance().getSegmentsOnTrack(this.id);
+  }
+
+  public List<TrainTrackSegment> getTrackSegmentsByStatus(TrainTrackStatus status) {
+    return RailwaySingleton.getInstance().getSegmentsOnTrackByStatus(this.id, status);
   }
 
   @Override
