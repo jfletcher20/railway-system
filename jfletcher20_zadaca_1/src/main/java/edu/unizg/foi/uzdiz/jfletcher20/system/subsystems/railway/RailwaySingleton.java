@@ -38,7 +38,7 @@ public class RailwaySingleton {
 
   private final TicketCaretaker ticketSystemCaretaker = new TicketCaretaker();
   private final TicketSystemOriginator ticketSystemOriginator = new TicketSystemOriginator();
-  private TicketCostParameters ticketCostParameters = new TicketCostParameters(0, 0, 0, 0, 0, 0);
+  private TicketCostParameters ticketCostParameters = null;
 
   private List<TrainTrack> tracks = new ArrayList<>();
   private List<Wagon> wagons = new ArrayList<>();
@@ -744,6 +744,10 @@ public class RailwaySingleton {
 
   public TicketCostParameters getTicketCostParameters() {
     return this.ticketCostParameters;
+  }
+
+  public boolean ticketCostParamsDefined() {
+    return this.ticketCostParameters != null;
   }
 
   public List<TrainTrack> getTrackSegmentsByStatusAndCode(TrainTrack trainTrack, TrainTrackStatus status) {

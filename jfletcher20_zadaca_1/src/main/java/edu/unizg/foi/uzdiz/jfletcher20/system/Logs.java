@@ -163,7 +163,7 @@ public abstract class Logs {
         return;
       String key = "e" + ++errorCount;
       errorList.add(new AbstractMap.SimpleEntry<>(key, message));
-      System.out.println("   [!] " + key + " Error: " + message);
+      System.out.println("   [\u001B[31m!\u001B[0m] " + key + " Error: " + message);
     }
 
     public void logError(String message, boolean increaseErrorCount) {
@@ -172,7 +172,7 @@ public abstract class Logs {
       if (increaseErrorCount)
         logError(message);
       else
-        System.out.println("   [!] Error: " + message);
+        System.out.println("   [\u001B[31m!\u001B[0m] Error: " + message);
     }
 
     public void logError(int row, String message) {
@@ -188,7 +188,7 @@ public abstract class Logs {
         errKey = "/\\" + " ".repeat(errKey.length() - 2);
       String key = errKey + ":r" + row + (instanceIndex > 1 ? ":" + instanceIndex : "");
       errorList.add(new AbstractMap.SimpleEntry<>(key, message));
-      System.out.println("   [!] " + key + " Error: " + message);
+      System.out.println("   [\u001B[31m!\u001B[0m] " + key + " Error: " + message);
     }
 
     public void addHeader(List<String> header) {
@@ -294,44 +294,45 @@ public abstract class Logs {
     }
 
     public void logWarning(String message) {
-      if (logWarnings)
-        System.out.println(" [-] Warning: " + message);
+      if (logWarnings) // color for orange iS: \u001B[33m
+        System.out.println(" [\u001B[33m-\u001B[0m] Warning: " + message);
     }
 
     public void logWarning(int row, String message) {
       if (logWarnings)
-        System.out.println(" [-] <w" + row + "> Warning: " + message);
+        System.out.println(" [\u001B[33m-\u001B[0m] <w" + row + "> Warning: " + message);
     }
 
     public void logInfo(String message) {
-      if (logInfo)
-        System.out.println(" [?] Info: " + message);
+      if (logInfo) // color for light-grey: \u001B[37m?\u001B[0m
+        System.out.println(" [\u001B[37m?\u001B[0m] Info: " + message);
     }
 
     public void logInfo(int row, String message) {
       if (logInfo)
-        System.out.println(" [?] <r" + row + "> Info: " + message);
+        System.out.println(" [\u001B[37m?\u001B[0m] <r" + row + "> Info: " + message);
     }
 
     public void logConsoleMessage(String message) {
-      System.out.println("  [>] " + message);
+      // color for reset is \u001B[0m
+      System.out.println("  [\u001B[36m>\u001B[0m] " + message);
     }
 
     public void logConsoleMessage(String message, boolean usePrefixSymbol) {
-      String prefix = usePrefixSymbol ? "[>]" : "   ";
+      String prefix = usePrefixSymbol ? "[\u001B[36m>\u001B[0m]" : "   ";
       System.out.println("  " + prefix + " " + message);
     }
 
     public void logConsoleMessage(int row, String message) {
-      System.out.println("  [>] <r" + row + "> " + message);
+      System.out.println("  " + "[\u001B[36m>\u001B[0m]" + "<r" + row + "> " + message);
     }
 
     public void logCommandMessage(String message) {
-      System.out.println("    [<] " + message);
+      System.out.println("    [\u001B[36m<\u001B[0m] " + message);
     }
 
     public void logCommandMessage(int row, String message) {
-      System.out.println("    [<] <r" + row + "> " + message);
+      System.out.println("    [\u001B[36m<\u001B[0m] <r" + row + "> " + message);
     }
 
     String prefix = " >-", suffix = "-< ";

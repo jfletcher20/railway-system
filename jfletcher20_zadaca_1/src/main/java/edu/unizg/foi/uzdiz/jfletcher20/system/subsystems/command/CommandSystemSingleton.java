@@ -233,7 +233,7 @@ public class CommandSystemSingleton {
         Logs.e("Neispravna oznaka kompozicije: " + vcMatcher.group("compositionCode"));
       }
     } else {
-      Logs.c("Nepoznata komanda.");
+      Logs.c("Nepoznata komanda. Ako ste unijeli naredbu putem copy-paste, pokušajte je ručno upisati.");
       outputMenu();
       return false;
     }
@@ -277,14 +277,22 @@ public class CommandSystemSingleton {
       Matcher ticketsViewMatcher, Matcher ticketsCompareMatcher, Matcher segmentsOfTrackWithStatusMatcher) {
     if (ticketPriceMatcher.matches()) {
       setTicketPrices(ticketPriceMatcher);
+    } else if (segmentsOfTrackWithStatusMatcher.matches()) {
+      displaySegmentsOfTrackWithStatus(segmentsOfTrackWithStatusMatcher);
     } else if (ticketPurchaseMatcher.matches()) {
+      if (!RailwaySingleton.getInstance().ticketCostParamsDefined()) {
+        Logs.e("Nisu postavljene cijene karata. Postavite cijene karata prije kupovine.");
+        return true;
+      }
       purchaseTicket(ticketPurchaseMatcher);
     } else if (ticketsViewMatcher.matches()) {
       viewBoughtTickets(ticketsViewMatcher);
     } else if (ticketsCompareMatcher.matches()) {
+      if (!RailwaySingleton.getInstance().ticketCostParamsDefined()) {
+        Logs.e("Nisu postavljene cijene karata. Postavite cijene karata prije kupovine.");
+        return true;
+      }
       compareTickets(ticketsCompareMatcher);
-    } else if (segmentsOfTrackWithStatusMatcher.matches()) {
-      displaySegmentsOfTrackWithStatus(segmentsOfTrackWithStatusMatcher);
     } else
       return false;
     return true;
@@ -307,6 +315,11 @@ public class CommandSystemSingleton {
         true);
 
     Logs.o("Uzorci dizajna, 2024. - Joshua Lee Fletcher");
+    // log warning message in red:
+    // Ako ste unijeli naredbu putem copy-paste, pokušajte je ručno upisati.
+    Logs.o("\u001B[91m"
+        + "Ako naredba koju ste unijeli ne radi, a unijeli ste je putem copy-paste, pokušajte je ručno upisati."
+        + "\u001B[0m", false);
   }
 
   private void dz1CommandsMenu() {
