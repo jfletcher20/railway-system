@@ -1128,7 +1128,8 @@ public class CommandSystemSingleton {
     }
     try {
       Ticket ticket = new Ticket(train.trainID, startStationString, endStationString, localDate, new Date(),
-          purchaseMethod, RailwaySingleton.getInstance().getTicketCostParameters().clone(), purchaseMethod.getStrategy());
+          purchaseMethod, RailwaySingleton.getInstance().getTicketCostParameters().clone(),
+          purchaseMethod.getStrategy());
       RailwaySingleton.getInstance().buyTicket(ticket);
       purchaseTicketPhase3(ticket);
     } catch (Exception e) {
@@ -1138,20 +1139,16 @@ public class CommandSystemSingleton {
   }
 
   private void purchaseTicketPhase3(Ticket ticket) {
-    Map<String, String> purchaseData = null;
     try {
-      purchaseData = ticket.getTicketPurchaseData();
+      ticket.getTicketPurchaseData();
+      ticket.getTicketData();
     } catch (Exception e) {
       Logs.e("Greška prilikom kupovine karte: " + e.getMessage());
       Logs.footer(true);
       return;
     }
     Logs.withPadding(() -> Logs.o("Kupljena karta:"));
-    Logs.tableHeader(List.of("Vlak", "Relacija", "Polazak", "Kupljeno"));
-    Logs.tableRow(ticket.getTicketData());
-    Logs.printTable(64);
-    Logs.table(purchaseData);
-    Logs.withPadding(() -> Logs.printTable(120), true, false);
+    displayTicket(ticket);
     Logs.footer(true);
   }
 
@@ -1179,14 +1176,19 @@ public class CommandSystemSingleton {
     } else {
       Logs.e("Neispravan broj karte: " + n);
     }
-    Logs.footer(true);
+    Logs.footer();
   }
 
   private void displayTicket(Ticket ticket) {
     Logs.tableHeader(List.of("Vlak", "Relacija", "Polazak", "Kupljeno"));
     Logs.tableRow(ticket.getTicketData());
     Logs.printTable(64);
-    Logs.table(ticket.getTicketPurchaseData());
+    Logs.tableHeader(
+        List.of("Izvorna cijena", "Konačna cijena", "Datum kupovine", "Popusti i dodatak na cijenu u vlaku"));
+    Logs.tableRow(List.of(ticket.getTicketPurchaseData().get("Izvorna cijena"),
+        ticket.getTicketPurchaseData().get("Konačna cijena"),
+        ticket.getTicketPurchaseData().get("Datum kupovine"),
+        ticket.getTicketPurchaseData().get("Popusti i dodatak na cijenu u vlaku")));
     Logs.withPadding(() -> Logs.printTable(120));
   }
 

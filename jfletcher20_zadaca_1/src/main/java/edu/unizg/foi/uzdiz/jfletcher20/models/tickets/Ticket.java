@@ -72,7 +72,7 @@ public record Ticket(
         } else if (purchaseDate == null) {
             throw new IllegalArgumentException("Datum kupovine mora biti definiran.");
         }
-        
+
         TrainComposite train = RailwaySingleton.getInstance().getSchedule().getTrainById(trainId);
         Weekday weekday = Weekday.getWeekday(departureDate.getDayOfWeek());
         if (!train.operatesOnDay(weekday)) {
@@ -120,19 +120,25 @@ public record Ticket(
     }
 
     private String wrap(ScheduleTime time) {
-        // had to remove colorizing time because it caused problems when displaying in table
-        // since each of the characters counting towards colorization would be counted as a length-significant character
+        // had to remove colorizing time because it caused problems when displaying in
+        // table
+        // since each of the characters counting towards colorization would be counted
+        // as a length-significant character
         // return time == null ? "" : // colorize the time in green and reset after
-        //         "\u001B[0m" + "[" + "\u001B[32m" + time.toString() + "\u001B[0m" + "] ";
+        // "\u001B[0m" + "[" + "\u001B[32m" + time.toString() + "\u001B[0m" + "] ";
         return time == null ? "" : "[" + time.toString() + "] ";
     }
 
     double pricePerKm(TrainType trainType) {
         switch (trainType) {
-            case TrainType.NORMAL: return ticketCostParameters.getPriceNormal();
-            case TrainType.FAST: return ticketCostParameters.getPriceFast();
-            case TrainType.EXPRESS: return ticketCostParameters.getPriceExpress();
-            default: throw new IllegalArgumentException("Nepoznat tip vlaka: " + trainType);
+            case TrainType.NORMAL:
+                return ticketCostParameters.getPriceNormal();
+            case TrainType.FAST:
+                return ticketCostParameters.getPriceFast();
+            case TrainType.EXPRESS:
+                return ticketCostParameters.getPriceExpress();
+            default:
+                throw new IllegalArgumentException("Nepoznat tip vlaka: " + trainType);
         }
     }
 
@@ -140,9 +146,9 @@ public record Ticket(
         return Map.of(
                 // "Ukupna udaljenost", "" + distance(),
                 "Izvorna cijena", "" + (this.getOriginalPrice()),
-                "Popusti i dodatak na cijenu u vlaku", ticketCostParameters.getDiscounts(this).toString(),
                 "Konačna cijena", this.getPrice() + "",
-                "Datum kupovine", this.purchaseDateDisplay() //
+                "Datum kupovine", this.purchaseDateDisplay(), //
+                "Popusti i dodatak na cijenu u vlaku", ticketCostParameters.getDiscounts(this).toString() //
         );
     }
 
