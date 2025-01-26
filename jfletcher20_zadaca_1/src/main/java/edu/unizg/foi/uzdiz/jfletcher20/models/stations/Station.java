@@ -5,6 +5,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.enums.StationType;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
+import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleton;
 
 /**
@@ -102,7 +103,7 @@ public record Station(
   }
 
   public void cryOut() {
-    System.out.println("\t>>" + "\tname:" + name + " " + "\ttype:" + type + " " + "\tactivity:" + activity + " " + "\tplatformCount:" + platformCount + " " + "\tstatus:" + status + " " + "\ttimeNormal:" + timeNormal + " " + "\ttimeFast:" + timeFast + " " + "\ttimeExpress:" + timeExpress);
+    Logs.o("\t>>" + "\tname:" + name + " " + "\ttype:" + type + " " + "\tactivity:" + activity + " " + "\tplatformCount:" + platformCount + " " + "\tstatus:" + status + " " + "\ttimeNormal:" + timeNormal + " " + "\ttimeFast:" + timeFast + " " + "\ttimeExpress:" + timeExpress, false);
   }
 
 }

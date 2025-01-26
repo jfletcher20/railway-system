@@ -182,25 +182,6 @@ public class CommandSystemSingleton {
       if (quitPattern.matcher(command).matches()) {
         Logs.c("Prekidanje programa...");
         break;
-      } else if (command.contains("tracks")) {
-        System.out.println(RailwaySingleton.getInstance().getTracks().toString().replaceAll(",", "\n\t"));
-      } else if (command.contains("lengths")) {
-        System.out.println(RailwaySingleton.getInstance().getTracks().size() + " tracks and "
-            + RailwaySingleton.getInstance().getStations().size() + " stations");
-      } else if (command.contains("segments")) {
-        String lastTrackId = "";
-        for (TrainTrackSegment segment : RailwaySingleton.getInstance().getSegments()) {
-          if (!lastTrackId.equals(segment.mainTrack.id())) {
-            if (lastTrackId != "") {
-              System.out
-                  .println("Total segments: " + RailwaySingleton.getInstance().getSegmentsOnTrack(lastTrackId).size());
-            }
-            lastTrackId = segment.mainTrack.id();
-          }
-          System.out.println(segment.mainTrack.id() + "\t" + segment.mainTrack.trackLength() + "\t"
-              + segment.startStation.name() + " - " + segment.endStation.name() + " "
-              + segment.getState().internalState());
-        }
       } else {
         identifyCommand(command);
       }
@@ -767,7 +748,6 @@ public class CommandSystemSingleton {
     try {
       ivi2sSecondPart(dt, format);
     } catch (Exception e) {
-      System.out.println(e);
       Logs.e("Neispravan format prikaza: " + format);
       Logs.footer(true);
       throw e;
@@ -1256,7 +1236,6 @@ public class CommandSystemSingleton {
     TrainTrackStatus status2 = null;
     try {
       status2 = TrainTrackStatus.fromCSV(status2String);
-      System.out.println("Searching for " + status2);
     } catch (IllegalArgumentException e) {
       Logs.e("Nepoznat status pruge: " + status2String);
       Logs.footer(true);
@@ -1279,7 +1258,7 @@ public class CommandSystemSingleton {
       }
     }
     Logs.printTable();
-    Logs.footer();
+    Logs.footer(true);
   }
 
 }

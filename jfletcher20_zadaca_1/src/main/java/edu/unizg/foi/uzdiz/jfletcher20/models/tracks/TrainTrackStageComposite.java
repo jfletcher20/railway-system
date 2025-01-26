@@ -67,20 +67,14 @@ public class TrainTrackStageComposite implements IComposite {
         ScheduleTime time = this.schedule.departureTime();
         for (StationLeaf station : compiledSchedule) {
             if (station.getStation().equals(this.schedule.departure())) {
-                // System.out.println("Departure station: " + station.getStation().name() + " at
-                // " + fromTime());
                 stationMap.put(fromTime(), station);
                 continue;
             } else if (station.getStation().equals(this.schedule.destination())) {
-                // System.out.println("Destination station: " + station.getStation().name() + "
-                // at " + toTime());
                 stationMap.put(toTime(), station);
                 break;
             } else {
                 time = time.addMinutes(station.getStation().timeForTrainType(this.schedule.trainType()));
                 stationMap.put(time, station);
-                // System.out.println("Station: " + station.getStation().name() + " at " +
-                // time.toString());
             }
         }
         return stationMap;

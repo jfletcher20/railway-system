@@ -764,7 +764,6 @@ public class RailwaySingleton {
       for (int i = 0; i < stations.size() - 1; i++) {
         Station station1 = stations.get(i);
         Station station2 = stations.get(i + 1);
-        System.out.println(applicableTracks.get(i));
         TrainTrackSegment segment = new TrainTrackSegment(
             applicableTracks.get(i), station1, station2, applicableTracks.get(i).status().toState());
         segments.add(segment);
