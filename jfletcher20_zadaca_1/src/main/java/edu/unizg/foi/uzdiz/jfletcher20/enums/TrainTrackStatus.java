@@ -10,7 +10,7 @@ public enum TrainTrackStatus {
     switch (value) {
       case "I":
         return FUNCTIONAL;
-      case "U":
+      case "K":
         return FAULTY;
       case "T":
         return TESTING;
@@ -18,6 +18,17 @@ public enum TrainTrackStatus {
         return CLOSED;
       default:
         throw new IllegalArgumentException("Nepoznat status pruge: " + value);
+    }
+  }
+
+  @Override
+  public String toString() {
+    switch (this) {
+      case FUNCTIONAL: return "Ispravno";
+      case FAULTY: return "U kvaru";
+      case TESTING: return "U testiranju";
+      case CLOSED: return "Zatvoreno";
+      default: return "Nepoznato";
     }
   }
 }

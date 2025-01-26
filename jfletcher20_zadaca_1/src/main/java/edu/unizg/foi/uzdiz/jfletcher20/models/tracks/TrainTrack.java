@@ -1,5 +1,7 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.tracks;
 
+import java.util.List;
+
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackCategory;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackStatus;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
@@ -37,8 +39,8 @@ public record TrainTrack(String id, // oznaka pruge
       throw new IllegalArgumentException("Vrsta prijevoza ne smije biti prazna.");
     if (trackLength < 0 || trackLength > 999)
       throw new IllegalArgumentException("Dužina pruge mora biti između 0 i 999 km.");
-    if (trackCount < 1)
-      throw new IllegalArgumentException("Broj kolosjeka ne smije biti manji od 1.");
+    if (trackCount < 1 || trackCount > 2)
+      throw new IllegalArgumentException("Broj kolosjeka mora biti 1 ili 2.");
     if (axleLoad < 10 || axleLoad > 50)
       throw new IllegalArgumentException("DO po osovini mora biti između 10 i 50 t/os.");
     if (linearLoad < 2 || linearLoad > 10)
@@ -61,5 +63,23 @@ public record TrainTrack(String id, // oznaka pruge
 
   public Station getEndStation(TrainType trainType) {
     return RailwaySingleton.getInstance().getEndStation(this.id, trainType);
+  }
+
+  public List<TrainTrack> getTrackSegmentsByStatusAndCode(TrainTrackStatus status) {
+    return RailwaySingleton.getInstance().getTrackSegmentsByStatusAndCode(this, status);
+  }
+
+  @Override
+  public String toString() {
+    return "TrainTrack{" +
+        "id='" + id + '\'' +
+        "::category=" + category +
+        "::transportType='" + transportType + '\'' +
+        "::trackCount=" + trackCount +
+        "::trackLength=" + trackLength +
+        "::axleLoad=" + axleLoad +
+        "::linearLoad=" + linearLoad +
+        "::status=" + status +
+        '}';
   }
 }

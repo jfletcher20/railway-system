@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackStatus;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
@@ -19,6 +20,7 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.schedule_days.ScheduleDays;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tickets.Ticket;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackSegment;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackStageComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 import edu.unizg.foi.uzdiz.jfletcher20.models.wagons.Wagon;
@@ -43,6 +45,7 @@ public class RailwaySingleton {
   private List<TrainComposition> compositions = new ArrayList<>();
   private Map<Integer, List<Wagon>> trainCompositions = new HashMap<>();
   private Map<String, List<Station>> railroad = new HashMap<>();
+  private Map<String, List<TrainTrackSegment>> railroad2 = new HashMap<>();
   private Map<String, ScheduleDays> scheduleDays = new HashMap<>();
   private List<Schedule> schedules = new ArrayList<>();
 
@@ -240,6 +243,15 @@ public class RailwaySingleton {
 
   public List<Station> getStationsOnTrack(String trackID) {
     return this.railroad.get(trackID);
+  }
+
+  public List<TrainTrackSegment> getSegmentsOnTrack(String trackID) {
+    return this.railroad2.get(trackID);
+  }
+
+  public TrainTrackSegment getSegmentOfStation(String trackID, Station station) {
+    return this.railroad2.get(trackID).stream().filter(s -> s.startStation.equals(station)).findFirst()
+        .orElse(null);
   }
 
   public TrainTrack getTrackOfStation(Station station) {
@@ -532,8 +544,8 @@ public class RailwaySingleton {
       adjacencyList = new HashMap<>();
     }
 
-    public void addEdge(Station from, Station to, double distance) {
-      adjacencyList.computeIfAbsent(from, k -> new ArrayList<>()).add(new Edge(from, to, distance));
+    public void addEdge(Station from, Station to, double distance, int index, TrainTrack segment) {
+      adjacencyList.computeIfAbsent(from, k -> new ArrayList<>()).add(new Edge(from, to, distance, index, segment));
     }
 
     public List<Edge> getEdges(Station station) {
@@ -545,19 +557,23 @@ public class RailwaySingleton {
     public Station from;
     public Station to;
     public double weight;
+    public int index;
+    public TrainTrack segment;
 
-    public Edge(Station from, Station to, double weight) {
+    public Edge(Station from, Station to, double weight, int index, TrainTrack segment) {
       this.from = from;
       this.to = to;
       this.weight = weight;
+      this.index = index;
+      this.segment = segment;
     }
   }
 
   public List<List<Edge>> getRoutesBetweenStations(Station startStation, Station endStation) {
     if (startStation == null || endStation == null) {
       Logs.e("Ne postoji ruta između stanica"
-          + (startStation == null ? " [start station]" : "")
-          + (endStation == null ? " [end station]" : ""));
+          + (startStation == null ? " [početna stanica]" : "")
+          + (endStation == null ? " [završna stanica]" : ""));
       return null;
     }
 
@@ -567,8 +583,9 @@ public class RailwaySingleton {
         Station stationA = trackStations.get(i);
         Station stationB = trackStations.get(i + 1);
         double distance = calculateDistance(stationA, stationB);
-        graph.addEdge(stationA, stationB, distance);
-        graph.addEdge(stationB, stationA, distance);
+        TrainTrack segment = getTrackOfStation(stationA);
+        graph.addEdge(stationA, stationB, distance, i, segment);
+        graph.addEdge(stationB, stationA, distance, i, segment);
       }
     }
 
@@ -719,6 +736,14 @@ public class RailwaySingleton {
 
   public TicketCostParameters getTicketCostParameters() {
     return this.ticketCostParameters;
+  }
+
+  public List<TrainTrack> getTrackSegmentsByStatusAndCode(TrainTrack trainTrack, TrainTrackStatus status) {
+    return this.tracks.stream().filter(t -> t.status() == status && t.id().equals(trainTrack.id())).toList();
+  }
+
+  public List<TrainTrack> getTrackSegmentsByStatus(TrainTrackStatus status2) {
+    return this.tracks.stream().filter(t -> t.status() == status2).toList();
   }
 
 }

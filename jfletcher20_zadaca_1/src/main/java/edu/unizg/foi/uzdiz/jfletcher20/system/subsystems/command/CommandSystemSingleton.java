@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TicketPurchaseMethod;
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackStatus;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
@@ -29,33 +30,6 @@ import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 
 /*
- * Potrebno je dodati funkcionalnost za kupovinu karata za vožnju putnika. Određivanje 
-cijene vožnje putnika vlakom temelji se na €/km za pojedinu vrstu vlaka (normalni, ubrzani, brzi). 
-Osnovna cijena karte vrijedi za kupovinu na blagajni. Tvrtka daje % popusta na cijenu ako se vozi 
-vlakom u subotu i/ili nedjelju. Tvrtka želi promovirati kupovinu karte putem web/mobilne aplikacije 
-za što daje određeni % popusta na cijenu. (enum TicketPurchaseMethod) S druge strane tvrtka za kupovinu karte u vlaku 
-određuje % uvećanja cijene. Izračun cijene karte s obzirom na način kupovine (blagajna, 
-web/mobilna aplikacija, u vlaku) treba se temeljiti na uzorku dizajna Strategy.  
-Svaku kupovinu karte potrebno je pohraniti kako bi se moglo do nje kasnije pristupiti, a 
-treba se temeljiti na uzorku dizajna Memento.
-SUma sumarum:
-  % popusta za subotu i nedjelju, % popusta za kupovinu karte putem web/mobilne
-  % uvećanja za kupovinu karte u vlaku
-
-● Određivanje cijene vožnje putnika vlakom €/km, popust za subotu i nedjelju, % popusta 
-za kupovinu karte putem web/mobilne aplikacije i % uvećanja za kupovinu karte u vlaku 
-○ Sintaksa:  
-■ CVP cijenaNormalni cijenaUbrzani cijenaBrzi popustSuN popustWebMob 
-uvecanjeVlak 
-○ Primjer:  
-■ CVP 0,10 0,12 0,15 20,0 10,0 10,0 
-○ Opis primjera:  
-■ Cijena karte za vožnju normalnim vlakom je 0,10 €/km, za ubrzanim vlakom 
-je 0,12 €/km, za brzim vlakom je 0,15 €/km, popust za vožnju vlakom 
-subotom i nedjeljom je 20,0%, popust za kupovinu karte putem 
-web/mobilne aplikacije je 10,0% i uvećanje za kupovinu karte u vlaku je 
-10,0% 
-
 
 ● Kupovina karte za putovanje između dviju stanica određenim vlakom na određeni datum 
 s odabranim načinom kupovanja karte 
@@ -70,20 +44,6 @@ Kraljevec - Čakovec, za 10.01.2025., a karta se kupuje putem web/mobilne aplika
 pisati podaci o vlaku, relaciji, datumu, vremenu kretanja s polazne stanice  
 i vremenu dolaska u odredišnu stanicu, izvorna cijena, popusti i konačna 
 cijena, način kupovanja karte, datum i vrijeme kupovine karte.
-
-
-● Ispit kupljenih karata za putovanje vlakom 
-○ Sintaksa:  
-■ IKKPV [n] 
-○ Primjer:  
-■ IKKPV 
-○ Opis primjera:  
-■ Ispit svih kupljenih karata za putovanja vlakom 
-○ Primjer:  
-■ IKKPV 3 
-○ Opis primjera:  
-■ Ispit 3. kupljene karte za putovanje vlakom 
-
 
 ● Usporedba karata za putovanje između dviju stanica na određeni datum unutar zadanog 
 vremena s odabranim načinom kupovanja karte 
@@ -112,6 +72,26 @@ dolaskom u odredišnu stanicu prije 16:00, a karta se kupuje na blagajni.
 ■ Usporedba cijena karti za putovanje vlakom na relaciji Donji Kraljevec – 
 Ludbreg, za 10.01.2025., s kretanjem s polazne stanice nakon 5:20 i 
 dolaskom u odredišnu stanicu prije 20:30, a karta se kupuje u vlaku.
+
+
+
+
+
+
+
+
+
+● Ispit relacija pruga sa zadanim statusom 
+○ Sintaksa:  
+■ IRPS status [oznaka] 
+○ Primjer:  
+■ IRPS K 
+○ Opis primjera:  
+■ Ispit svih relacija koje su u kvaru na svim prugama 
+○ Primjer:  
+■ IRPS Z M501 
+○ Opis primjera:  
+■ Ispit svih relacija koje su zatvorene na pruzi M501
 
 
  */
@@ -171,6 +151,9 @@ public class CommandSystemSingleton {
   Pattern compareTicketsPattern = Pattern.compile(
       "^UKP2S (?<startStation>.+) - (?<endStation>.+) - (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}) - (?<fromTime>[0-9]{1,2}:[0-9]{2}) - (?<toTime>[0-9]{1,2}:[0-9]{2}) - (?<purchaseMethod>.+)$");
 
+  Pattern segmentsOfTrackWithStatusPattern = Pattern
+      .compile("^IRPS (?<status>[IKZT]) (?<trackCode>[A-Za-z0-9]+)$|^IRPS (?<status2>[IKZT])$");
+
   Pattern linkPattern = Pattern.compile("^LINK (?<name>[\\p{L}]+(?: [\\p{L}]+)*) (?<lastName>[\\p{L}]+) -"
       + " (?<groupId>.+) - (?<action>.+)$|^LINK PREGLED$");
   private final ChatMediator userChat = new ChatMediator();
@@ -198,8 +181,11 @@ public class CommandSystemSingleton {
       if (quitPattern.matcher(command).matches()) {
         Logs.c("Prekidanje programa...");
         break;
+      } else if (command.contains("tracks")) {
+        System.out.println(RailwaySingleton.getInstance().getTracks().toString().replaceAll(",", "\n\t"));
+      } else {
+        identifyCommand(command);
       }
-      identifyCommand(command);
     }
     Logs.footer(true);
   }
@@ -226,16 +212,15 @@ public class CommandSystemSingleton {
     Matcher ticketPurchaseMatcher = purchaseTicketPattern.matcher(command);
     Matcher ticketsViewMatcher = viewBoughtTicketsPattern.matcher(command);
     Matcher ticketsCompareMatcher = compareTicketsPattern.matcher(command);
+    Matcher segmentsOfTrackWithStatus = segmentsOfTrackWithStatusPattern.matcher(command);
     Matcher linkMatcher = linkPattern.matcher(command);
     if (matchBaseCommands(command, vtMatcher, vsMatcher, vsbMatcher, addUserMatcher, viewUsersMatcher,
         viewTrainsMatcher, viewTrainStagesMatcher, ivrvMatcher, linkMatcher, addTrainObserverPatternMatcher,
-        trainScheduleBetweenStationsMatcher, simulateTrainMatcher)) {
+        trainScheduleBetweenStationsMatcher, simulateTrainMatcher))
       return true;
-    }
-    if (matchTicketCommands(command, ticketPriceMatcher, ticketPurchaseMatcher, ticketsViewMatcher,
-        ticketsCompareMatcher)) {
+    if (matchTicketAndTrackCommands(command, ticketPriceMatcher, ticketPurchaseMatcher, ticketsViewMatcher,
+        ticketsCompareMatcher, segmentsOfTrackWithStatus))
       return true;
-    }
     if (viewTrainsWithStagesOnMatcher.matches()) {
       try {
         viewTrainsWithStagesOnDays(Weekday.daysFromString(viewTrainsWithStagesOnMatcher.group("days")));
@@ -289,8 +274,8 @@ public class CommandSystemSingleton {
     return true;
   }
 
-  private boolean matchTicketCommands(String command, Matcher ticketPriceMatcher, Matcher ticketPurchaseMatcher,
-      Matcher ticketsViewMatcher, Matcher ticketsCompareMatcher) {
+  private boolean matchTicketAndTrackCommands(String command, Matcher ticketPriceMatcher, Matcher ticketPurchaseMatcher,
+      Matcher ticketsViewMatcher, Matcher ticketsCompareMatcher, Matcher segmentsOfTrackWithStatusMatcher) {
     if (ticketPriceMatcher.matches()) {
       setTicketPrices(ticketPriceMatcher);
     } else if (ticketPurchaseMatcher.matches()) {
@@ -299,6 +284,8 @@ public class CommandSystemSingleton {
       viewBoughtTickets(ticketsViewMatcher);
     } else if (ticketsCompareMatcher.matches()) {
       compareTickets(ticketsCompareMatcher);
+    } else if (segmentsOfTrackWithStatusMatcher.matches()) {
+      displaySegmentsOfTrackWithStatus(segmentsOfTrackWithStatusMatcher);
     } else
       return false;
     return true;
@@ -385,11 +372,15 @@ public class CommandSystemSingleton {
         "\t\t\t\t\t\t" + "\u001B[0m"
             + "- Usporedba karata za putovanje između dviju stanica na određeni datum unutar zadanog vremena s odabranim načinom kupovanja karte",
         false);
+    Logs.o("\u001B[93m" + "IRPS [status] [oznakaPruge]" +
+        "\t\t" + "\u001B[0m"
+            + "- Pregled svih pruga s određenim statusom ili određenih pruga s određenim statusom",
+        false);
   }
 
   private void customCommandsMenu() {
     Logs.withPadding(() -> Logs.o("\u001B[93m" +
-        "LINK [ime] [prz] - [grupa] - [O|Z|poruka] "
+        "LINK [ime] [prz] - [grupa] - [O|Z|poruka] " + "\u001B[0m"
         + "- Otvori/zatvori vezu između korisnika i grupe ili pošalji obavijest u grupu",
         false), true, false);
     Logs.o("\u001B[93m" + "LINK PREGLED\t\t\t\t" + "\u001B[0m" + "- Pregled svih grupa", false);
@@ -1194,4 +1185,84 @@ public class CommandSystemSingleton {
 
   private void compareTickets(Matcher ticketsCompareMatcher) {
   }
+
+  private void displaySegmentsOfTrackWithStatus(Matcher segmentsOfTrackWithStatus) {
+    if (segmentsOfTrackWithStatus.group("status2") != null) {
+      displaySegmentsOfTrackWithStatusVariant(segmentsOfTrackWithStatus.group("status2"));
+      return;
+    }
+    String statusString = segmentsOfTrackWithStatus.group("status");
+    String trackCode = segmentsOfTrackWithStatus.group("trackCode");
+    Logs.header("Ispis relacija pruge sa zadanim statusom", true);
+    TrainTrackStatus status = null;
+    try {
+      status = TrainTrackStatus.fromCSV(statusString);
+    } catch (IllegalArgumentException e) {
+      Logs.e("Nepoznat status pruge: " + statusString);
+      Logs.footer(true);
+      return;
+    }
+    var findTrack = RailwaySingleton.getInstance().getTrackById(trackCode);
+    if (findTrack == null) {
+      Logs.e("Nepostojeća pruga s oznakom: " + trackCode);
+      Logs.footer(true);
+      return;
+    }
+    List<TrainTrack> tracks = findTrack.getTrackSegmentsByStatusAndCode(status);
+    if (tracks.isEmpty()) {
+      Logs.e("Nema relacija sa statusom " + status + " za prugu " + trackCode);
+      Logs.footer(true);
+      return;
+    }
+    displaySegmentsOfTrackWithStatusPhase2(trackCode, status, findTrack, tracks);
+  }
+
+  private void displaySegmentsOfTrackWithStatusPhase2(String trackId, TrainTrackStatus status,
+      TrainTrack findTrack, List<TrainTrack> tracks) {
+    List<String> header = Arrays.asList("Oznaka pruge", "Početna stanica", "Završna stanica", "Status");
+    Logs.tableHeader(header);
+    for (TrainTrack track : tracks) {
+      List<String> row = Arrays.asList(
+          track.id(),
+          track.getStartStation().name(),
+          track.getEndStation().name(),
+          track.status().toString() //
+      );
+      Logs.tableRow(row);
+    }
+    Logs.printTable();
+    Logs.footer(true);
+  }
+
+  private void displaySegmentsOfTrackWithStatusVariant(String status2String) {
+    // display all tracks with the given status
+    TrainTrackStatus status2 = null;
+    try {
+      status2 = TrainTrackStatus.fromCSV(status2String);
+    } catch (IllegalArgumentException e) {
+      Logs.e("Nepoznat status pruge: " + status2String);
+      Logs.footer(true);
+      return;
+    }
+    Logs.header("Ispis relacija pruge sa zadanim statusom", true);
+    List<TrainTrack> tracks = RailwaySingleton.getInstance().getTrackSegmentsByStatus(status2);
+    if (tracks.isEmpty()) {
+      Logs.e("Nema relacija sa statusom " + status2);
+      Logs.footer(true);
+      return;
+    }
+    List<String> header = Arrays.asList("Oznaka pruge", "Početna stanica", "Završna stanica", "Status");
+    Logs.tableHeader(header);
+    for (TrainTrack track : tracks) {
+      List<String> row = Arrays.asList(
+          track.id(),
+          track.getStartStation().name(),
+          track.getEndStation().name(),
+          track.status().toString() //
+      );
+      Logs.tableRow(row);
+    }
+    Logs.footer();
+  }
+
 }
