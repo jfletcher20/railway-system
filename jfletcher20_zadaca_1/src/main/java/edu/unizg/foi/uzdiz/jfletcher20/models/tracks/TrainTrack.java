@@ -94,4 +94,8 @@ public record TrainTrack(String id, // oznaka pruge
   public List<TrainTrackSegment> getTrackSegmentsBetweenStations(String startStation, String endStation) {
     return RailwaySingleton.getInstance().getSegmentsBetweenStations(this.id, startStation, endStation);
   }
+
+  public List<TrainTrackSegment> getTrackSegmentsBetweenStationsOrToEnd(String startStation, String endStation) {
+    return RailwaySingleton.getInstance().getSegmentsBetweenStationsOrToEnd(this.id, startStation, endStation);
+  }
 }

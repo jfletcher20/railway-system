@@ -18,6 +18,8 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.StationLeaf;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrack;
+import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackSegment;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackStageComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.users.User;
 import edu.unizg.foi.uzdiz.jfletcher20.system.Logs;
@@ -550,14 +552,33 @@ public class TrainComposite implements IComponent, ISubject {
         return hasStationsOnDay(weekday, List.of(of));
     }
 
-    public boolean hasRouteForParameters(Weekday weekday, String start, String end, ScheduleTime from, ScheduleTime to) {
-        if (!hasStation(start) || !hasStation(end) || !operatesOnDay(weekday))
+    public boolean hasRouteForParameters(Weekday weekday, String start, String end, ScheduleTime from,
+            ScheduleTime to) {
+        if (!hasStation(start) || !hasStation(end) || !operatesOnDay(weekday) || !isStationBefore(start, end))
             return false;
-        if (!isStationBefore(start, end))
-            return false;
-            // get departure time at station from and arrival time at station end, and make sure they are within from-to
         ScheduleTime departureTime = getDepartureTimeAtStation(start);
         ScheduleTime arrivalTime = getArrivalTimeAtStation(end);
+        List<TrainTrackStageComposite> stages = new ArrayList<>();
+        for (TrainTrackStageComposite stage : this.children)
+            if (stage.schedule.days().contains(weekday))
+                stages.add(stage);
+        List<String> tracksIDsOfStages = new ArrayList<>();
+        boolean foundStart = false;
+        for (TrainTrackStageComposite stage : stages)
+            for (StationLeaf leaf : stage.children) {
+                if (leaf.getStation().name().equals(start))
+                    foundStart = true;
+                if (foundStart)
+                    tracksIDsOfStages.add(stage.trackID);
+                if (leaf.getStation().name().equals(end))
+                    break;
+            }
+        // get all segments between the start and end stations
+        List<TrainTrackSegment> segments = new ArrayList<>();
+        for (String trackID : tracksIDsOfStages) {
+            TrainTrack track = RailwaySingleton.getInstance().getTrackById(trackID);
+            segments.addAll(track.getTrackSegmentsBetweenStations(start, end));
+        }
         return departureTime.isBetweenOrEqual(from, to) && arrivalTime.isBetweenOrEqual(from, to);
     }
 
