@@ -19,7 +19,7 @@ public class LinkHistoryCommand implements ICommand {
         } else {
             Logs.o("Povijest naredbi:");
             for (ICommand cmd : history) {
-                Logs.o(" - " + cmd.getClass().getSimpleName() + "::" + cmd.toString(), false);
+                Logs.o(" - " + cmd.getClass().getSimpleName() + ":\t" + cmd.toString(), false);
             }
         }
     }

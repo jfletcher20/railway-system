@@ -36,6 +36,6 @@ public class LinkCommand implements ICommand {
 
     @Override
     public String toString() {
-        return groupId + " " + user;
+        return user + " sada participira u grupi " + groupId;
     }
 }

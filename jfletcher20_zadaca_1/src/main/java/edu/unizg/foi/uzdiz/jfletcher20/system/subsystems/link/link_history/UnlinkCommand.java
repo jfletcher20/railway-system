@@ -35,6 +35,6 @@ public class UnlinkCommand implements ICommand {
 
     @Override
     public String toString() {
-        return groupId + " " + user;
+        return user + " više nije u grupi " + groupId;
     }
 }
