@@ -786,5 +786,34 @@ public class RailwaySingleton {
     return this.railroad2;
   }
 
-}
+  public List<TrainTrackSegment> getSegmentsBetweenStations(String id, String startStation, String endStation) {
+    List<TrainTrackSegment> segments = this.railroad2.get(id);
+    List<TrainTrackSegment> segmentsBetweenStations = new ArrayList<>();
+    // for (TrainTrackSegment segment : segments) {
+    // if (segment.startStation.name().equals(startStation) &&
+    // segment.endStation.name().equals(endStation))
+    // segmentsBetweenStations.add(segment);
+    // }
+    // first get the segment that starts with startstation; once that's found ,f
+    // ithe same segment ends with endstation then job is done
+    // otherwise add the current one and go next
+    // and if there is no segment with endstation then return an empty list
+    boolean foundStart = false;
+    for (TrainTrackSegment segment : segments) {
+      if (!foundStart) {
+        if (segment.startStation.name().equals(startStation)) {
+          foundStart = true;
+          segmentsBetweenStations.add(segment);
+        }
+        if (segment.endStation.name().equals(endStation))
+          return segmentsBetweenStations;
+      } else {
+        segmentsBetweenStations.add(segment);
+        if (segment.endStation.name().equals(endStation))
+          return segmentsBetweenStations;
+      }
+    }
+    return new ArrayList<>();
+  }
 
+}

@@ -30,73 +30,6 @@ import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleto
 import edu.unizg.foi.uzdiz.jfletcher20.utils.ParsingUtil;
 import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 
-/*
-
-● Kupovina karte za putovanje između dviju stanica određenim vlakom na određeni datum 
-s odabranim načinom kupovanja karte 
-○ Sintaksa:  
-■ KKPV2S oznaka - polaznaStanica - odredišnaStanica - datum - 
-načinKupovine 
-○ Primjer:  
-■ KKPV2S 3609 - Donji Kraljevec - Čakovec - 10.01.2025. - WM 
-○ Opis primjera:  
-■ Kupovina karte za putovanje vlakom s oznakom 3609 na relaciji Donji 
-Kraljevec - Čakovec, za 10.01.2025., a karta se kupuje putem web/mobilne aplikacije. Ostali načini kupovine su: B – blagajna i V – vlak. Na karti moraju 
-pisati podaci o vlaku, relaciji, datumu, vremenu kretanja s polazne stanice  
-i vremenu dolaska u odredišnu stanicu, izvorna cijena, popusti i konačna 
-cijena, način kupovanja karte, datum i vrijeme kupovine karte.
-
-● Usporedba karata za putovanje između dviju stanica na određeni datum unutar zadanog 
-vremena s odabranim načinom kupovanja karte 
-○ Sintaksa:  
-■ UKP2S polaznaStanica - odredišnaStanica - datum - odVr - doVr 
-načinKupovine 
-○ Primjer:  
-■ UKP2S Donji Kraljevec - Čakovec - 10.01.2025. - 0:00 - 23:59 - WM 
-○ Opis primjera:  
-■ Usporedba karata za putovanje vlakom na relaciji Donji Kraljevec – 
-Čakovec, za 10.01.2025., s kretanjem s polazne stanice nakon 0:00 i 
-dolaskom u odredišnu stanicu prije 23:59, a karta se kupuje putem 
-web/mobilne aplikacije. Na svakoj karti moraju pisati podaci o svim 
-vlakovima kojima se treba voziti, relaciji pojedinog vlaka, datumu, vremenu 
-kretanja s polazne stanice  i vremenu dolaska u odredišnu stanicu pojedine 
-relacije, izvorna cijena, popusti i konačna cijena, način kupovanja karte. 
-○ Primjeri:  
-■ UKP2S Donji Kraljevec - Novi Marof - 10.01.2025. - 08:00 - 16:00 - B 
-○ Opis primjera:  
-■ Usporedba cijena karti za putovanje vlakom na relaciji Donji Kraljevec – 
-Novi Marof, za 10.01.2025., s kretanjem s polazne stanice nakon 8:00 i 
-dolaskom u odredišnu stanicu prije 16:00, a karta se kupuje na blagajni.  
-○ Primjeri:  
-■ UKP2S Donji Kraljevec - Ludbreg - 10.01.2025. - 5:20 - 20:30 - V 
-○ Opis primjera:  
-■ Usporedba cijena karti za putovanje vlakom na relaciji Donji Kraljevec – 
-Ludbreg, za 10.01.2025., s kretanjem s polazne stanice nakon 5:20 i 
-dolaskom u odredišnu stanicu prije 20:30, a karta se kupuje u vlaku.
-
-
-
-
-
-
-
-
-
-● Ispit relacija pruga sa zadanim statusom 
-○ Sintaksa:  
-■ IRPS status [oznaka] 
-○ Primjer:  
-■ IRPS K 
-○ Opis primjera:  
-■ Ispit svih relacija koje su u kvaru na svim prugama 
-○ Primjer:  
-■ IRPS Z M501 
-○ Opis primjera:  
-■ Ispit svih relacija koje su zatvorene na pruzi M501
-
-
- */
-
 /**
  * The CommandSystem class is responsible for handling the command system of the
  * program.
@@ -151,6 +84,22 @@ public class CommandSystemSingleton {
 
   Pattern compareTicketsPattern = Pattern.compile(
       "^UKP2S (?<startStation>.+) - (?<endStation>.+) - (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}\\.) - (?<fromTime>[0-9]{1,2}:[0-9]{2}) - (?<toTime>[0-9]{1,2}:[0-9]{2}) - (?<purchaseMethod>.+)$");
+
+  /*
+   * ● Promjena statusa pruge između dviju stanica
+   * ○ Sintaksa:
+   * ■ PSP2S oznaka - polaznaStanica - odredišnaStanica - status
+   * ○ Primjer:
+   * ■ PSP2S M501 - Donji Kraljevec – Mala Subotica - K
+   * ○ Opis primjera:
+   * ■ Pruga s oznakom M501 na relaciji Donji Kraljevec – Mala Subotica mijenja
+   * status koji označava da je u kvaru, što znači da vlakovi ne mogu putovati
+   * tom prugom između tih dviju stanica jer na toj relaciji pruga ima samo jedan
+   * kolosjek. Ostali statusi su: I - ispravna, T – u testiranju, Z - zatvorena.
+   */
+
+  Pattern setStatusOfSegmentsPattern = Pattern.compile(
+      "^PSP2S (?<trackCode>[A-Za-z0-9]+) - (?<startStation>.+) - (?<endStation>.+) - (?<status>[IKZT])$");
 
   Pattern segmentsOfTrackWithStatusPattern = Pattern
       .compile("^IRPS (?<status>[IKZT]) (?<trackCode>[A-Za-z0-9]+)$|^IRPS (?<status2>[IKZT])$");
@@ -211,6 +160,7 @@ public class CommandSystemSingleton {
     Matcher ticketPurchaseMatcher = purchaseTicketPattern.matcher(command);
     Matcher ticketsViewMatcher = viewBoughtTicketsPattern.matcher(command);
     Matcher ticketsCompareMatcher = compareTicketsPattern.matcher(command);
+    Matcher setStatusOfSegmentsMatcher = setStatusOfSegmentsPattern.matcher(command);
     Matcher segmentsOfTrackWithStatus = segmentsOfTrackWithStatusPattern.matcher(command);
     Matcher linkMatcher = linkPattern.matcher(command);
     if (matchBaseCommands(command, vtMatcher, vsMatcher, vsbMatcher, addUserMatcher, viewUsersMatcher,
@@ -218,7 +168,7 @@ public class CommandSystemSingleton {
         trainScheduleBetweenStationsMatcher, simulateTrainMatcher))
       return true;
     if (matchTicketAndTrackCommands(command, ticketPriceMatcher, ticketPurchaseMatcher, ticketsViewMatcher,
-        ticketsCompareMatcher, segmentsOfTrackWithStatus))
+        ticketsCompareMatcher, setStatusOfSegmentsMatcher, segmentsOfTrackWithStatus))
       return true;
     if (viewTrainsWithStagesOnMatcher.matches()) {
       try {
@@ -274,11 +224,13 @@ public class CommandSystemSingleton {
   }
 
   private boolean matchTicketAndTrackCommands(String command, Matcher ticketPriceMatcher, Matcher ticketPurchaseMatcher,
-      Matcher ticketsViewMatcher, Matcher ticketsCompareMatcher, Matcher segmentsOfTrackWithStatusMatcher) {
+      Matcher ticketsViewMatcher, Matcher ticketsCompareMatcher, Matcher setStatusOfSegmentsMatcher, Matcher segmentsOfTrackWithStatusMatcher) {
     if (ticketPriceMatcher.matches()) {
       setTicketPrices(ticketPriceMatcher);
     } else if (segmentsOfTrackWithStatusMatcher.matches()) {
       displaySegmentsOfTrackWithStatus(segmentsOfTrackWithStatusMatcher);
+    } else if (setStatusOfSegmentsMatcher.matches()) {
+      setStatusOfSegments(setStatusOfSegmentsMatcher);
     } else if (ticketPurchaseMatcher.matches()) {
       if (!RailwaySingleton.getInstance().ticketCostParamsDefined()) {
         Logs.e("Nisu postavljene cijene karata. Postavite cijene karata prije kupovine.");
@@ -1391,4 +1343,88 @@ public class CommandSystemSingleton {
     Logs.footer(true);
   }
 
+  private void setStatusOfSegments(Matcher setStatusOfSegmentsMatcher) {
+    String trackCode = setStatusOfSegmentsMatcher.group("trackCode");
+    String startStation = setStatusOfSegmentsMatcher.group("startStation");
+    String endStation = setStatusOfSegmentsMatcher.group("endStation");
+    String statusString = setStatusOfSegmentsMatcher.group("status");
+    if (trackCode == null || startStation == null || endStation == null || statusString == null) {
+      Logs.e("Nedostaje obavezni parametar: " + (trackCode == null ? "oznakaPruge" : "")
+          + (startStation == null ? "prvaStanica" : "") + (endStation == null ? "drugaStanica" : "")
+          + (statusString == null ? "status" : ""));
+      return;
+    }
+    TrainTrackStatus status;
+    try {
+      status = TrainTrackStatus.fromCSV(statusString);
+    } catch (Exception e) {
+      Logs.e("Nepoznat status pruge: " + statusString);
+      return;
+    }
+    Logs.header("Promjena statusa relacija u " + status + " između " + startStation + " i " + endStation + " na pruzi " + trackCode,
+        true);
+    TrainTrack track = RailwaySingleton.getInstance().getTrackById(trackCode);
+    if (track == null) {
+      Logs.e("Nepostojeća pruga s oznakom: " + trackCode);
+      Logs.footer(true);
+      return;
+    }
+    setStatusOfSegmentsPhase2(track, startStation, endStation, status);
+  }
+
+  private void setStatusOfSegmentsPhase2(TrainTrack track, String startStation, String endStation,
+      TrainTrackStatus status) {
+    List<TrainTrackSegment> segments = track.getTrackSegmentsBetweenStations(startStation, endStation);
+    if (segments.isEmpty()) {
+      Logs.e("Nema relacija između stanica " + startStation + " i " + endStation + " na pruzi " + track.id());
+      Logs.footer(true);
+      return;
+    }
+    List<String> header = Arrays.asList("Oznaka pruge", "Početna stanica", "Završna stanica", "Status");
+    Logs.tableHeader(header);
+    for (TrainTrackSegment segment : segments) {
+      List<String> row = Arrays.asList(
+          segment.mainTrack.id(),
+          segment.startStation.name(),
+          segment.endStation.name(),
+          segment.getState().internalState().toString() //
+      );
+      Logs.tableRow(row);
+    }
+    Logs.printTable();
+    for (TrainTrackSegment segment : segments) {
+      segment.setState(status.toState());
+    }
+    header = Arrays.asList("Oznaka pruge", "Početna stanica", "Završna stanica", "Status");
+    Logs.tableHeader(header);
+    for (TrainTrackSegment segment : segments) {
+      List<String> row = Arrays.asList(
+          segment.mainTrack.id(),
+          segment.startStation.name(),
+          segment.endStation.name(),
+          segment.getState().internalState().toString() //
+      );
+      Logs.tableRow(row);
+    }
+    Logs.printTable();
+    Logs.o("Status relacija između stanica " + startStation + " i " + endStation + " na pruzi " + track.id()
+        + " promijenjen u " + status);
+    Logs.footer(true);
+  }
+
 }
+
+/*
+ * 
+ * ● Promjena statusa pruge između dviju stanica
+ * ○ Sintaksa:
+ * ■ PSP2S oznaka - polaznaStanica - odredišnaStanica - status
+ * ○ Primjer:
+ * ■ PSP2S M501 - Donji Kraljevec – Mala Subotica - K
+ * ○ Opis primjera:
+ * ■ Pruga s oznakom M501 na relaciji Donji Kraljevec – Mala Subotica mijenja
+ * status koji označava da je u kvaru, što znači da vlakovi ne mogu putovati
+ * tom prugom između tih dviju stanica jer na toj relaciji pruga ima samo jedan
+ * kolosjek. Ostali statusi su: I - ispravna, T – u testiranju, Z - zatvorena.
+ * 
+ */

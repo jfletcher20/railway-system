@@ -35,7 +35,7 @@ public class TrainTrackSegment {
     }
 
     public boolean setState(ITrainTrackSegmentState state) {
-        return state.setState(this, state);
+        return this.state.setState(this, state);
     }
 
     public boolean isFunctional() {

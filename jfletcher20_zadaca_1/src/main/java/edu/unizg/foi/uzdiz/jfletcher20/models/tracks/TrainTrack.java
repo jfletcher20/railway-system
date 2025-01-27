@@ -90,4 +90,8 @@ public record TrainTrack(String id, // oznaka pruge
         "::status=" + status +
         '}';
   }
+
+  public List<TrainTrackSegment> getTrackSegmentsBetweenStations(String startStation, String endStation) {
+    return RailwaySingleton.getInstance().getSegmentsBetweenStations(this.id, startStation, endStation);
+  }
 }
