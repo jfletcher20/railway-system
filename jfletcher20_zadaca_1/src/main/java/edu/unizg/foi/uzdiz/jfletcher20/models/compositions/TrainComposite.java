@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackStatus;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IComponent;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IObserver;
@@ -579,6 +581,18 @@ public class TrainComposite implements IComponent, ISubject {
             TrainTrack track = RailwaySingleton.getInstance().getTrackById(trackID);
             segments.addAll(track.getTrackSegmentsBetweenStations(start, end));
         }
+        // every segment that has an internalState that is not functional must be compiled into a list
+        List<TrainTrackSegment> nonFunctionalSegments = new ArrayList<>();
+        TraversalDirection direction = segments.get(0).startStation.name().equals(start)
+                ? TraversalDirection.FORTH
+                : TraversalDirection.REVERSE;
+        for (TrainTrackSegment segment : segments)
+            if (segment.getStatus(direction) != TrainTrackStatus.FUNCTIONAL)
+                nonFunctionalSegments.add(segment);
+        // if there are non-functional segments, the route is not valid
+        if (!nonFunctionalSegments.isEmpty())
+            throw new IllegalArgumentException("Nisu svi segmenti funkcionalni: " + nonFunctionalSegments.stream().map(
+                    segment -> segment.startStation.name() + " -> " + segment.endStation.name()).reduce("", String::concat));
         return departureTime.isBetweenOrEqual(from, to) && arrivalTime.isBetweenOrEqual(from, to);
     }
 

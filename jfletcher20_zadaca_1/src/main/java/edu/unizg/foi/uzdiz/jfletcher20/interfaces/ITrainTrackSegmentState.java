@@ -40,9 +40,10 @@ statusa pruge kada nije ispravna utječe na vozni red, a time i na kupovinu kara
 
 package edu.unizg.foi.uzdiz.jfletcher20.interfaces;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackStatus;
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
 import edu.unizg.foi.uzdiz.jfletcher20.models.tracks.TrainTrackSegment;
 
 public interface ITrainTrackSegmentState {
     public TrainTrackStatus internalState();
-    public boolean setState(TrainTrackSegment segment, ITrainTrackSegmentState state);
+    public boolean setState(TrainTrackSegment segment, ITrainTrackSegmentState state, TraversalDirection forth);
 }

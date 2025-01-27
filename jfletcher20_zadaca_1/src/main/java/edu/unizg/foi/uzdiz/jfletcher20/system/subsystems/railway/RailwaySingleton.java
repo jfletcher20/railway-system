@@ -254,7 +254,7 @@ public class RailwaySingleton {
   }
 
   public List<TrainTrackSegment> getSegmentsOnTrackByStatus(String trackID, TrainTrackStatus status) {
-    return this.railroad2.get(trackID).stream().filter(s -> s.getState().internalState() == status).toList();
+    return this.railroad2.get(trackID).stream().filter(s -> s.getStateForth().internalState() == status).toList();
   }
 
   public TrainTrackSegment getSegmentOfStation(String trackID, Station station) {
@@ -784,7 +784,8 @@ public class RailwaySingleton {
 
   public List<TrainTrackSegment> getSegmentsByStatus(TrainTrackStatus status2) {
     // return all segments with that status
-    return this.railroad2.values().stream().flatMap(List::stream).filter(s -> s.getState().internalState() == status2)
+    return this.railroad2.values().stream().flatMap(List::stream)
+        .filter(s -> s.getStateForth().internalState() == status2)
         .toList();
   }
 
@@ -792,8 +793,7 @@ public class RailwaySingleton {
     return this.railroad2;
   }
 
-  public boolean stationIsBeforeStation(Station station1, Station station2) {
-    TrainTrack track = getTrackOfStation(station1);
+  public boolean stationIsBeforeStation(TrainTrack track, Station station1, Station station2) {
     List<Station> stations = getStationsOnTrack(track.id());
     int station1Index = -1, station2Index = -1;
     for (int i = 0; i < stations.size(); i++) {
@@ -809,9 +809,13 @@ public class RailwaySingleton {
     return this.railroad.get(trackId).stream().filter(s -> s.name().equals(stationName)).findFirst().orElse(null);
   }
 
-  public List<TrainTrackSegment> getSegmentsBetweenStations(String trackId, String startStation, String endStation) {
-    List<TrainTrackSegment> segments = this.railroad2.get(trackId);
-    if (!stationIsBeforeStation(getStationOnTrack(trackId, startStation), getStationOnTrack(trackId, endStation))) {
+  public Station getStationOnTrack(TrainTrack track, String stationName) {
+    return this.railroad.get(track.id()).stream().filter(s -> s.name().equals(stationName)).findFirst().orElse(null);
+  }
+
+  public List<TrainTrackSegment> getSegmentsBetweenStations(TrainTrack track, String startStation, String endStation) {
+    List<TrainTrackSegment> segments = this.railroad2.get(track.id());
+    if (!stationIsBeforeStation(track, getStationOnTrack(track, startStation), getStationOnTrack(track, endStation))) {
       String temp = startStation;
       startStation = endStation;
       endStation = temp;
@@ -836,10 +840,10 @@ public class RailwaySingleton {
     return new ArrayList<>();
   }
 
-  public List<TrainTrackSegment> getSegmentsBetweenStationsOrToEnd(String trackId, String startStation,
+  public List<TrainTrackSegment> getSegmentsBetweenStationsOrToEnd(TrainTrack track, String startStation,
       String endStation) {
-    List<TrainTrackSegment> segments = this.railroad2.get(trackId);
-    if (!stationIsBeforeStation(getStationOnTrack(trackId, startStation), getStationOnTrack(trackId, endStation))) {
+    List<TrainTrackSegment> segments = this.railroad2.get(track.id());
+    if (!stationIsBeforeStation(track, getStationOnTrack(track, startStation), getStationOnTrack(track, endStation))) {
       String temp = startStation;
       startStation = endStation;
       endStation = temp;
@@ -862,6 +866,12 @@ public class RailwaySingleton {
       }
     }
     return segmentsBetweenStations;
+  }
+
+  public TraversalDirection getTraversalDirectionForStations(TrainTrack track, String startStation, String endStation) {
+    return stationIsBeforeStation(track, getStationOnTrack(track, startStation), getStationOnTrack(track, endStation))
+        ? TraversalDirection.FORTH
+        : TraversalDirection.REVERSE;
   }
 
 }

@@ -25,18 +25,36 @@ public abstract class Logs {
     LogsSingleton.getInstance().logError(row, message);
   }
 
+  /**
+   * Logs a warning message. If warnings are not enabled, this will not do anything.
+   * @param message
+   */
   public static void w(String message) {
     LogsSingleton.getInstance().logWarning(message);
   }
 
+  /**
+   * Logs a warning message with a row number. If warnings are not enabled, this will not do anything.
+   * @param row
+   * @param message
+   */
   public static void w(int row, String message) {
     LogsSingleton.getInstance().logWarning(row, message);
   }
 
+  /**
+   * Logs an info message. If info logs are not enabled, this will not do anything.
+   * @param message
+   */
   public static void i(String message) {
     LogsSingleton.getInstance().logInfo(message);
   }
 
+  /**
+   * Logs an info message with a row number. If info logs are not enabled, this will not do anything.
+   * @param row
+   * @param message
+   */
   public static void i(int row, String message) {
     LogsSingleton.getInstance().logInfo(row, message);
   }

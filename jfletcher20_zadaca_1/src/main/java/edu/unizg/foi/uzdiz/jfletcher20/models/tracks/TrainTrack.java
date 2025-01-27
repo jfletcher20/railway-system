@@ -5,6 +5,7 @@ import java.util.List;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackCategory;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackStatus;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainType;
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
 import edu.unizg.foi.uzdiz.jfletcher20.interfaces.IProduct;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleton;
@@ -92,10 +93,14 @@ public record TrainTrack(String id, // oznaka pruge
   }
 
   public List<TrainTrackSegment> getTrackSegmentsBetweenStations(String startStation, String endStation) {
-    return RailwaySingleton.getInstance().getSegmentsBetweenStations(this.id, startStation, endStation);
+    return RailwaySingleton.getInstance().getSegmentsBetweenStations(this, startStation, endStation);
   }
 
   public List<TrainTrackSegment> getTrackSegmentsBetweenStationsOrToEnd(String startStation, String endStation) {
-    return RailwaySingleton.getInstance().getSegmentsBetweenStationsOrToEnd(this.id, startStation, endStation);
+    return RailwaySingleton.getInstance().getSegmentsBetweenStationsOrToEnd(this, startStation, endStation);
+  }
+
+  public TraversalDirection getTraversalDirectionForStations(String startStation, String endStation) {
+    return RailwaySingleton.getInstance().getTraversalDirectionForStations(this, startStation, endStation);
   }
 }

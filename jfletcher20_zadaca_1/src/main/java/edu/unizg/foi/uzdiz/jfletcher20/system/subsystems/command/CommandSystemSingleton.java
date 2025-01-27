@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TicketPurchaseMethod;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.TrainTrackStatus;
+import edu.unizg.foi.uzdiz.jfletcher20.enums.TraversalDirection;
 import edu.unizg.foi.uzdiz.jfletcher20.enums.Weekday;
 import edu.unizg.foi.uzdiz.jfletcher20.models.compositions.TrainComposite;
 import edu.unizg.foi.uzdiz.jfletcher20.models.stations.Station;
@@ -121,7 +122,18 @@ public class CommandSystemSingleton {
       if (quitPattern.matcher(command).matches()) {
         Logs.c("Prekidanje programa...");
         break;
-      } else {
+      } else if (command.contains("segments")) {
+        // print all segments with isBidirectional() == false
+        // print all segments with isBidirectional() == true
+
+        var segments = RailwaySingleton.getInstance().getSegments();
+        if (segments.isEmpty()) {
+          Logs.e("Nema segmenata pruge.");
+          continue;
+        }
+printSegments(segments);
+
+      }else {
         lastCommandSucceeded = identifyCommand(command);
       }
     }
@@ -1329,18 +1341,7 @@ public class CommandSystemSingleton {
       Logs.footer(true);
       return;
     }
-    List<String> header = Arrays.asList("Oznaka pruge", "Početna stanica", "Završna stanica", "Status");
-    Logs.tableHeader(header);
-    for (TrainTrackSegment segment : segments) {
-      List<String> row = Arrays.asList(
-          segment.mainTrack.id(),
-          segment.startStation.name(),
-          segment.endStation.name(),
-          segment.getState().internalState().toString() //
-      );
-      Logs.tableRow(row);
-    }
-    Logs.printTable();
+    printSegments(segments);
     Logs.footer(true);
   }
 
@@ -1359,18 +1360,18 @@ public class CommandSystemSingleton {
     Logs.tableHeader(header);
     for (var entry : RailwaySingleton.getInstance().getSegmentsRailroad().entrySet()) {
       for (var segment : entry.getValue()) {
-        if (segment.getState().internalState().equals(status2)) {
+        if (segment.getStatuses().contains(status2)) {
           List<String> row = Arrays.asList(
               segment.mainTrack.id(),
               segment.startStation.name(),
               segment.endStation.name(),
-              segment.getState().internalState().toString() //
+              String.join(", ", segment.getStatusesDisplay()) //
           );
           Logs.tableRow(row);
         }
       }
     }
-    Logs.printTable();
+    Logs.printTable(120);
     Logs.footer(true);
   }
 
@@ -1413,6 +1414,23 @@ public class CommandSystemSingleton {
       Logs.footer(true);
       return;
     }
+    TraversalDirection traversalDirection = track.getTraversalDirectionForStations(startStation, endStation);
+    Logs.o("Trenutno stanje:\n");
+    printSegments(segments);
+    Logs.o("", false);
+    Logs.o("Postavljanje statusa...");
+    for (TrainTrackSegment segment : segments) {
+      segment.setState(status.toState(), traversalDirection);
+    }
+    Logs.o("Novo stanje:\n");
+    printSegments(segments);
+    Logs.o("", false);
+    Logs.o("Status relacija između stanica " + startStation + " i " + endStation + " na pruzi " + track.id()
+        + " promijenjen u " + status);
+    Logs.footer(true);
+  }
+
+  private void printSegments(List<TrainTrackSegment> segments) {
     List<String> header = Arrays.asList("Oznaka pruge", "Početna stanica", "Završna stanica", "Status");
     Logs.tableHeader(header);
     for (TrainTrackSegment segment : segments) {
@@ -1420,29 +1438,11 @@ public class CommandSystemSingleton {
           segment.mainTrack.id(),
           segment.startStation.name(),
           segment.endStation.name(),
-          segment.getState().internalState().toString() //
+          String.join(", ", segment.getStatusesDisplay()) //
       );
       Logs.tableRow(row);
     }
-    Logs.printTable();
-    for (TrainTrackSegment segment : segments) {
-      segment.setState(status.toState());
-    }
-    header = Arrays.asList("Oznaka pruge", "Početna stanica", "Završna stanica", "Status");
-    Logs.tableHeader(header);
-    for (TrainTrackSegment segment : segments) {
-      List<String> row = Arrays.asList(
-          segment.mainTrack.id(),
-          segment.startStation.name(),
-          segment.endStation.name(),
-          segment.getState().internalState().toString() //
-      );
-      Logs.tableRow(row);
-    }
-    Logs.printTable();
-    Logs.o("Status relacija između stanica " + startStation + " i " + endStation + " na pruzi " + track.id()
-        + " promijenjen u " + status);
-    Logs.footer(true);
+    Logs.printTable(120);
   }
 
 }
