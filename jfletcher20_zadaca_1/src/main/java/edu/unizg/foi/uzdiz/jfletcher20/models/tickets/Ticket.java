@@ -16,33 +16,6 @@ import edu.unizg.foi.uzdiz.jfletcher20.models.schedule.ScheduleTime;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.railway.RailwaySingleton;
 import edu.unizg.foi.uzdiz.jfletcher20.system.subsystems.ticket.TicketCostParameters;
 
-/*
- * ● Kupovina karte za putovanje između dviju stanica određenim vlakom na određeni datum 
-s odabranim načinom kupovanja karte 
-○ Sintaksa:  
-■ KKPV2S oznaka - polaznaStanica - odredišnaStanica - datum - 
-načinKupovine 
-○ Primjer:  
-■ KKPV2S 3609 - Donji Kraljevec - Čakovec - 10.01.2025. - WM 
-○ Opis primjera:  
-■ Kupovina karte za putovanje vlakom s oznakom 3609 na relaciji Donji 
-Kraljevec - Čakovec, za 10.01.2025., a karta se kupuje putem web/mobilne 
-12 
-Kolegij: Uzorci dizajna 
-Akademska godina: 2024./2025. 
-aplikacije. Ostali načini kupovine su: B – blagajna i V – vlak. 
-
-Na karti moraju pisati:
-    ✅ podaci o vlaku,
-    ✅ relaciji,
-    ✅ datumu,
-    ✅ vremenu kretanja s polazne stanice i vremenu dolaska u odredišnu stanicu,
-    ☒ izvorna cijena,
-    ☒ popusti
-    ☒ i konačna cijena,
-    ✅ način kupovanja karte,
-    ✅ datum i vrijeme kupovine karte. 
- */
 public record Ticket(
         String trainId, // oznaka vlaka
         String departureStation, // polazna stanica
@@ -74,10 +47,10 @@ public record Ticket(
         }
 
         TrainComposite train = RailwaySingleton.getInstance().getSchedule().getTrainById(trainId);
-        Weekday weekday = Weekday.getWeekday(departureDate.getDayOfWeek());
+        Weekday weekday = Weekday.fromDayOfWeek(departureDate.getDayOfWeek());
         if (!train.operatesOnDay(weekday)) {
             throw new IllegalArgumentException("Vlak ne vozi na danu tjedna " + weekday);
-        } else if (!train.hasStationsOnDday(weekday, List.of(departureStation, arrivalStation))) {
+        } else if (!train.hasStationsOnDay(weekday, List.of(departureStation, arrivalStation))) {
             throw new IllegalArgumentException("Vlak ne vozi tom relacijom na danu tjedna " + weekday);
         }
     }
@@ -113,12 +86,13 @@ public record Ticket(
 
     public ScheduleTime departureTime() {
         var train = RailwaySingleton.getInstance().getSchedule().getTrainById(trainId);
-        return train.getDepartureTimeAtStation(departureStation);
+        // return train.getDepartureTimeAtStation(departureStation);
+        return train.getDepartureTimeAtStation(departureStation, Weekday.fromDayOfWeek(departureDate.getDayOfWeek()));
     }
 
     public ScheduleTime arrivalTime() {
         var train = RailwaySingleton.getInstance().getSchedule().getTrainById(trainId);
-        return train.getArrivalTimeAtStation(arrivalStation);
+        return train.getArrivalTimeAtStation(arrivalStation, Weekday.fromDayOfWeek(departureDate.getDayOfWeek()));
     }
 
     private String wrap(ScheduleTime time) {
@@ -145,10 +119,11 @@ public record Ticket(
     }
 
     public Map<String, String> getTicketPurchaseData() {
+        // numbers should be rounded to 2 decimals
         return Map.of(
-                // "Ukupna udaljenost", "" + distance(),
-                "Izvorna cijena", "" + (this.getOriginalPrice()),
-                "Konačna cijena", this.getPrice() + "",
+                // "Ukupna udaljenost", "" + String.format("%.2f", distance()),
+                "Izvorna cijena", String.format("%.2f", this.getOriginalPrice()) + " €",
+                "Konačna cijena", String.format("%.2f", this.getPrice()) + " €",
                 "Datum kupovine", this.purchaseDateDisplay(), //
                 "Popusti i dodatak na cijenu u vlaku", ticketCostParameters.getDiscounts(this).toString() //
         );

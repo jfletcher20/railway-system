@@ -219,11 +219,12 @@ public abstract class Logs {
       for (int rowIndex = 0; rowIndex < tableOutput.size(); rowIndex++) {
         List<String> row = tableOutput.get(rowIndex);
         StringBuilder line = formatRow(row, columnLengths);
-        rows.add(line.toString());
-
-        if (rowIndex == 0) {
+        if (!line.toString().contains("-+-divider-+-") && !line.toString().contains("-+-spacer-+-"))
+          rows.add(line.toString());
+        if (line.toString().contains("-+-spacer-+-"))
+          rows.add("");
+        if (rowIndex == 0 || line.toString().contains("-+-divider-+-"))
           rows.add(createDivider(columnLengths));
-        }
       }
 
       tableOutput.clear();

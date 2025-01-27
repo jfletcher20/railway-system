@@ -150,7 +150,7 @@ public class CommandSystemSingleton {
   Pattern viewBoughtTicketsPattern = Pattern.compile("^IKKPV( (?<n>[0-9]+))?$");
 
   Pattern compareTicketsPattern = Pattern.compile(
-      "^UKP2S (?<startStation>.+) - (?<endStation>.+) - (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}) - (?<fromTime>[0-9]{1,2}:[0-9]{2}) - (?<toTime>[0-9]{1,2}:[0-9]{2}) - (?<purchaseMethod>.+)$");
+      "^UKP2S (?<startStation>.+) - (?<endStation>.+) - (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}\\.) - (?<fromTime>[0-9]{1,2}:[0-9]{2}) - (?<toTime>[0-9]{1,2}:[0-9]{2}) - (?<purchaseMethod>.+)$");
 
   Pattern segmentsOfTrackWithStatusPattern = Pattern
       .compile("^IRPS (?<status>[IKZT]) (?<trackCode>[A-Za-z0-9]+)$|^IRPS (?<status2>[IKZT])$");
@@ -289,7 +289,7 @@ public class CommandSystemSingleton {
       viewBoughtTickets(ticketsViewMatcher);
     } else if (ticketsCompareMatcher.matches()) {
       if (!RailwaySingleton.getInstance().ticketCostParamsDefined()) {
-        Logs.e("Nisu postavljene cijene karata. Postavite cijene karata prije kupovine.");
+        Logs.e("Nisu postavljene cijene karata. Postavite cijene karata prije usporedbe.");
         return true;
       }
       compareTickets(ticketsCompareMatcher);
@@ -1184,9 +1184,11 @@ public class CommandSystemSingleton {
   private void displayTicket(Ticket ticket) {
     Logs.tableHeader(List.of("Vlak", "Relacija", "Polazak", "Kupljeno"));
     Logs.tableRow(ticket.getTicketData());
-    Logs.printTable(64);
-    Logs.tableHeader(
+    // Logs.printTable(64);
+    Logs.tableRow(List.of("-+-spacer-+-"));
+    Logs.tableRow(
         List.of("Izvorna cijena", "Konačna cijena", "Datum kupovine", "Popusti i dodatak na cijenu u vlaku"));
+    Logs.tableRow(List.of("-+-divider-+-"));
     Logs.tableRow(List.of(ticket.getTicketPurchaseData().get("Izvorna cijena"),
         ticket.getTicketPurchaseData().get("Konačna cijena"),
         ticket.getTicketPurchaseData().get("Datum kupovine"),
@@ -1194,7 +1196,112 @@ public class CommandSystemSingleton {
     Logs.withPadding(() -> Logs.printTable(120));
   }
 
-  private void compareTickets(Matcher ticketsCompareMatcher) {
+  // UKP2S Donji Kraljevec - Čakovec - 10.01.2025. - 0:00 - 23:59 - WM
+  private void compareTickets(Matcher compareTicketsMatcher) {
+    String startStationString = compareTicketsMatcher.group("startStation");
+    String endStationString = compareTicketsMatcher.group("endStation");
+    String dateString = compareTicketsMatcher.group("date");
+    String fromTimeString = compareTicketsMatcher.group("fromTime");
+    String toTimeString = compareTicketsMatcher.group("toTime");
+    String purchaseMethodString = compareTicketsMatcher.group("purchaseMethod");
+    Logs.header("Usporedba karata", true);
+    if (fromTimeString == null || toTimeString == null || startStationString == null || endStationString == null
+        || dateString == null
+        || purchaseMethodString == null) {
+      Logs.e("Nedostaje obavezni parametar: " + (fromTimeString == null ? "odVremena" : "")
+          + (toTimeString == null ? "doVremena" : "")
+          + (startStationString == null ? "polaznaStanica" : "") + (endStationString == null ? "odredišnaStanica" : "")
+          + (dateString == null ? "datum" : "") + (purchaseMethodString == null ? "metodaKupovine" : ""));
+      Logs.footer(true);
+      return;
+    }
+    if (RailwaySingleton.getInstance().getStationsByName(endStationString).isEmpty()) {
+      Logs.e("Nepostojeća stanica: " + endStationString);
+      Logs.footer(true);
+      return;
+    }
+    if (RailwaySingleton.getInstance().getStationsByName(startStationString).isEmpty()) {
+      Logs.e("Nepostojeća stanica: " + startStationString);
+      Logs.footer(true);
+      return;
+    }
+    ScheduleTime fromTime = new ScheduleTime(fromTimeString), toTime = new ScheduleTime(toTimeString);
+    compareTickets2(startStationString, endStationString, dateString, fromTime, toTime, purchaseMethodString);
+  }
+
+  private void compareTickets2(String startStationString, String endStationString, String dateString,
+      ScheduleTime fromTime, ScheduleTime toTime, String purchaseMethodString) {
+    Date date = new Date();
+    try {
+      date = ParsingUtil.dt(dateString);
+      if (date == null) {
+        Logs.e("Neispravan format datuma: " + dateString);
+        Logs.footer(true);
+        return;
+      }
+    } catch (Exception e) {
+      Logs.e("Greška " + e.getClass().getSimpleName() + "::" + e.getMessage() + " prilikom parsiranja datuma: "
+          + dateString);
+      Logs.footer(true);
+      return;
+    }
+    LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    TicketPurchaseMethod purchaseMethod = null;
+    try {
+      purchaseMethod = TicketPurchaseMethod.fromString(purchaseMethodString);
+    } catch (IllegalArgumentException e) {
+      Logs.e("Nepoznat način kupovine: " + purchaseMethodString);
+      Logs.footer(true);
+      return;
+    }
+    try {
+      compileAllPossibleTickets(fromTime, toTime, startStationString, endStationString, localDate, purchaseMethod);
+    } catch (Exception e) {
+      Logs.e("Greška prilikom kupovine karte: " + e.getMessage());
+      Logs.footer(true);
+    }
+  }
+
+  private void compileAllPossibleTickets(ScheduleTime fromTime, ScheduleTime toTime, String startStationString,
+      String endStationString, LocalDate localDate, TicketPurchaseMethod purchaseMethod) {
+    if (fromTime.isAfter(toTime)) {
+      Logs.e("Vrijeme polaska " + fromTime + " je nakon vremena dolaska " + toTime);
+      return;
+    }
+    List<Ticket> tickets = new ArrayList<>();
+    for (TrainComposite train : RailwaySingleton.getInstance().getSchedule().children) {
+      if (!train.hasStation(startStationString) || !train.hasStation(endStationString))
+        continue;
+      try {
+        if (train.hasRouteForParameters(Weekday.fromDayOfWeek(localDate.getDayOfWeek()), startStationString,
+            endStationString, fromTime, toTime)) {
+          Ticket ticket = new Ticket(train.trainID, startStationString, endStationString, localDate, new Date(),
+              purchaseMethod, RailwaySingleton.getInstance().getTicketCostParameters().clone(),
+              purchaseMethod.getStrategy());
+          tickets.add(ticket);
+        }
+      } catch (Exception e) {
+        // ignore
+      }
+    }
+    displayTickets(tickets);
+  }
+
+  private void displayTickets(List<Ticket> tickets) {
+    try {
+      for (Ticket ticket : tickets) {
+        ticket.getTicketPurchaseData();
+        ticket.getTicketData();
+      }
+    } catch (Exception e) {
+      Logs.e("Greška prilikom pripreme karte: " + e.getMessage());
+    }
+    try {
+      for (Ticket ticket : tickets)
+        displayTicket(ticket);
+    } catch (Exception e) {
+      Logs.e("Greška prilikom prikaza karte: " + e.getMessage());
+    }
   }
 
   private void displaySegmentsOfTrackWithStatus(Matcher segmentsOfTrackWithStatus) {

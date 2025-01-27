@@ -1,8 +1,7 @@
 package edu.unizg.foi.uzdiz.jfletcher20.models.schedule;
 
-public record ScheduleTime(
-        int hours,
-        int minutes) {
+public record ScheduleTime(int hours, int minutes) {
+
     public ScheduleTime(int hours, int minutes) {
         // if minutes go over 60, add to the next hour
         if (minutes >= 60) {
@@ -53,8 +52,8 @@ public record ScheduleTime(
         return this.isAfter(time1) && this.isBefore(time2);
     }
 
-    public boolean isBetweenOrEqual(ScheduleTime time1, ScheduleTime time2) {
-        return this.isAfter(time1) && this.isBefore(time2) || this.equals(time1) || this.equals(time2);
+    public boolean isBetweenOrEqual(ScheduleTime a, ScheduleTime b) {
+        return this.isAfter(a) && this.isBefore(b) || this.equals(a) || this.equals(b);
     }
 
     public ScheduleTime addMinutes(int minutes) {
@@ -63,7 +62,7 @@ public record ScheduleTime(
         newMinutes %= 60;
         return new ScheduleTime(newHours, newMinutes);
     }
-    
+
     public ScheduleTime subtractMinutes(int minutes) {
         int newMinutes = this.minutes - minutes;
         int newHours = this.hours - newMinutes / 60;

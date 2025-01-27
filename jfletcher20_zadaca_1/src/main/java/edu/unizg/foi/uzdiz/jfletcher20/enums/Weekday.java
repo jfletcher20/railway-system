@@ -130,7 +130,7 @@ public enum Weekday {
         return List.of(SATURDAY, SUNDAY);
     }
 
-    public static Weekday getWeekday(java.time.DayOfWeek day) {
+    public static Weekday fromDayOfWeek(java.time.DayOfWeek day) {
         return switch (day) {
             case java.time.DayOfWeek.MONDAY -> Weekday.MONDAY;
             case java.time.DayOfWeek.TUESDAY -> Weekday.TUESDAY;

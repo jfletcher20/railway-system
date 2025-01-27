@@ -485,6 +485,17 @@ public class TrainComposite implements IComponent, ISubject {
         return departureTime;
     }
 
+    public ScheduleTime getAltDepartureTimeAtStation(String start) {
+        if (this.children.isEmpty() || !this.hasStation(start))
+            return null;
+        TrainTrackStageComposite withStation = this.firstWithStation(start);
+        if (withStation == null)
+            return null;
+        // calculate the schedule time of departure for the station
+        ScheduleTime departureTime = withStation.fromTime(start);
+        return departureTime;
+    }
+
     public ScheduleTime getArrivalTimeAtStation(String end) {
         if (this.children.isEmpty() || !this.hasStation(end))
             return null;
@@ -510,7 +521,7 @@ public class TrainComposite implements IComponent, ISubject {
         return this.calculateCumulativeDistance(departureStation, arrivalStation);
     }
 
-    public boolean hasStationsOnDday(Weekday weekday, List<String> of) {
+    public boolean hasStationsOnDay(Weekday weekday, List<String> of) {
         if (!hasStations(of) || !operatesOnDay(weekday))
             return false;
         // get all stages with that weekday
@@ -533,6 +544,65 @@ public class TrainComposite implements IComponent, ISubject {
             }
         }
         return found == of.size();
+    }
+
+    public boolean hasStationOnDay(Weekday weekday, String of) {
+        return hasStationsOnDay(weekday, List.of(of));
+    }
+
+    public boolean hasRouteForParameters(Weekday weekday, String start, String end, ScheduleTime from, ScheduleTime to) {
+        if (!hasStation(start) || !hasStation(end) || !operatesOnDay(weekday))
+            return false;
+        if (!isStationBefore(start, end))
+            return false;
+            // get departure time at station from and arrival time at station end, and make sure they are within from-to
+        ScheduleTime departureTime = getDepartureTimeAtStation(start);
+        ScheduleTime arrivalTime = getArrivalTimeAtStation(end);
+        return departureTime.isBetweenOrEqual(from, to) && arrivalTime.isBetweenOrEqual(from, to);
+    }
+
+    public ScheduleTime getDepartureTimeAtStation(String departureStation, Weekday weekday) {
+        if (this.children.isEmpty() || !this.hasStation(departureStation))
+            return null;
+        // get all stages with that weekday
+        List<TrainTrackStageComposite> stages = new ArrayList<>();
+        for (TrainTrackStageComposite stage : this.children) {
+            if (stage.schedule.days().contains(weekday)) {
+                stages.add(stage);
+            }
+        }
+        // iterate through the stages and check if a match for the name in of is found
+        // for all elements from of
+        for (TrainTrackStageComposite stage : stages) {
+            for (StationLeaf leaf : stage.children) {
+                if (leaf.getStation().name().equals(departureStation)) {
+                    return stage.getInverseStationMap().get(leaf);
+                }
+            }
+        }
+        return null;
+    }
+
+    public ScheduleTime getArrivalTimeAtStation(String arrivalStation, Weekday weekday) {
+        if (this.children.isEmpty() || !this.hasStation(arrivalStation))
+            return null;
+        // get all stages with that weekday
+        List<TrainTrackStageComposite> stages = new ArrayList<>();
+        for (TrainTrackStageComposite stage : this.children) {
+            if (stage.schedule.days().contains(weekday)) {
+                stages.add(stage);
+            }
+        }
+        // iterate through the stages and check if a match for the name in of is found
+        // for all elements from of
+        for (TrainTrackStageComposite stage : stages) {
+            for (StationLeaf leaf : stage.children) {
+                if (leaf.getStation().name().equals(arrivalStation)) {
+                    return stage.getInverseStationMap().get(leaf);
+                }
+            }
+        }
+        return null;
     }
 
 }
