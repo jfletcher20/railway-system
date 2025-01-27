@@ -628,8 +628,13 @@ public class RailwaySingleton {
     visited.remove(currentStation);
   }
 
-  public void addUser(String name, String lastName) {
+  public boolean addUser(String name, String lastName) {
+    if (getUserByName(name, lastName, false) != null) {
+      Logs.e("Korisnik " + name + " " + lastName + " već postoji.");
+      return false;
+    }
     users.add(new User(name, lastName));
+    return true;
   }
 
   public List<User> getUsers() {
@@ -654,6 +659,7 @@ public class RailwaySingleton {
         .orElseGet(() -> {
           if (!createIfNotExists)
             return null;
+          Logs.o("", false);
           Logs.o("Korisnik " + name + " " + lastName + " ne postoji. Dodajem korisnika...");
           User newUser = new User(name, lastName);
           this.users.add(newUser);
@@ -830,7 +836,8 @@ public class RailwaySingleton {
     return new ArrayList<>();
   }
 
-  public List<TrainTrackSegment> getSegmentsBetweenStationsOrToEnd(String trackId, String startStation, String endStation) {
+  public List<TrainTrackSegment> getSegmentsBetweenStationsOrToEnd(String trackId, String startStation,
+      String endStation) {
     List<TrainTrackSegment> segments = this.railroad2.get(trackId);
     if (!stationIsBeforeStation(getStationOnTrack(trackId, startStation), getStationOnTrack(trackId, endStation))) {
       String temp = startStation;

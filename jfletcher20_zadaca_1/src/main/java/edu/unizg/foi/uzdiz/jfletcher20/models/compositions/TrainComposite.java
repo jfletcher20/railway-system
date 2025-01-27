@@ -53,7 +53,7 @@ public class TrainComposite implements IComponent, ISubject {
             if (this.trainID.equals("2212")) {
                 child.Operation();
             } else {
-                System.out.print(".");
+                Logs.i(".");
             }
         }
     }

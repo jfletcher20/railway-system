@@ -85,27 +85,16 @@ public class CommandSystemSingleton {
   Pattern compareTicketsPattern = Pattern.compile(
       "^UKP2S (?<startStation>.+) - (?<endStation>.+) - (?<date>[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}\\.) - (?<fromTime>[0-9]{1,2}:[0-9]{2}) - (?<toTime>[0-9]{1,2}:[0-9]{2}) - (?<purchaseMethod>.+)$");
 
-  /*
-   * ● Promjena statusa pruge između dviju stanica
-   * ○ Sintaksa:
-   * ■ PSP2S oznaka - polaznaStanica - odredišnaStanica - status
-   * ○ Primjer:
-   * ■ PSP2S M501 - Donji Kraljevec – Mala Subotica - K
-   * ○ Opis primjera:
-   * ■ Pruga s oznakom M501 na relaciji Donji Kraljevec – Mala Subotica mijenja
-   * status koji označava da je u kvaru, što znači da vlakovi ne mogu putovati
-   * tom prugom između tih dviju stanica jer na toj relaciji pruga ima samo jedan
-   * kolosjek. Ostali statusi su: I - ispravna, T – u testiranju, Z - zatvorena.
-   */
-
   Pattern setStatusOfSegmentsPattern = Pattern.compile(
       "^PSP2S (?<trackCode>[A-Za-z0-9]+) - (?<startStation>.+) - (?<endStation>.+) - (?<status>[IKZT])$");
 
   Pattern segmentsOfTrackWithStatusPattern = Pattern
       .compile("^IRPS (?<status>[IKZT]) (?<trackCode>[A-Za-z0-9]+)$|^IRPS (?<status2>[IKZT])$");
 
+  // should have group names for every individual link command variant
   Pattern linkPattern = Pattern.compile("^LINK (?<name>[\\p{L}]+(?: [\\p{L}]+)*) (?<lastName>[\\p{L}]+) -"
-      + " (?<groupId>.+) - (?<action>.+)$|^LINK PREGLED$");
+      + " (?<groupId>.+) - (?<action>.+)$"
+      + "|(?<view>^LINK PREGLED$)|(?<history>^LINK POVIJEST$)|(?<reset>^LINK RESET$)|(?<undo>^LINK UNDO$)");
   private final ChatMediator userChat = new ChatMediator();
 
   public ChatMediator getUserChat() {
@@ -123,16 +112,17 @@ public class CommandSystemSingleton {
 
   public void startCommandSystem() {
     outputMenu();
+    boolean lastCommandSucceeded = false;
     while (true) {
       Logs.withPadding(() -> {
         System.out.print("     < ");
-      }, true, false);
+      }, !lastCommandSucceeded, false);
       String command = System.console().readLine();
       if (quitPattern.matcher(command).matches()) {
         Logs.c("Prekidanje programa...");
         break;
       } else {
-        identifyCommand(command);
+        lastCommandSucceeded = identifyCommand(command);
       }
     }
     Logs.footer(true);
@@ -207,7 +197,7 @@ public class CommandSystemSingleton {
     } else if (viewTrainsMatcher.matches()) {
       viewTrains();
     } else if (linkMatcher.matches()) {
-      processLinkCommand(command);
+      processLinkCommand(linkMatcher);
     } else if (viewTrainStagesMatcher.matches()) {
       viewTrainStagesOfTrain(viewTrainStagesMatcher.group("trainCode"));
     } else if (ivrvMatcher.matches()) {
@@ -224,7 +214,8 @@ public class CommandSystemSingleton {
   }
 
   private boolean matchTicketAndTrackCommands(String command, Matcher ticketPriceMatcher, Matcher ticketPurchaseMatcher,
-      Matcher ticketsViewMatcher, Matcher ticketsCompareMatcher, Matcher setStatusOfSegmentsMatcher, Matcher segmentsOfTrackWithStatusMatcher) {
+      Matcher ticketsViewMatcher, Matcher ticketsCompareMatcher, Matcher setStatusOfSegmentsMatcher,
+      Matcher segmentsOfTrackWithStatusMatcher) {
     if (ticketPriceMatcher.matches()) {
       setTicketPrices(ticketPriceMatcher);
     } else if (segmentsOfTrackWithStatusMatcher.matches()) {
@@ -288,28 +279,29 @@ public class CommandSystemSingleton {
   }
 
   private void trainCommandsMenu() {
-    Logs.o("\u001B[93m" + "IV\t\t\t\t\t" + "\u001B[0m" + "- Pregled vlakova", false);
-    Logs.o("\u001B[93m" + "IEV [oznakaVlaka]\t\t\t\t" + "\u001B[0m" + "- Pregled etapa vlaka", false);
+    Logs.withPadding(() -> Logs.o("\u001B[95m" + "IV\t\t\t\t\t" + "\u001B[0m" + "- Pregled vlakova", false), true,
+        false);
+    Logs.o("\u001B[95m" + "IEV [oznakaVlaka]\t\t\t\t" + "\u001B[0m" + "- Pregled etapa vlaka", false);
     Logs.o(
-        "\u001B[93m" + "IEVD [dani]\t\t\t\t" + "\u001B[0m"
+        "\u001B[95m" + "IEVD [dani]\t\t\t\t" + "\u001B[0m"
             + "- Pregled vlakova koji voze sve etape na određene dane u tjednu",
         false);
-    Logs.o("\u001B[93m" + "IVRV [oznakaVlaka]\t\t\t" + "\u001B[0m" + "- Pregled vlakova i njihovih etapa", false);
-    Logs.o("\u001B[93m" + "IVI2S [polaznaStanica] - [odredišnaStanica] - [dan] - [odVr] - [doVr] - [prikaz]", false);
+    Logs.o("\u001B[95m" + "IVRV [oznakaVlaka]\t\t\t" + "\u001B[0m" + "- Pregled vlakova i njihovih etapa", false);
+    Logs.o("\u001B[95m" + "IVI2S [polaznaStanica] - [odredišnaStanica] - [dan] - [odVr] - [doVr] - [prikaz]", false);
     Logs.o("\t\t\t\t\t\t" + "\u001B[0m" + "- Pregled vlakova između dvije stanice na "
         + "određeni dan u tjednu unutar zadanog vremena", false);
   }
 
   private void userCommandsMenu() {
     Logs.withPadding(
-        () -> Logs.o("\u001B[93m" + "DK [ime] [prezime]\t\t\t" + "\u001B[0m" + "- Dodavanje korisnika", false), true,
+        () -> Logs.o("\u001B[94m" + "DK [ime] [prezime]\t\t\t" + "\u001B[0m" + "- Dodavanje korisnika", false), true,
         false);
-    Logs.o("\u001B[93m" + "PK\t\t\t\t\t" + "\u001B[0m" + "- Pregled korisnika", false);
-    Logs.o("\u001B[93m" +
+    Logs.o("\u001B[94m" + "PK\t\t\t\t\t" + "\u001B[0m" + "- Pregled korisnika", false);
+    Logs.o("\u001B[94m" +
         "DPK [ime] [prz] - [oznVlaka] [- stanica]  " + "\u001B[0m"
         + "- Dodavanje korisnika za praćenje putovanja vlaka ili dolaska u određenu željezničku stanicu",
         false);
-    Logs.o("\u001B[93m" +
+    Logs.o("\u001B[94m" +
         "SVV [oznakaVlaka] - [dan] - [koeficijent]\t" + "\u001B[0m"
         + "- Simulacija vožnje vlaka na dan u tjednu u koeficijentu vremena",
         false);
@@ -318,36 +310,47 @@ public class CommandSystemSingleton {
   private void ticketCommandsMenu() {
     Logs.withPadding(
         () -> Logs.o(
-            "\u001B[93m"
+            "\u001B[92m"
                 + "CVP [cijenaNormalni] [cijenaUbrzani] [cijenaBrzi] [popustSuN] [popustWebMob] [uvecanjeVlak]",
             false),
         true, false);
     Logs.o("\t\t\t\t\t\t" + "\u001B[0m" + "- Postavljanje cijena karata", false);
-    Logs.o("\u001B[93m" + "KKPV2S [oznaka] - [polaznaStanica] - [odredišnaStanica] - [datum] - [načinKupovine]", false);
+    Logs.o("\u001B[92m" + "KKPV2S [oznaka] - [polaznaStanica] - [odredišnaStanica] - [datum] - [načinKupovine]", false);
     Logs.o(
         "\t\t\t\t\t\t" + "\u001B[0m"
             + "- Kupovina karte za putovanje između dviju stanica određenim vlakom na određeni datum s odabranim načinom kupovanja karte",
         false);
-    Logs.o("\u001B[93m" + "IKKPV [n]\t\t\t\t\t" + "\u001B[0m" + "- Ispit kupljenih karata za putovanje vlakom", false);
+    Logs.o("\u001B[92m" + "IKKPV [n]\t\t\t\t\t" + "\u001B[0m" + "- Ispit kupljenih karata za putovanje vlakom", false);
     Logs.o("\t\t\t\t\t\t" + "\u001B[0m" + "- Ispit svih kupljenih karata za putovanja vlakom", false);
-    Logs.o("\u001B[93m" + "UKP2S [polaznaStanica] - [odredišnaStanica] - [datum] - [odVr] - [doVr] - [načinKupovine]",
+    Logs.o("\u001B[92m" + "UKP2S [polaznaStanica] - [odredišnaStanica] - [datum] - [odVr] - [doVr] - [načinKupovine]",
         false);
     Logs.o(
         "\t\t\t\t\t\t" + "\u001B[0m"
             + "- Usporedba karata za putovanje između dviju stanica na određeni datum unutar zadanog vremena s odabranim načinom kupovanja karte",
         false);
-    Logs.o("\u001B[93m" + "IRPS [status] [oznakaPruge]" +
+    Logs.o("\u001B[92m" +
+        "PSP2S [oznakaPruge] - [polaznaStanica] - [odredišnaStanica] - [status]" + "\u001B[0m", false);
+    Logs.o("\t\t\t\t\t\t" + "\u001B[0m" + "- Postavljanje statusa segmenta pruge", false);
+    Logs.o("\u001B[92m" + "IRPS [status] [oznakaPruge]" +
         "\t\t" + "\u001B[0m"
         + "- Pregled svih pruga s određenim statusom ili određenih pruga s određenim statusom",
         false);
   }
 
   private void customCommandsMenu() {
-    Logs.withPadding(() -> Logs.o("\u001B[93m" +
+    // color for cyan: \u001B[96m
+    Logs.withPadding(() -> Logs.o("\u001B[96m" +
         "LINK [ime] [prz] - [grupa] - [O|Z|poruka] " + "\u001B[0m"
         + "- Otvori/zatvori vezu između korisnika i grupe ili pošalji obavijest u grupu",
         false), true, false);
-    Logs.o("\u001B[93m" + "LINK PREGLED\t\t\t\t" + "\u001B[0m" + "- Pregled svih grupa", false);
+    Logs.o("\u001B[96m" + "LINK PREGLED\t\t\t\t" + "\u001B[0m" + "- Pregled svih grupa", false);
+    Logs.o("\u001B[96m" + "LINK POVIJEST\t\t\t\t" + "\u001B[0m" + "- Pregled povijesti veza", false);
+    Logs.o(
+        "\u001B[96m" + "LINK RESET\t\t\t\t" + "\u001B[0m" + "- Poništavanje svih naredbi za otvaranje/zatvaranje veze",
+        false);
+    Logs.o(
+        "\u001B[96m" + "LINK UNDO\t\t\t\t\t" + "\u001B[0m" + "- Poništavanje zadnje naredbe otvaranja/zatvaranja veze",
+        false);
   }
 
   private void viewTracks() {
@@ -506,8 +509,8 @@ public class CommandSystemSingleton {
 
   private void addUser(String name, String lastName) {
     Logs.header("Dodavanje korisnika", true);
-    RailwaySingleton.getInstance().addUser(name, lastName);
-    Logs.o("Dodan korisnik: " + name + " " + lastName);
+    if (RailwaySingleton.getInstance().addUser(name, lastName))
+      Logs.o("Dodan korisnik: " + name + " " + lastName);
     Logs.footer(true);
   }
 
@@ -607,18 +610,20 @@ public class CommandSystemSingleton {
 
   /**
    * Process the LINK command (dodatna funkcionalnost izvan specifikacija zadaće
-   * 2).
+   * 2 i 3).
    * 
    * @param command The command string.
    */
-  private void processLinkCommand(String command) {
-    var matcher = linkPattern.matcher(command);
-    matcher.matches();
-    if (matcher.group("name") == null) {
-      viewGroupChatListWithMembers();
+  private void processLinkCommand(Matcher linkMatcher) {
+    if (linkMatcher.group("name") == null) {
+      if (!commandDesignPatternForLink(linkMatcher)) {
+        viewGroupChatListWithMembers();
+        return;
+      } else
+        return;
     } else {
-      String name = matcher.group("name"), lastName = matcher.group("lastName");
-      String groupId = matcher.group("groupId"), action = matcher.group("action");
+      String name = linkMatcher.group("name"), lastName = linkMatcher.group("lastName");
+      String groupId = linkMatcher.group("groupId"), action = linkMatcher.group("action");
       var user = RailwaySingleton.getInstance().getUserByName(name, lastName, true);
       if (user == null) {
         Logs.e("Korisnik nije pronađen: " + name + " " + lastName);
@@ -626,10 +631,12 @@ public class CommandSystemSingleton {
       }
       switch (action) {
         case "O":
-          userChat.linkUser(groupId, user);
+          Logs.header("Otvori vezu", true);
+          userChat.command(groupId, user, true);
           break;
         case "Z":
-          userChat.unlinkUser(groupId, user);
+          Logs.header("Zatvori vezu", true);
+          userChat.command(groupId, user, false);
           break;
         default:
           if (!action.isEmpty()) {
@@ -640,6 +647,30 @@ public class CommandSystemSingleton {
           break;
       }
     }
+    Logs.footer(true);
+  }
+
+  private boolean commandDesignPatternForLink(Matcher linkMatcher) {
+    String view = linkMatcher.group("view");
+    if (view != null)
+      return false;
+    String history = linkMatcher.group("history");
+    if (history != null) {
+      Logs.header("Povijest pridruživanja/odlaska iz grupa", true);
+      userChat.printHistory();
+    }
+    String reset = linkMatcher.group("reset");
+    if (reset != null) {
+      Logs.header("Undo svih naredbi", true);
+      userChat.undoAllCommands();
+    }
+    String undo = linkMatcher.group("undo");
+    if (undo != null) {
+      Logs.header("Undo zadnje naredbe", true);
+      userChat.undoLastCommand();
+    }
+    Logs.footer(true);
+    return true;
   }
 
   private void viewGroupChatListWithMembers() {
@@ -1361,7 +1392,9 @@ public class CommandSystemSingleton {
       Logs.e("Nepoznat status pruge: " + statusString);
       return;
     }
-    Logs.header("Promjena statusa relacija u " + status + " između " + startStation + " i " + endStation + " na pruzi " + trackCode,
+    Logs.header(
+        "Promjena statusa relacija u " + status + " između " + startStation + " i " + endStation + " na pruzi "
+            + trackCode,
         true);
     TrainTrack track = RailwaySingleton.getInstance().getTrackById(trackCode);
     if (track == null) {
@@ -1413,18 +1446,3 @@ public class CommandSystemSingleton {
   }
 
 }
-
-/*
- * 
- * ● Promjena statusa pruge između dviju stanica
- * ○ Sintaksa:
- * ■ PSP2S oznaka - polaznaStanica - odredišnaStanica - status
- * ○ Primjer:
- * ■ PSP2S M501 - Donji Kraljevec – Mala Subotica - K
- * ○ Opis primjera:
- * ■ Pruga s oznakom M501 na relaciji Donji Kraljevec – Mala Subotica mijenja
- * status koji označava da je u kvaru, što znači da vlakovi ne mogu putovati
- * tom prugom između tih dviju stanica jer na toj relaciji pruga ima samo jedan
- * kolosjek. Ostali statusi su: I - ispravna, T – u testiranju, Z - zatvorena.
- * 
- */
