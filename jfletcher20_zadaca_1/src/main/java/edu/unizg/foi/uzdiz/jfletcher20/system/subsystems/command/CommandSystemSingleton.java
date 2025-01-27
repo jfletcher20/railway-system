@@ -1266,6 +1266,7 @@ public class CommandSystemSingleton {
       String endStationString, LocalDate localDate, TicketPurchaseMethod purchaseMethod) {
     if (fromTime.isAfter(toTime)) {
       Logs.e("Vrijeme polaska " + fromTime + " je nakon vremena dolaska " + toTime);
+      Logs.footer(true);
       return;
     }
     List<Ticket> tickets = new ArrayList<>();
@@ -1284,6 +1285,11 @@ public class CommandSystemSingleton {
         // ignore
       }
     }
+    if (tickets.isEmpty()) {
+      Logs.e("Nema karata za tražene parametre.");
+      Logs.footer(true);
+      return;
+    }
     displayTickets(tickets);
   }
 
@@ -1297,8 +1303,12 @@ public class CommandSystemSingleton {
       Logs.e("Greška prilikom pripreme karte: " + e.getMessage());
     }
     try {
-      for (Ticket ticket : tickets)
+      Logs.withPadding(() -> Logs.o("Pronađene karte:"), false, true);
+      int i = 0;
+      for (Ticket ticket : tickets) {
+        Logs.o("Karta " + (++i) + "", false);
         displayTicket(ticket);
+      }
     } catch (Exception e) {
       Logs.e("Greška prilikom prikaza karte: " + e.getMessage());
     }
